@@ -28,6 +28,21 @@ public class HrWorkspaceController : ControllerBase
     public Task<IActionResult> GetPayslips(CancellationToken cancellationToken)
         => ExecuteAsync(user => _hrWorkspaceService.GetPayslipsAsync(user, cancellationToken));
 
+    [HttpGet("holerite/{id}")]
+    [ProducesResponseType(typeof(HrPayslipDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPayslipDetail(string id, CancellationToken cancellationToken)
+    {
+        var session = PortalSessionHttpContext.Get(HttpContext);
+        if (session?.PortalUser is null)
+        {
+            return Unauthorized(new { message = "Sessao do portal nao encontrada." });
+        }
+
+        var payload = await _hrWorkspaceService.GetPayslipDetailAsync(session.PortalUser, id, cancellationToken);
+        return payload is null ? NotFound(new { message = "Holerite nao encontrado." }) : Ok(payload);
+    }
+
     [HttpGet("beneficios")]
     [ProducesResponseType(typeof(HrBenefitsResponse), StatusCodes.Status200OK)]
     public Task<IActionResult> GetBenefits(CancellationToken cancellationToken)

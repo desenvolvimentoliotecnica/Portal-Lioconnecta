@@ -87,8 +87,9 @@ import {
   HR_PROFILE_ROUTE,
   isHrProfileModuleSlug,
   getHrProfileModuleData,
-  renderHrProfileModulePage
-} from "./hrProfile/index.js?v=0.23.3";
+  renderHrProfileModulePage,
+  bindPayslipModal
+} from "./hrProfile/index.js?v=0.23.4";
 import {
   JOURNEY_ROUTE,
   isJourneyModuleSlug,
@@ -540,6 +541,10 @@ function renderHrProfilePage(data, route, slug) {
   const centerContent = document.getElementById("center-content");
   renderShell(data, route);
   centerContent.innerHTML = renderHrProfileModulePage(slug, data.hrModule);
+
+  if (slug === "holerite") {
+    bindPayslipModal(document);
+  }
 }
 
 function renderJourneyPage(data, route, slug) {

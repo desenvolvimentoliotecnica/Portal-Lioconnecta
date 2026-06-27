@@ -809,6 +809,15 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
         Assert.NotNull(holerite);
         Assert.True(holerite.IsSimulated);
         Assert.NotEmpty(holerite.Items);
+
+        var holeriteDetail = await _client.GetFromJsonAsync<HrPayslipDetailDto>("/api/hr/holerite/2026-05");
+        Assert.NotNull(holeriteDetail);
+        Assert.Equal("2026-05", holeriteDetail.Id);
+        Assert.NotEmpty(holeriteDetail.Earnings);
+        Assert.NotEmpty(holeriteDetail.Deductions);
+
+        var missingHolerite = await _client.GetAsync("/api/hr/holerite/inexistente");
+        Assert.Equal(HttpStatusCode.NotFound, missingHolerite.StatusCode);
         Assert.NotNull(beneficios);
         Assert.True(beneficios.IsSimulated);
         Assert.NotEmpty(beneficios.Items);

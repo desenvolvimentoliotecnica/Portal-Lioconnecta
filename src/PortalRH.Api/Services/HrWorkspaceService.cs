@@ -58,6 +58,80 @@ public class HrWorkspaceService : IHrWorkspaceService
         return Task.FromResult(response);
     }
 
+    public Task<HrPayslipDetailDto?> GetPayslipDetailAsync(PortalUser user, string payslipId, CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+
+        var summaries = new Dictionary<string, (string PeriodLabel, string ReferenceMonth, decimal Gross, decimal Net, DateTime PaymentDate)>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["2026-05"] = ("Maio/2026", "2026-05", 8420.55m, 6234.18m, new DateTime(2026, 5, 30)),
+            ["2026-04"] = ("Abril/2026", "2026-04", 8420.55m, 6188.42m, new DateTime(2026, 4, 30)),
+            ["2026-03"] = ("Marco/2026", "2026-03", 8420.55m, 6201.07m, new DateTime(2026, 3, 31)),
+            ["2026-02"] = ("Fevereiro/2026", "2026-02", 8420.55m, 6195.33m, new DateTime(2026, 2, 28))
+        };
+
+        if (!summaries.TryGetValue(payslipId, out var summary))
+        {
+            return Task.FromResult<HrPayslipDetailDto?>(null);
+        }
+
+        var earnings = new List<HrPayslipLineDto>
+        {
+            new("001", "Salario base", "30,00 d", 7200.00m),
+            new("020", "Horas extras 50%", "8,00 h", 480.55m),
+            new("035", "Adicional noturno", "12,00 h", 240.00m),
+            new("050", "Premio produtividade", "—", 500.00m)
+        };
+
+        var deductions = new List<HrPayslipLineDto>
+        {
+            new("101", "INSS", "11,00 %", 924.26m),
+            new("102", "IRRF", "15,00 %", 612.11m),
+            new("120", "Vale transporte", "6,00 %", 432.00m),
+            new("130", "Plano de saude", "—", 218.00m)
+        };
+
+        var totalEarnings = earnings.Sum(item => item.Amount);
+        var totalDeductions = deductions.Sum(item => item.Amount);
+        var baseSalary = 7200.00m;
+        var baseInss = 8420.55m;
+        var baseFgts = 8420.55m;
+        var fgtsAmount = Math.Round(baseFgts * 0.08m, 2, MidpointRounding.AwayFromZero);
+
+        var detail = new HrPayslipDetailDto(
+            payslipId,
+            summary.PeriodLabel,
+            summary.ReferenceMonth,
+            summary.Gross,
+            summary.Net,
+            summary.PaymentDate,
+            "Disponivel",
+            "LIOCONNECTA Tecnologia LTDA",
+            "12.345.678/0001-90",
+            "Av. Paulista, 1000 - Bela Vista - Sao Paulo/SP",
+            user.DisplayName,
+            "00012345",
+            "123.456.789-00",
+            user.Title ?? "Analista de Sistemas",
+            user.Department ?? "Tecnologia da Informacao",
+            "15/03/2019",
+            "Banco Itau Unibanco S.A.",
+            "1234",
+            "56789-0",
+            baseSalary,
+            baseInss,
+            baseFgts,
+            fgtsAmount,
+            earnings,
+            deductions,
+            totalEarnings,
+            totalDeductions,
+            Provider,
+            IsSimulated);
+
+        return Task.FromResult<HrPayslipDetailDto?>(detail);
+    }
+
     public Task<HrBenefitsResponse> GetBenefitsAsync(PortalUser user, CancellationToken cancellationToken)
     {
         _ = cancellationToken;

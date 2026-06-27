@@ -2,6 +2,7 @@ import { renderEmptyState } from "../components/cards.js";
 import { escapeHtml } from "../components/html.js";
 import { renderRhAdminHero } from "../people/adminNav.js";
 import { getHrProfileModule } from "./moduleCatalog.js";
+import { renderPayslipModalShell } from "./payslipModal.js";
 
 function formatCurrency(value) {
   const amount = Number(value ?? 0);
@@ -141,28 +142,39 @@ function renderPayslipPage(data = {}) {
     title: data.title,
     provider: data.provider,
     isSimulated: data.isSimulated,
-    bodyHtml: renderContentCard({
-      title: "Comprovantes disponiveis",
-      bodyHtml: items.length
-        ? `
-          <div class="hr-profile-list">
-            ${items.map((item) => `
-              <article class="hr-profile-list-item">
-                <div>
-                  <strong>${escapeHtml(item.periodLabel)}</strong>
-                  <span>Pagamento em ${escapeHtml(formatDate(item.paymentDate))}</span>
-                </div>
-                <div class="hr-profile-list-item__meta">
-                  <span>Liquido ${escapeHtml(formatCurrency(item.netAmount))}</span>
-                  ${renderStatusPill(item.status)}
-                  <button type="button" class="comm-secondary-button" disabled>Baixar PDF</button>
-                </div>
-              </article>
-            `).join("")}
-          </div>
-        `
-        : renderEmptyState("Nenhum holerite", "Os holerites liberados pelo RH aparecerao aqui.")
-    })
+    bodyHtml: `
+      ${renderContentCard({
+        title: "Comprovantes disponiveis",
+        bodyHtml: items.length
+          ? `
+            <div class="hr-profile-list">
+              ${items.map((item) => `
+                <article class="hr-profile-list-item">
+                  <div>
+                    <strong>${escapeHtml(item.periodLabel)}</strong>
+                    <span>Pagamento em ${escapeHtml(formatDate(item.paymentDate))}</span>
+                  </div>
+                  <div class="hr-profile-list-item__meta">
+                    <span>Liquido ${escapeHtml(formatCurrency(item.netAmount))}</span>
+                    ${renderStatusPill(item.status)}
+                    <button
+                      type="button"
+                      class="feed-composer-submit"
+                      data-action="open-payslip-modal"
+                      data-payslip-id="${escapeHtml(item.id)}"
+                    >
+                      Visualizar
+                    </button>
+                    <button type="button" class="comm-secondary-button" disabled>Baixar PDF</button>
+                  </div>
+                </article>
+              `).join("")}
+            </div>
+          `
+          : renderEmptyState("Nenhum holerite", "Os holerites liberados pelo RH aparecerao aqui.")
+      })}
+      ${renderPayslipModalShell()}
+    `
   });
 }
 

@@ -37,6 +37,43 @@ public sealed record HrPayslipResponse(
     string Provider,
     bool IsSimulated);
 
+public sealed record HrPayslipLineDto(
+    string Code,
+    string Description,
+    string Reference,
+    decimal Amount);
+
+public sealed record HrPayslipDetailDto(
+    string Id,
+    string PeriodLabel,
+    string ReferenceMonth,
+    decimal GrossAmount,
+    decimal NetAmount,
+    DateTime PaymentDate,
+    string Status,
+    string CompanyName,
+    string CompanyCnpj,
+    string CompanyAddress,
+    string EmployeeName,
+    string EmployeeRegistration,
+    string EmployeeCpf,
+    string EmployeeRole,
+    string EmployeeDepartment,
+    string EmployeeAdmissionDate,
+    string BankName,
+    string BankAgency,
+    string BankAccount,
+    decimal BaseSalary,
+    decimal BaseInss,
+    decimal BaseFgts,
+    decimal FgtsAmount,
+    IReadOnlyList<HrPayslipLineDto> Earnings,
+    IReadOnlyList<HrPayslipLineDto> Deductions,
+    decimal TotalEarnings,
+    decimal TotalDeductions,
+    string Provider,
+    bool IsSimulated);
+
 public sealed record HrBenefitItemDto(
     string Code,
     string Label,
