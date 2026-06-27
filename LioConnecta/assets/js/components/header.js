@@ -44,7 +44,15 @@ export function renderHeaderShell(data) {
             ${data.user.area ? `<span class="user-area">${escapeHtml(data.user.area)}</span>` : ""}
           </div>
         </div>
-        <button class="topbar-link" data-analytics="topbar.logout" data-action="portal-logout">Sair</button>
+        <button
+          type="button"
+          class="topbar-logout-btn"
+          data-analytics="topbar.logout"
+          data-action="portal-logout"
+        >
+          <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+          Sair
+        </button>
       </div>
     </header>
 
