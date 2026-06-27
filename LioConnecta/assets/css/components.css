@@ -5953,3 +5953,54 @@ body.agenda-event-modal-open {
     border-top: 1px solid #dbe6f0;
   }
 }
+
+.payslip-export-host {
+  left: -9999px;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  width: 860px;
+  z-index: -1;
+}
+
+@media print {
+  body.payslip-printing > *:not(#payslip-modal) {
+    display: none !important;
+  }
+
+  body.payslip-printing #payslip-modal {
+    background: none;
+    display: block !important;
+    inset: 0;
+    padding: 0;
+    position: static;
+  }
+
+  body.payslip-printing #payslip-modal[hidden] {
+    display: none !important;
+  }
+
+  body.payslip-printing .payslip-modal__dialog {
+    border: none;
+    box-shadow: none;
+    max-height: none;
+    width: 100%;
+  }
+
+  body.payslip-printing .payslip-modal__header,
+  body.payslip-printing .payslip-modal__actions {
+    display: none !important;
+  }
+
+  body.payslip-printing .payslip-modal__body {
+    background: #fff;
+    overflow: visible;
+    padding: 0;
+  }
+
+  body.payslip-printing .payslip-doc {
+    border: none;
+    box-shadow: none;
+    max-width: none;
+  }
+}

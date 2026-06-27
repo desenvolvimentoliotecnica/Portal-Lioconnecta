@@ -165,7 +165,14 @@ function renderPayslipPage(data = {}) {
                     >
                       Visualizar
                     </button>
-                    <button type="button" class="comm-secondary-button" disabled>Baixar PDF</button>
+                    <button
+                      type="button"
+                      class="comm-secondary-button"
+                      data-action="download-payslip-pdf-list"
+                      data-payslip-id="${escapeHtml(item.id)}"
+                    >
+                      Baixar PDF
+                    </button>
                   </div>
                 </article>
               `).join("")}

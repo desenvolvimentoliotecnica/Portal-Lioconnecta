@@ -1,5 +1,13 @@
 import { escapeHtml } from "../components/html.js";
+import { showToast } from "../core/feedback.js";
 import { getPayslipDetail } from "./service.js";
+import {
+  buildPayslipFilename,
+  downloadPayslipPdf,
+  printPayslipDocument
+} from "./payslipExport.js";
+
+let currentPayslipDetail = null;
 
 function formatCurrency(value) {
   const amount = Number(value ?? 0);
@@ -171,9 +179,13 @@ export function renderPayslipModalShell() {
             <span id="payslip-modal-subtitle">Visualizacao do comprovante</span>
           </div>
           <div class="payslip-modal__actions">
-            <button type="button" class="comm-secondary-button" data-action="print-payslip" disabled title="Integracao futura">
+            <button type="button" class="comm-secondary-button" data-action="print-payslip" disabled>
               <i class="fa-solid fa-print" aria-hidden="true"></i>
               Imprimir
+            </button>
+            <button type="button" class="comm-secondary-button" data-action="download-payslip-pdf" disabled>
+              <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
+              Baixar PDF
             </button>
             <button
               type="button"
@@ -193,6 +205,16 @@ export function renderPayslipModalShell() {
   `;
 }
 
+function setPayslipActionsEnabled(modal, enabled) {
+  if (!modal) {
+    return;
+  }
+
+  modal.querySelectorAll("[data-action='print-payslip'], [data-action='download-payslip-pdf']").forEach((button) => {
+    button.disabled = !enabled;
+  });
+}
+
 function getModalElements(root = document) {
   return {
     modal: root.getElementById("payslip-modal"),
@@ -200,6 +222,34 @@ function getModalElements(root = document) {
     title: root.getElementById("payslip-modal-title"),
     subtitle: root.getElementById("payslip-modal-subtitle")
   };
+}
+
+async function handleDownloadPayslipPdf(payslipId, root = document) {
+  try {
+    const detail = payslipId && payslipId === currentPayslipDetail?.id
+      ? currentPayslipDetail
+      : await getPayslipDetail(payslipId);
+
+    const host = root.createElement("div");
+    host.className = "payslip-export-host";
+    host.innerHTML = renderPayslipDocument(detail);
+    root.body.appendChild(host);
+
+    const documentNode = host.querySelector(".payslip-doc");
+    await downloadPayslipPdf(documentNode, buildPayslipFilename(detail), root);
+    host.remove();
+    showToast("PDF do holerite gerado com sucesso.", "success");
+  } catch {
+    showToast("Nao foi possivel gerar o PDF do holerite.", "danger");
+  }
+}
+
+function handlePrintPayslip(root = document) {
+  try {
+    printPayslipDocument(root);
+  } catch {
+    showToast("Nao foi possivel imprimir o holerite.", "danger");
+  }
 }
 
 export function closePayslipModal(root = document) {
@@ -211,6 +261,8 @@ export function closePayslipModal(root = document) {
   modal.hidden = true;
   modal.setAttribute("aria-hidden", "true");
   root.body.classList.remove("modal-open");
+  currentPayslipDetail = null;
+  setPayslipActionsEnabled(modal, false);
 }
 
 export async function openPayslipModal(payslipId, root = document) {
@@ -222,10 +274,13 @@ export async function openPayslipModal(payslipId, root = document) {
   modal.hidden = false;
   modal.setAttribute("aria-hidden", "false");
   root.body.classList.add("modal-open");
+  currentPayslipDetail = null;
+  setPayslipActionsEnabled(modal, false);
   body.innerHTML = `<div class="payslip-modal__loading">Carregando holerite...</div>`;
 
   try {
     const detail = await getPayslipDetail(payslipId);
+    currentPayslipDetail = detail;
     if (title) {
       title.textContent = `Holerite ${detail.periodLabel || ""}`.trim();
     }
@@ -233,7 +288,10 @@ export async function openPayslipModal(payslipId, root = document) {
       subtitle.textContent = `Pagamento em ${formatDate(detail.paymentDate)} • Liquido ${formatCurrency(detail.netAmount)}`;
     }
     body.innerHTML = renderPayslipDocument(detail);
+    setPayslipActionsEnabled(modal, true);
   } catch {
+    currentPayslipDetail = null;
+    setPayslipActionsEnabled(modal, false);
     body.innerHTML = `
       <div class="payslip-modal__error">
         <strong>Nao foi possivel carregar o holerite.</strong>
@@ -266,6 +324,20 @@ export function bindPayslipModal(root = document) {
     });
   });
 
+  centerContent.querySelectorAll("[data-action='download-payslip-pdf-list']").forEach((button) => {
+    if (button.dataset.bound === "true") {
+      return;
+    }
+
+    button.dataset.bound = "true";
+    button.addEventListener("click", () => {
+      const payslipId = button.getAttribute("data-payslip-id") || "";
+      if (payslipId) {
+        handleDownloadPayslipPdf(payslipId, root);
+      }
+    });
+  });
+
   if (modal.dataset.bound === "true") {
     return;
   }
@@ -280,6 +352,19 @@ export function bindPayslipModal(root = document) {
 
     if (event.target.closest("[data-action='close-payslip-modal']")) {
       closePayslipModal(root);
+      return;
+    }
+
+    if (event.target.closest("[data-action='print-payslip']")) {
+      handlePrintPayslip(root);
+      return;
+    }
+
+    if (event.target.closest("[data-action='download-payslip-pdf']")) {
+      const payslipId = currentPayslipDetail?.id || "";
+      if (payslipId) {
+        handleDownloadPayslipPdf(payslipId, root);
+      }
     }
   });
 
