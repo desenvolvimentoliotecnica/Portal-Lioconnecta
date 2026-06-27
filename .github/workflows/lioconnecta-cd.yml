@@ -97,7 +97,7 @@ jobs:
             -OutputRoot "${{ needs.resolve-context.outputs.package_directory }}"
 
       - name: Upload deploy package
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ needs.resolve-context.outputs.artifact_name }}
           path: ${{ needs.resolve-context.outputs.package_directory }}
@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ needs.resolve-context.outputs.artifact_name }}-tests
           path: "**/*.trx"
@@ -120,7 +120,7 @@ jobs:
     environment: ${{ needs.resolve-context.outputs.environment_name }}
     steps:
       - name: Download deploy package
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v7
         with:
           name: ${{ needs.resolve-context.outputs.artifact_name }}
           path: ./deploy-package
