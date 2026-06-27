@@ -64,15 +64,15 @@ jobs:
     needs: resolve-context
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -97,7 +97,7 @@ jobs:
             -OutputRoot "${{ needs.resolve-context.outputs.package_directory }}"
 
       - name: Upload deploy package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ needs.resolve-context.outputs.artifact_name }}
           path: ${{ needs.resolve-context.outputs.package_directory }}
@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ needs.resolve-context.outputs.artifact_name }}-tests
           path: "**/*.trx"
@@ -120,7 +120,7 @@ jobs:
     environment: ${{ needs.resolve-context.outputs.environment_name }}
     steps:
       - name: Download deploy package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: ${{ needs.resolve-context.outputs.artifact_name }}
           path: ./deploy-package
