@@ -1,10 +1,11 @@
 import { showToast } from "../core/feedback.js?v=0.12.10";
-import { APP_VERSION } from "../core/runtimeConfig.js?v=0.12.10";
+import { APP_VERSION } from "../core/runtimeConfig.js?v=0.13.1";
 import {
+  ensureValidPortalSession,
   getStoredPortalSession,
   loginWithLdap,
   resolvePortalPostLoginTarget
-} from "../services/portalAuthService.js?v=0.12.8";
+} from "../services/portalAuthService.js?v=0.13.0";
 
 function renderVersionBadge() {
   const badge = document.querySelector(".app-version-badge");
@@ -67,19 +68,25 @@ function bindPortalLoginForm() {
   });
 }
 
-function tryRestorePortalSession() {
-  const session = getStoredPortalSession();
-  if (!session) {
+async function tryRestorePortalSession() {
+  if (!getStoredPortalSession()) {
     return;
   }
 
-  redirectToPortal(resolvePortalPostLoginTarget());
+  try {
+    const validated = await ensureValidPortalSession();
+    if (validated) {
+      redirectToPortal(resolvePortalPostLoginTarget());
+    }
+  } catch (error) {
+    console.warn("Sessao local encontrada, mas a API ainda nao respondeu para validacao.", error);
+  }
 }
 
 function bootstrapLogin() {
   renderVersionBadge();
   bindPortalLoginForm();
-  tryRestorePortalSession();
+  void tryRestorePortalSession();
 }
 
 bootstrapLogin();

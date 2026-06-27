@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PortalRH.Api.Contracts.Admin.Auth;
 using PortalRH.Api.Contracts.Admin.PortalUsers;
+using PortalRH.Api.Contracts.MoodSurvey;
 using PortalRH.Api.Data;
 using PortalRH.Api.Domain;
 using PortalRH.Api.Interfaces;
@@ -136,6 +137,34 @@ public class PortalUserAdminService : IPortalUserAdminService
                 item.CreatedAtUtc))
             .ToListAsync(cancellationToken);
 
+        var recentMoodSurveyEntries = await _dbContext.MoodSurveyAuditLogs
+            .AsNoTracking()
+            .Include(item => item.PortalUser)
+            .OrderByDescending(item => item.CreatedAtUtc)
+            .Take(12)
+            .ToListAsync(cancellationToken);
+
+        var moodSurveyAuditDtos = recentMoodSurveyEntries
+            .Select(item =>
+            {
+                var option = MoodSurveyOptionCatalog.Find(item.OptionKey);
+                return new MoodSurveyAuditLogDto(
+                    item.Id,
+                    item.PortalUserId,
+                    item.ActorDisplayName,
+                    item.PortalUser?.Department,
+                    item.OptionKey,
+                    option?.Label ?? item.OptionKey,
+                    option?.Emoji ?? "🙂",
+                    item.ActionType,
+                    MoodSurveyAuditActionTypes.GetLabel(item.ActionType),
+                    item.IpAddress,
+                    item.Origin,
+                    item.SurveyDate,
+                    item.CreatedAtUtc);
+            })
+            .ToList();
+
         return new PortalUserAdminListResponse(
             items.Select(MapToDto).ToList(),
             summary,
@@ -153,6 +182,7 @@ public class PortalUserAdminService : IPortalUserAdminService
                 .ToList(),
             recentLogins,
             recentAuditEntries,
+            moodSurveyAuditDtos,
             currentPage,
             currentPageSize,
             totalItems,
@@ -291,7 +321,8 @@ public class PortalUserAdminService : IPortalUserAdminService
             users.Count(item => item.Role == PortalUserRoleCatalog.PortalAdmin),
             authEvents.Count(item => item.IsSuccess && item.EventType == PortalAuthEventTypes.LoginSuccess),
             authEvents.Count(item => !item.IsSuccess && item.EventType == PortalAuthEventTypes.LoginFailure),
-            authEvents.Count(item => item.EventType == PortalAuthEventTypes.Logout));
+            authEvents.Count(item => item.EventType == PortalAuthEventTypes.Logout),
+            await _dbContext.MoodSurveyAuditLogs.AsNoTracking().CountAsync(cancellationToken));
     }
 
     private async Task WriteAuditAsync(

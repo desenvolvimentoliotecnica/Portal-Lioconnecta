@@ -24,13 +24,13 @@ export async function getCarouselData() {
     return mapCarouselViewModel({
       title: "COMUNICACAO CENTRALIZADA",
       slides: mapCommunicationSlides(apiItems)
-    });
+    }, { allowDefaults: false });
   } catch (error) {
     console.error("Falha ao carregar carrossel de comunicados.", error);
     return mapCarouselViewModel({
       title: "COMUNICACAO CENTRALIZADA",
       slides: [],
       errorMessage: "Não foi possível carregar os comunicados publicados com imagem."
-    });
+    }, { allowDefaults: false });
   }
 }

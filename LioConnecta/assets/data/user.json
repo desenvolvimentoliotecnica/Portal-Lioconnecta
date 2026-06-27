@@ -32,6 +32,6 @@
   "composer": {
     "title": "No que você está pensando?",
     "placeholder": "Compartilhe uma atualização com a equipe...",
-    "actions": ["Foto", "Evento", "Comunicado", "Conquista"]
+    "actions": ["Adicionar fotos"]
   }
 }

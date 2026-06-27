@@ -1,6 +1,7 @@
 import { getJson, patchJson } from "./apiClient.js";
 import { resolveApiEndpoint } from "../core/runtimeConfig.js";
 import { getStoredPortalSession } from "./portalAuthService.js";
+import { mapMoodAuditEntry } from "./moodSurveyDashboardService.js";
 
 function normalizeText(value, fallback = "") {
   const text = String(value ?? "").trim();
@@ -178,7 +179,8 @@ export async function listPortalUsers(query = {}, options = {}) {
       portalAdmins: Number(payload?.summary?.portalAdmins ?? 0),
       loginEvents: Number(payload?.summary?.loginEvents ?? 0),
       failedLoginEvents: Number(payload?.summary?.failedLoginEvents ?? 0),
-      logoutEvents: Number(payload?.summary?.logoutEvents ?? 0)
+      logoutEvents: Number(payload?.summary?.logoutEvents ?? 0),
+      moodSurveyEvents: Number(payload?.summary?.moodSurveyEvents ?? 0)
     },
     roleOptions: Array.isArray(payload?.roleOptions) ? payload.roleOptions.map(mapRoleOption) : [],
     departmentOptions: Array.isArray(payload?.departmentOptions)
@@ -202,6 +204,9 @@ export async function listPortalUsers(query = {}, options = {}) {
       : [],
     recentLogins: Array.isArray(payload?.recentLogins) ? payload.recentLogins.map(mapLoginEvent) : [],
     recentAuditEntries: Array.isArray(payload?.recentAuditEntries) ? payload.recentAuditEntries.map(mapAuditEntry) : [],
+    recentMoodSurveyEntries: Array.isArray(payload?.recentMoodSurveyEntries)
+      ? payload.recentMoodSurveyEntries.map(mapMoodAuditEntry)
+      : [],
     page: Number(payload?.page ?? 1),
     pageSize: Number(payload?.pageSize ?? 8),
     totalItems: Number(payload?.totalItems ?? 0),

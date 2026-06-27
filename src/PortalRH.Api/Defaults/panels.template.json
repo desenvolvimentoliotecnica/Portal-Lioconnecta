@@ -1,0 +1,101 @@
+{
+  "leftPanels": [
+    {
+      "title": "MINHA JORNADA",
+      "moduleKey": "home",
+      "items": [
+        { "label": "Tarefas Pendentes", "badge": "5", "url": "#minha-jornada/tarefas" },
+        { "label": "Solicitacoes em Andamento", "badge": "3", "url": "#minha-jornada/solicitacoes" },
+        { "label": "Trilhas de Aprendizagem", "badge": "2", "url": "#minha-jornada/trilhas" },
+        { "label": "Documentos Recentes", "badge": "4", "url": "#minha-jornada/documentos" }
+      ]
+    },
+    {
+      "title": "MEU PAINEL",
+      "moduleKey": "home",
+      "items": [
+        { "label": "Notificacoes Totais", "badge": "20" },
+        { "label": "Comunicados Novos", "badge": "4" },
+        { "label": "Interacoes no Feed", "badge": "6" },
+        { "label": "Aprovacoes Pendentes", "badge": "2" },
+        { "label": "Eventos/Reunioes", "badge": "5" },
+        { "label": "Aniversarios", "badge": "1" },
+        { "label": "Atualizacoes de Sistema", "badge": "2" }
+      ]
+    },
+    {
+      "title": "SISTEMAS CORPORATIVOS",
+      "moduleKey": "home",
+      "items": [
+        { "label": "Corporativos" },
+        { "label": "Google Workspace" },
+        { "label": "SISTEMAS" },
+        { "label": "PROJETOS" },
+        { "label": "RECURSOS" }
+      ]
+    },
+    {
+      "title": "INDICADORES RAPIDOS",
+      "moduleKey": "home",
+      "items": [
+        { "label": "Presenca Hoje", "value": "92%" },
+        { "label": "Chamados Abertos", "value": "14" },
+        { "label": "Projetos Ativos", "value": "7" },
+        { "label": "Eventos da Semana", "value": "5" },
+        { "label": "Treinamentos do Mes", "value": "3" }
+      ]
+    }
+  ],
+  "rightPanels": [
+    {
+      "type": "quick-links",
+      "title": "ACESSOS RAPIDOS",
+      "moduleKey": "quick-links",
+      "items": [
+        { "className": "sap", "label": "Gestao Integrada", "shortLabel": "SAP" },
+        { "className": "google", "label": "Google Workspace", "shortLabel": "G" },
+        { "className": "service", "label": "ServiceNow", "shortLabel": "◉" },
+        { "className": "teams", "label": "Microsoft Teams", "shortLabel": "T" },
+        { "className": "learn", "label": "e-Learning Treinamentos", "shortLabel": "▤" },
+        { "className": "jira", "label": "Jira/Confluence", "shortLabel": "◆" },
+        { "className": "sap", "label": "Ferias", "shortLabel": "FR" },
+        { "className": "google", "label": "Holerite", "shortLabel": "HL" },
+        { "className": "teams", "label": "Beneficios", "shortLabel": "BF" },
+        { "className": "learn", "label": "Ponto", "shortLabel": "PT" }
+      ]
+    },
+    {
+      "type": "profile",
+      "title": "MEU PERFIL RH",
+      "moduleKey": "hr-profile",
+      "name": "Colaborador",
+      "subtitle": "",
+      "items": [
+        "Ferias (Consultar/Solicitar)",
+        "Holerite",
+        "Beneficios (Seguro/VT)",
+        "Minha Avaliacao",
+        "Dados Cadastrais",
+        "Ponto",
+        "Treinamentos",
+        "Chamados RH"
+      ]
+    },
+    {
+      "title": "AGENDA",
+      "moduleKey": "agenda",
+      "items": [
+        { "label": "09:00 • Daily RH" },
+        { "label": "10:00 • Comite de Pessoas" },
+        { "label": "11:00 • Alinhamento com TI" },
+        { "label": "13:30 • Revisao de Projetos" },
+        { "label": "14:30 • Reuniao com Comunicacao Interna" },
+        { "label": "15:00 • Follow-up de Contratacoes" },
+        { "label": "16:00 • Planejamento de Treinamentos" },
+        { "label": "17:00 • Revisao de Indicadores RH" },
+        { "label": "17:30 • Comite de Cultura" },
+        { "label": "18:00 • Encerramento Executivo" }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,9 @@
 import { renderEmptyState } from "../components/cards.js";
 import { escapeHtml } from "../components/html.js";
+import { renderRhAdminHero } from "../people/adminNav.js";
+import { renderPollAdminWizardModal } from "./adminPollWizard.js";
+import { renderHomePollCarousel } from "./pollHomeCarousel.js";
+import { renderPollInteractionBlock } from "./pollVoteUi.js";
 
 function renderPollAttachment(poll, className = "") {
   if (!poll?.attachmentUrl || !poll?.attachmentLabel) {
@@ -82,40 +86,6 @@ function renderPollStatsCard(label, value, detail, tone = "brand") {
   `;
 }
 
-function renderPollOptionBar(option, showResults = false) {
-  const extra = showResults
-    ? `<span class="poll-option-result">${escapeHtml(String(option.votes))} voto(s) • ${escapeHtml(String(option.percentage))}%</span>`
-    : `<span class="poll-option-result">${option.isSelected ? "Seu voto" : "Escolha disponivel"}</span>`;
-
-  return `
-    <div class="poll-option-bar ${option.isSelected ? "is-selected" : ""}">
-      <div class="poll-option-bar__top">
-        <strong>${escapeHtml(option.label)}</strong>
-        ${extra}
-      </div>
-      <div class="poll-option-bar__track">
-        <span style="width:${showResults ? Math.min(option.percentage, 100) : 0}%"></span>
-      </div>
-    </div>
-  `;
-}
-
-function renderPollVoteInput(poll, option, index) {
-  const type = poll.allowMultipleChoices ? "checkbox" : "radio";
-
-  return `
-    <label class="poll-vote-choice ${option.isSelected ? "is-selected" : ""}">
-      <input
-        type="${type}"
-        name="poll-choice-${escapeHtml(poll.id)}"
-        value="${escapeHtml(option.id)}"
-        ${option.isSelected ? "checked" : ""}
-      />
-      <span>${escapeHtml(option.label)}</span>
-    </label>
-  `;
-}
-
 function renderPollMeta(poll) {
   return `
     <div class="poll-meta-row">
@@ -127,36 +97,8 @@ function renderPollMeta(poll) {
   `;
 }
 
-function renderPollVoteForm(poll, compact = false) {
-  return `
-    <form class="poll-vote-form" data-action="submit-poll-vote" data-poll-id="${escapeHtml(poll.id)}">
-      <div class="poll-vote-options ${compact ? "is-compact" : ""}">
-        ${poll.options.map(renderPollVoteInput.bind(null, poll)).join("")}
-      </div>
-      <div class="poll-vote-actions">
-        <button type="submit" class="feed-composer-submit">Registrar voto</button>
-        ${poll.allowMultipleChoices
-          ? '<span class="poll-form-hint">Voce pode selecionar mais de uma opcao.</span>'
-          : '<span class="poll-form-hint">Escolha apenas uma alternativa.</span>'}
-      </div>
-    </form>
-  `;
-}
-
-function renderPollResults(poll) {
-  return `
-    <div class="poll-results-list">
-      ${poll.options.map((option) => renderPollOptionBar(option, true)).join("")}
-    </div>
-  `;
-}
-
 function renderPollCard(poll) {
-  const footer = poll.status === "Published" && !poll.hasVoted
-    ? renderPollVoteForm(poll, true)
-    : poll.resultsVisible
-      ? renderPollResults(poll)
-      : `<div class="poll-results-locked"><i class="fa-solid fa-lock"></i><span>Os resultados serao exibidos ${escapeHtml(poll.resultsVisibilityLabel.toLowerCase())}.</span></div>`;
+  const footer = renderPollInteractionBlock(poll, { compact: true });
 
   return `
     <article class="card poll-card">
@@ -202,26 +144,7 @@ export function renderHomePollHighlight(poll) {
     return "";
   }
 
-  return `
-    <section class="card poll-home-card">
-      <div class="card-header">ENQUETE DA SEMANA</div>
-      <div class="poll-home-card__body">
-        <div class="poll-home-card__copy">
-          <div class="comm-meta-row">
-            <span class="comm-tag comm-tag--solid">${escapeHtml(poll.statusLabel)}</span>
-            <span class="comm-tag">${escapeHtml(String(poll.totalVotes))} voto(s)</span>
-          </div>
-          <h3>${escapeHtml(poll.title)}</h3>
-          <p>${escapeHtml(poll.summary)}</p>
-          <div class="poll-home-card__actions">
-            <a href="#enquetes/leitura/${escapeHtml(poll.slug)}" class="feed-composer-submit">Responder agora</a>
-            ${renderPollAttachment(poll)}
-          </div>
-        </div>
-        ${renderPollMedia(poll, { cover: true })}
-      </div>
-    </section>
-  `;
+  return renderHomePollCarousel([poll]);
 }
 
 export function renderPollsHub(data, { canManage = false } = {}) {
@@ -242,11 +165,7 @@ export function renderPollsHub(data, { canManage = false } = {}) {
           </div>
           <div class="poll-featured-card__vote">
             ${renderPollMedia(data.featured, { cover: true })}
-            ${data.featured.status === "Published" && !data.featured.hasVoted
-              ? renderPollVoteForm(data.featured)
-              : data.featured.resultsVisible
-                ? renderPollResults(data.featured)
-                : `<div class="poll-results-locked"><i class="fa-solid fa-lock"></i><span>Resultados ocultos ate a proxima etapa desta enquete.</span></div>`}
+            ${renderPollInteractionBlock(data.featured)}
           </div>
         </div>
       </section>
@@ -305,11 +224,7 @@ export function renderPollDetailPage(poll) {
         </div>
         ${renderPollMeta(poll)}
         ${renderPollAttachment(poll)}
-        ${poll.status === "Published" && !poll.hasVoted
-          ? renderPollVoteForm(poll)
-          : poll.resultsVisible
-            ? renderPollResults(poll)
-            : `<div class="poll-results-locked"><i class="fa-solid fa-lock"></i><span>Os resultados ainda nao podem ser exibidos.</span></div>`}
+        ${renderPollInteractionBlock(poll)}
       </div>
     </section>
   `;
@@ -364,21 +279,6 @@ function renderAdminPollCard(item) {
   `;
 }
 
-function renderAdminOptionEditor(option = {}, index = 0) {
-  return `
-    <div class="poll-option-editor" data-option-row>
-      <input type="hidden" name="optionId" value="${escapeHtml(option.id || "")}" />
-      <label class="communication-form-field">
-        <span>Opcao ${index + 1}</span>
-        <input type="text" name="optionLabel" value="${escapeHtml(option.label || "")}" placeholder="Descreva a alternativa" />
-      </label>
-      <button type="button" class="comm-tertiary-button" data-action="remove-poll-option">
-        <i class="fa-solid fa-trash"></i>
-      </button>
-    </div>
-  `;
-}
-
 export function renderAdminPollsPage(data, selectedPoll = null) {
   const editing = Boolean(selectedPoll?.id);
   const formPoll = selectedPoll || {
@@ -400,112 +300,30 @@ export function renderAdminPollsPage(data, selectedPoll = null) {
   };
 
   return [
-    renderPollHero(data, true),
+    renderRhAdminHero({
+      title: "Enquetes",
+      description: data.intro.subtitle
+    }),
     `<section class="comm-kpi-grid">
       ${renderPollStatsCard("Enquetes cadastradas", data.summary.totalPolls, "Base editorial", "brand")}
       ${renderPollStatsCard("Publicadas", data.summary.publishedPolls, "Disponiveis no portal", "success")}
       ${renderPollStatsCard("Encerradas", data.summary.closedPolls, "Historico consolidado", "info")}
       ${renderPollStatsCard("Votos acumulados", data.summary.totalVotes, "Participacao registrada", "danger")}
     </section>`,
-    `<section class="poll-admin-layout">
+    `<section class="poll-admin-layout poll-admin-layout--list-only">
       <div class="card">
-        <div class="card-header">Enquetes publicadas e rascunhos</div>
+        <div class="card-header poll-admin-list__header">
+          <span>Enquetes publicadas e rascunhos</span>
+          <button type="button" class="feed-composer-submit" data-action="admin-poll-create">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            Nova enquete
+          </button>
+        </div>
         <div class="poll-admin-list">
           ${data.items.length ? data.items.map(renderAdminPollCard).join("") : renderEmptyState("Nenhuma enquete cadastrada", data.intro.loadError || "Crie a primeira enquete para iniciar o modulo editorial.")}
         </div>
       </div>
-      <div class="card">
-        <div class="card-header">${editing ? "Editar enquete" : "Nova enquete"}</div>
-        <form id="admin-poll-form" class="poll-admin-form" data-mode="${editing ? "edit" : "create"}" data-poll-id="${escapeHtml(formPoll.id || "")}">
-          <div class="communication-form-grid">
-            <label class="communication-form-field communication-form-field--full">
-              <span>Titulo</span>
-              <input type="text" name="title" value="${escapeHtml(formPoll.title || "")}" placeholder="Qual pauta devemos priorizar?" />
-            </label>
-            <label class="communication-form-field communication-form-field--full">
-              <span>Resumo</span>
-              <textarea name="summary" rows="3" placeholder="Contextualize o objetivo da enquete">${escapeHtml(formPoll.summary || "")}</textarea>
-            </label>
-            <label class="communication-form-field communication-form-field--full">
-              <span>Descricao completa</span>
-              <textarea name="body" rows="6" placeholder="Explique o motivo, o criterio de escolha e o prazo da enquete">${escapeHtml(formPoll.body || "")}</textarea>
-            </label>
-            ${renderPollAssetUploader({
-              assetType: "image",
-              label: "Imagem da enquete",
-              inputName: "pollImageFile",
-              valueName: "imageUrl",
-              value: formPoll.imageUrl || "",
-              accept: "image/*",
-              buttonLabel: "Enviar imagem",
-              helper: "Use PNG, JPG, WEBP ou GIF.",
-              previewType: "image"
-            })}
-            <label class="communication-form-field">
-              <span>Rotulo do anexo</span>
-              <input type="text" name="attachmentLabel" value="${escapeHtml(formPoll.attachmentLabel || "")}" placeholder="Baixar material complementar" />
-            </label>
-            ${renderPollAssetUploader({
-              assetType: "attachment",
-              label: "Arquivo anexo",
-              inputName: "pollAttachmentFile",
-              valueName: "attachmentUrl",
-              value: formPoll.attachmentUrl || "",
-              accept: ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip",
-              buttonLabel: "Enviar anexo",
-              helper: "Use PDF, Office, TXT ou ZIP.",
-              previewType: "attachment"
-            })}
-            <label class="communication-form-field">
-              <span>Publico</span>
-              <input type="text" name="audience" value="${escapeHtml(formPoll.audience || "Toda a companhia")}" />
-            </label>
-            <label class="communication-form-field">
-              <span>Status</span>
-              <select name="status">
-                ${data.statusOptions.map((option) => `<option value="${escapeHtml(option.key)}" ${option.key === formPoll.status ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
-              </select>
-            </label>
-            <label class="communication-form-field">
-              <span>Publicacao</span>
-              <input type="datetime-local" name="publishedAtUtc" value="${escapeHtml(formPoll.publishedAtEditorValue || "")}" />
-            </label>
-            <label class="communication-form-field">
-              <span>Encerramento</span>
-              <input type="datetime-local" name="closesAtUtc" value="${escapeHtml(formPoll.closesAtEditorValue || "")}" />
-            </label>
-            <label class="communication-form-field">
-              <span>Visibilidade dos resultados</span>
-              <select name="resultsVisibility">
-                ${data.resultsVisibilityOptions.map((option) => `<option value="${escapeHtml(option.key)}" ${option.key === formPoll.resultsVisibility ? "selected" : ""}>${escapeHtml(option.label)}</option>`).join("")}
-              </select>
-            </label>
-            <div class="communication-form-field">
-              <span>Preferencias</span>
-              <label class="communication-checkbox-wrap"><input type="checkbox" name="allowMultipleChoices" ${formPoll.allowMultipleChoices ? "checked" : ""} /> Permitir multipla escolha</label>
-              <label class="communication-checkbox-wrap"><input type="checkbox" name="isFeatured" ${formPoll.isFeatured ? "checked" : ""} /> Destacar na home</label>
-            </div>
-          </div>
-          <div class="poll-admin-options-editor">
-            <div class="poll-admin-options-editor__head">
-              <strong>Alternativas da enquete</strong>
-              <button type="button" class="comm-secondary-button" data-action="add-poll-option">Adicionar opcao</button>
-            </div>
-            <div id="poll-option-list">
-              ${(formPoll.options || []).map(renderAdminOptionEditor).join("")}
-            </div>
-          </div>
-          <div class="communication-form-actions communication-form-actions--spread">
-            <div class="communication-form-footnote">
-              O salvamento publica as opcoes exatamente na ordem exibida acima.
-            </div>
-            <div class="communication-form-action-group">
-              <button type="submit" class="feed-composer-submit">${editing ? "Salvar alteracoes" : "Criar enquete"}</button>
-              <button type="button" class="comm-tertiary-button" data-action="admin-poll-reset">Limpar</button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </section>`
+    </section>`,
+    renderPollAdminWizardModal(data, formPoll, editing)
   ].join("");
 }

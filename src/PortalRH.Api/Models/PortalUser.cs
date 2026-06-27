@@ -23,6 +23,7 @@ public class PortalUser
     public int FailedLoginCount { get; set; }
     public string? LastKnownIpAddress { get; set; }
     public string? LastOrigin { get; set; }
+    public string? PasswordHash { get; set; }
 
     public ICollection<PortalSession> Sessions { get; set; } = new List<PortalSession>();
     public ICollection<PortalUserLoginEvent> LoginEvents { get; set; } = new List<PortalUserLoginEvent>();

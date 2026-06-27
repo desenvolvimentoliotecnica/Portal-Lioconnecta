@@ -122,6 +122,23 @@ export async function patchJson(url, payload, options = {}) {
   return response.json();
 }
 
+export async function deleteJson(url, options = {}) {
+  const response = await fetch(url, {
+    method: "DELETE",
+    ...options
+  });
+
+  if (!response.ok) {
+    throw new Error(`Falha ao excluir em ${url}: HTTP ${response.status}`);
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  return response.json();
+}
+
 export function unwrapDataEnvelope(payload, { fallback = {} } = {}) {
   if (payload && typeof payload === "object" && "data" in payload) {
     return payload.data ?? fallback;

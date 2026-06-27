@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using PortalRH.Api.Data;
 using PortalRH.Api.Interfaces;
+using PortalRH.Api.Infrastructure;
 using PortalRH.Api.Models;
 using PortalRH.Api.Services;
 
@@ -18,14 +19,37 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IFeedService, FeedService>();
 builder.Services.AddScoped<ICommunicationService, CommunicationService>();
 builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<MicrosoftGraphAuthClient>();
+builder.Services.AddScoped<MicrosoftGraphConnectionTester>();
+builder.Services.AddScoped<IMicrosoftGraphUserPhotoService, MicrosoftGraphUserPhotoService>();
+builder.Services.AddScoped<IMicrosoftGraphCalendarService, MicrosoftGraphCalendarService>();
 builder.Services.AddScoped<ILdapConfigurationService, LdapConfigurationService>();
+builder.Services.AddScoped<IMicrosoftGraphConfigurationService, MicrosoftGraphConfigurationService>();
 builder.Services.AddScoped<IPortalAuthService, PortalAuthService>();
 builder.Services.AddScoped<IPortalUserAdminService, PortalUserAdminService>();
 builder.Services.AddScoped<IPollService, PollService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IAgendaService, AgendaService>();
+builder.Services.AddScoped<IMoodSurveyService, MoodSurveyService>();
+builder.Services.AddScoped<IMoodSurveyFeedbackService, MoodSurveyFeedbackService>();
+builder.Services.AddScoped<IPortalShellService, PortalShellService>();
+builder.Services.AddScoped<IPortalPanelsComposer, PortalPanelsComposer>();
+builder.Services.AddScoped<IQuickLinkService, QuickLinkService>();
+builder.Services.AddScoped<IJourneyService, JourneyService>();
+builder.Services.AddScoped<IJourneyWorkspaceService, JourneyWorkspaceService>();
+builder.Services.AddScoped<IKpiService, KpiService>();
+builder.Services.AddScoped<IHrProfileService, HrProfileService>();
+builder.Services.AddScoped<IHrWorkspaceService, HrWorkspaceService>();
+builder.Services.AddScoped<ICorporateSystemsService, CorporateSystemsService>();
 builder.Services.AddScoped<ILdapDirectoryAuthenticator, LdapDirectoryAuthenticator>();
 builder.Services.AddScoped<IPasswordHasher<AdminUser>, PasswordHasher<AdminUser>>();
+builder.Services.AddScoped<IPasswordHasher<PortalUser>, PasswordHasher<PortalUser>>();
+builder.Services.AddScoped<IPortalUserSeedService, PortalUserSeedService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("LioConnectaLocal", policy =>
@@ -67,8 +91,11 @@ if (string.IsNullOrWhiteSpace(webRootPath))
     webRootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
 }
 
+var uploadsRoot = PortalUploadPaths.ResolveUploadsRoot(builder.Configuration, builder.Environment);
+
 Directory.CreateDirectory(webRootPath);
-Directory.CreateDirectory(Path.Combine(webRootPath, "uploads"));
+PortalUploadPaths.EnsureFeedUploadsReady(builder.Configuration, builder.Environment);
+uploadsRoot = PortalUploadPaths.ResolveUploadsRoot(builder.Configuration, builder.Environment);
 
 if (app.Environment.IsDevelopment())
 {
@@ -77,10 +104,30 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("LioConnectaLocal");
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new
+        {
+            message = "Erro interno ao processar a requisicao."
+        });
+    });
+});
+
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(webRootPath),
     RequestPath = ""
+});
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsRoot),
+    RequestPath = "/uploads"
 });
 app.UseAuthorization();
 app.MapControllers();

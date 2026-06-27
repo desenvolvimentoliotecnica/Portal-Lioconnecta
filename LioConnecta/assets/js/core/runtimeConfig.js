@@ -1,10 +1,12 @@
-export const APP_VERSION = "v0.12.10";
+export const APP_VERSION = "v0.23.7";
 
 export const DATA_MODES = Object.freeze({
   MOCK: "mock",
   LOCAL: "local",
   API: "api"
 });
+
+const MOCK_SHELL_DOMAINS = new Set(["carousel"]);
 
 function resolveDefaultApiBaseUrl() {
   const currentWindow = getWindowObject();
@@ -18,6 +20,17 @@ function resolveDefaultApiBaseUrl() {
 
 function isLoopbackHost(hostname) {
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
+function resolveDefaultDataMode() {
+  const currentWindow = getWindowObject();
+  const hostname = currentWindow?.location?.hostname;
+
+  if (!hostname) {
+    return DATA_MODES.MOCK;
+  }
+
+  return isLoopbackHost(hostname) ? DATA_MODES.MOCK : DATA_MODES.API;
 }
 
 function normalizeApiBaseUrl(candidate) {
@@ -42,16 +55,33 @@ function normalizeApiBaseUrl(candidate) {
 }
 
 const DEFAULT_RUNTIME_CONFIG = Object.freeze({
-  dataMode: DATA_MODES.MOCK,
+  dataMode: resolveDefaultDataMode(),
   localBasePath: "./local-api",
   apiBaseUrl: "",
   endpoints: {
     user: "/me-ui",
     feed: "/feed",
+    feedAssets: "/feed/assets",
     panels: "/panels",
     carousel: "/carousel",
     communications: "/communications",
+    notifications: "/notifications",
+    agenda: "/agenda",
     polls: "/polls",
+    quickLinks: "/quick-links",
+    journey: "/journey/summary",
+    journeyTarefas: "/journey/tarefas",
+    journeySolicitacoes: "/journey/solicitacoes",
+    journeyTrilhas: "/journey/trilhas",
+    journeyDocumentos: "/journey/documentos",
+    kpis: "/kpis/summary",
+    hrProfile: "/hr/profile",
+    hrFerias: "/hr/ferias",
+    hrHolerite: "/hr/holerite",
+    hrBeneficios: "/hr/beneficios",
+    hrAvaliacao: "/hr/avaliacao",
+    hrCadastro: "/hr/cadastro",
+    hrPonto: "/hr/ponto",
     portalLdapLogin: "/auth/ldap/login",
     portalSession: "/auth/session",
     portalLogout: "/auth/logout",
@@ -59,12 +89,18 @@ const DEFAULT_RUNTIME_CONFIG = Object.freeze({
     adminSession: "/admin/auth/session",
     adminLogout: "/admin/auth/logout",
     adminLdap: "/admin/ldap",
+    adminMicrosoftGraph: "/admin/microsoft-graph",
     adminPolls: "/admin/polls",
     adminPollAssets: "/admin/polls/assets",
     adminPortalUsers: "/admin/portal-users",
     adminPortalUserStatus: "/admin/portal-users/{id}/status",
     adminPortalUserRole: "/admin/portal-users/{id}/role",
-    adminPortalUserPermission: "/admin/portal-users/{id}/permissions"
+    adminPortalUserPermission: "/admin/portal-users/{id}/permissions",
+    moodSurveyToday: "/mood-survey/today",
+    moodSurveyVote: "/mood-survey/vote",
+    moodSurveyDashboard: "/mood-survey/dashboard",
+    adminMoodSurveyDashboard: "/admin/mood-survey/dashboard",
+    moodSurveyFeedbackMessages: "/mood-survey/feedback-messages"
   }
 });
 
@@ -111,11 +147,17 @@ function joinUrl(base, path) {
 export function getRuntimeConfig() {
   const stored = readStoredConfig();
   const params = getUrlParams();
+  const hostname = getWindowObject()?.location?.hostname;
+  const prefersApiHost = Boolean(hostname && !isLoopbackHost(hostname));
+  const storedMode = stored.dataMode;
+  const effectiveStoredMode = prefersApiHost && storedMode === DATA_MODES.MOCK
+    ? undefined
+    : storedMode;
 
   const dataMode = normalizeMode(
     params.get("dataMode") ??
-    stored.dataMode ??
-    DEFAULT_RUNTIME_CONFIG.dataMode
+    effectiveStoredMode ??
+    resolveDefaultDataMode()
   );
 
   const localBasePath = params.get("localBasePath") ?? stored.localBasePath ?? DEFAULT_RUNTIME_CONFIG.localBasePath;
@@ -161,7 +203,9 @@ export function resolveDataSource(domain) {
     feed: joinUrl(config.apiBaseUrl, config.endpoints.feed),
     panels: joinUrl(config.apiBaseUrl, config.endpoints.panels),
     carousel: joinUrl(config.apiBaseUrl, config.endpoints.carousel),
-    communications: joinUrl(config.apiBaseUrl, config.endpoints.communications)
+    communications: joinUrl(config.apiBaseUrl, config.endpoints.communications),
+    notifications: joinUrl(config.apiBaseUrl, config.endpoints.notifications),
+    agenda: joinUrl(config.apiBaseUrl, config.endpoints.agenda)
   };
 
   const sourceMap = {
@@ -169,6 +213,10 @@ export function resolveDataSource(domain) {
     [DATA_MODES.LOCAL]: localSources,
     [DATA_MODES.API]: apiSources
   };
+
+  if (config.dataMode === DATA_MODES.API && MOCK_SHELL_DOMAINS.has(domain)) {
+    return mockSources[domain];
+  }
 
   return sourceMap[config.dataMode][domain];
 }

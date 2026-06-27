@@ -117,17 +117,79 @@ export async function loginWithLdap(login, password) {
   return storePortalSession(response);
 }
 
-export async function fetchPortalSession() {
+function parseHttpStatus(error) {
+  const match = String(error?.message ?? "").match(/HTTP (\d{3})/);
+  return match ? Number(match[1]) : 0;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+async function requestPortalSession() {
   const session = getStoredPortalSession();
   if (!session) {
     return null;
   }
 
-  const payload = await getJson(resolveApiEndpoint("portalSession"), {
-    headers: getPortalAuthHeaders()
-  });
+  try {
+    const payload = await getJson(resolveApiEndpoint("portalSession"), {
+      headers: getPortalAuthHeaders()
+    });
+    return storePortalSession(payload);
+  } catch (error) {
+    const status = parseHttpStatus(error);
+    if (status === 401 || status === 403) {
+      clearPortalSession();
+      return null;
+    }
 
-  return storePortalSession(payload);
+    throw error;
+  }
+}
+
+export async function fetchPortalSession() {
+  return requestPortalSession();
+}
+
+export async function ensureValidPortalSession(options = {}) {
+  const { retries = 3, retryDelayMs = 350 } = options;
+
+  if (!getStoredPortalSession()) {
+    return null;
+  }
+
+  let lastError = null;
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      const validated = await requestPortalSession();
+      if (validated) {
+        return validated;
+      }
+
+      return null;
+    } catch (error) {
+      lastError = error;
+      const status = parseHttpStatus(error);
+      if (status === 401 || status === 403) {
+        return null;
+      }
+
+      if (attempt < retries) {
+        await sleep(retryDelayMs * (attempt + 1));
+      }
+    }
+  }
+
+  const cached = getStoredPortalSession();
+  if (cached) {
+    return cached;
+  }
+
+  throw lastError ?? new Error("Falha ao validar sessao do portal.");
 }
 
 export async function logoutPortal() {

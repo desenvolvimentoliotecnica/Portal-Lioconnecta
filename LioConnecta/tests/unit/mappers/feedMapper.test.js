@@ -40,3 +40,27 @@ test("feedMapper normaliza métricas e comentários", () => {
   assert.equal(result.posts[0].comments.length, 1);
   assert.equal(result.posts[0].comments[0].author, "Paulo");
 });
+
+test("feedMapper preserva galeria de imagens do post", () => {
+  const result = mapFeedViewModel({
+    posts: [
+      {
+        author: "Leonardo",
+        text: "",
+        image: "https://example.com/foto.jpg",
+        images: [
+          {
+            url: "https://example.com/foto.jpg",
+            description: "Cardapio do dia",
+            aspectRatio: "9:16"
+          }
+        ]
+      }
+    ]
+  });
+
+  assert.equal(result.posts.length, 1);
+  assert.equal(result.posts[0].images.length, 1);
+  assert.equal(result.posts[0].images[0].description, "Cardapio do dia");
+  assert.equal(result.posts[0].images[0].aspectRatio, "9:16");
+});

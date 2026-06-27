@@ -7,7 +7,7 @@ namespace PortalRH.Api.Controllers;
 
 [ApiController]
 [Route("api/admin/polls/assets")]
-[RequireSuperAdminSession]
+[RequirePortalSession]
 public class AdminPollAssetsController : ControllerBase
 {
     private static readonly HashSet<string> AllowedImageExtensions =
@@ -31,8 +31,23 @@ public class AdminPollAssetsController : ControllerBase
     [RequestSizeLimit(20 * 1024 * 1024)]
     [ProducesResponseType(typeof(PollAssetUploadResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Upload(string assetType, IFormFile? file, CancellationToken cancellationToken)
     {
+        var session = PortalSessionHttpContext.Get(HttpContext);
+        if (session?.PortalUser is null)
+        {
+            return Unauthorized(new { message = "Sessao do portal nao encontrada." });
+        }
+
+        if (!PortalModuleAccess.CanManagePolls(session.PortalUser))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = "Voce nao possui permissao para gerenciar enquetes."
+            });
+        }
+
         if (file is null || file.Length <= 0)
         {
             return BadRequest(new { message = "Selecione um arquivo para upload." });

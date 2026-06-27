@@ -8,4 +8,5 @@ public sealed record PortalUserAdminSummaryDto(
     int PortalAdmins,
     int LoginEvents,
     int FailedLoginEvents,
-    int LogoutEvents);
+    int LogoutEvents,
+    int MoodSurveyEvents);

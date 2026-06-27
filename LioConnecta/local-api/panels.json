@@ -6,19 +6,23 @@
                                         "items":  [
                                                       {
                                                           "label":  "Tarefas Pendentes",
-                                                          "badge":  "5"
+                                                          "badge":  "5",
+                                                          "url":  "#minha-jornada/tarefas"
                                                       },
                                                       {
                                                           "label":  "SolicitaÃ§Ãµes em Andamento",
-                                                          "badge":  "3"
+                                                          "badge":  "3",
+                                                          "url":  "#minha-jornada/solicitacoes"
                                                       },
                                                       {
                                                           "label":  "Trilhas de Aprendizagem",
-                                                          "badge":  "2"
+                                                          "badge":  "2",
+                                                          "url":  "#minha-jornada/trilhas"
                                                       },
                                                       {
                                                           "label":  "Documentos Recentes",
-                                                          "badge":  "4"
+                                                          "badge":  "4",
+                                                          "url":  "#minha-jornada/documentos"
                                                       }
                                                   ]
                                     },
@@ -206,23 +210,6 @@
                                                        },
                                                        {
                                                            "label":  "18:00 â€¢ Encerramento Executivo"
-                                                       }
-                                                   ]
-                                     },
-                                     {
-                                         "title":  "COMUNICADOS",
-                                         "items":  [
-                                                       {
-                                                           "label":  "PolÃ­tica hÃ­brida atualizada"
-                                                       },
-                                                       {
-                                                           "label":  "Campanha interna de inovaÃ§Ã£o"
-                                                       },
-                                                       {
-                                                           "label":  "Nova trilha de lideranÃ§a"
-                                                       },
-                                                       {
-                                                           "label":  "CalendÃ¡rio corporativo 2026"
                                                        }
                                                    ]
                                      }

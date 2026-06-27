@@ -101,6 +101,64 @@ namespace PortalRH.Api.Data.Migrations
                     b.ToTable("admin_users", (string)null);
                 });
 
+            modelBuilder.Entity("PortalRH.Api.Models.AgendaEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Audience")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("EndAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<Guid?>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("StartAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("StartAtUtc");
+
+                    b.ToTable("agenda_events", (string)null);
+                });
+
             modelBuilder.Entity("PortalRH.Api.Models.Communication", b =>
                 {
                     b.Property<Guid>("Id")
@@ -186,6 +244,511 @@ namespace PortalRH.Api.Data.Migrations
                     b.ToTable("communications", (string)null);
                 });
 
+            modelBuilder.Entity("PortalRH.Api.Models.CommunicationInteractionAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ActorDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ActorLogin")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("CommunicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommunicationId");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.ToTable("communication_interaction_audit_logs", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.CommunicationLike", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommunicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("CommunicationId", "PortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("communication_likes", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.CommunicationSave", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommunicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("CommunicationId", "PortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("communication_saves", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.CommunicationShare", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommunicationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("CommunicationId", "PortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("communication_shares", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPost", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("DeletedAtUtc");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.ToTable("feed_posts", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ActorDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ActorLogin")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FeedPostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("FeedPostId");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.ToTable("feed_post_audit_logs", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FeedPostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Origin")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("FeedPostId", "CreatedAtUtc");
+
+                    b.ToTable("feed_post_comments", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostCommentMention", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FeedPostCommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MentionedPortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MentionedPortalUserId");
+
+                    b.HasIndex("FeedPostCommentId", "MentionedPortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("feed_post_comment_mentions", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostLike", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FeedPostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("FeedPostId", "PortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("feed_post_likes", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostMedia", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AspectRatio")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid>("FeedPostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeedPostId", "SortOrder");
+
+                    b.ToTable("feed_post_media", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostMediaComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FeedPostMediaId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Origin")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("FeedPostMediaId", "CreatedAtUtc");
+
+                    b.ToTable("feed_post_media_comments", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostMention", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FeedPostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MentionedPortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MentionedPortalUserId");
+
+                    b.HasIndex("FeedPostId", "MentionedPortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("feed_post_mentions", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostSave", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FeedPostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("FeedPostId", "PortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("feed_post_saves", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostShare", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FeedPostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("FeedPostId", "PortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("feed_post_shares", (string)null);
+                });
+
             modelBuilder.Entity("PortalRH.Api.Models.LdapConfiguration", b =>
                 {
                     b.Property<Guid>("Id")
@@ -256,6 +819,255 @@ namespace PortalRH.Api.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ldap_configurations", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.MicrosoftGraphConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("ClientSecretProtected")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserIdentifier")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("microsoft_graph_configurations", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.MoodSurveyAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ActorDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("ActorLogin")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("OptionKey")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("SurveyDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("SurveyDate");
+
+                    b.ToTable("mood_survey_audit_logs", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.MoodSurveyFeedbackMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("OptionKey")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OptionKey");
+
+                    b.HasIndex("OptionKey", "IsActive");
+
+                    b.ToTable("mood_survey_feedback_messages", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.MoodSurveyVote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("FeedbackMessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("OptionKey")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Origin")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("SurveyDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FeedbackMessageId");
+
+                    b.HasIndex("SurveyDate");
+
+                    b.HasIndex("PortalUserId", "SurveyDate")
+                        .IsUnique();
+
+                    b.ToTable("mood_survey_votes", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Audience")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Icon")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime>("PublishedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("TargetUrl")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("character varying(240)");
+
+                    b.Property<string>("Tone")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("PublishedAtUtc");
+
+                    b.HasIndex("SourceType", "SourceId")
+                        .IsUnique();
+
+                    b.ToTable("notifications", (string)null);
                 });
 
             modelBuilder.Entity("PortalRH.Api.Models.Poll", b =>
@@ -489,6 +1301,10 @@ namespace PortalRH.Api.Data.Migrations
                     b.Property<string>("ModulePermissionsJson")
                         .HasColumnType("text");
 
+                    b.Property<string>("PasswordHash")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(80)
@@ -645,6 +1461,80 @@ namespace PortalRH.Api.Data.Migrations
                     b.ToTable("portal_user_login_events", (string)null);
                 });
 
+            modelBuilder.Entity("PortalRH.Api.Models.PortalUserNotificationRead", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("NotificationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PortalUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ReadAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PortalUserId");
+
+                    b.HasIndex("NotificationId", "PortalUserId")
+                        .IsUnique();
+
+                    b.ToTable("portal_user_notification_reads", (string)null);
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.QuickLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Audience")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("ClassName")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)");
+
+                    b.Property<string>("ShortLabel")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive", "SortOrder");
+
+                    b.ToTable("quick_links", (string)null);
+                });
+
             modelBuilder.Entity("PortalRH.Api.Models.AdminSession", b =>
                 {
                     b.HasOne("PortalRH.Api.Models.AdminUser", "AdminUser")
@@ -654,6 +1544,295 @@ namespace PortalRH.Api.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("AdminUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.AgendaEvent", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.CommunicationInteractionAuditLog", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.Communication", "Communication")
+                        .WithMany()
+                        .HasForeignKey("CommunicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Communication");
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.CommunicationLike", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.Communication", "Communication")
+                        .WithMany()
+                        .HasForeignKey("CommunicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Communication");
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.CommunicationSave", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.Communication", "Communication")
+                        .WithMany()
+                        .HasForeignKey("CommunicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Communication");
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.CommunicationShare", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.Communication", "Communication")
+                        .WithMany()
+                        .HasForeignKey("CommunicationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Communication");
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPost", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostAuditLog", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.FeedPost", "FeedPost")
+                        .WithMany()
+                        .HasForeignKey("FeedPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FeedPost");
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostComment", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.FeedPost", "FeedPost")
+                        .WithMany("Comments")
+                        .HasForeignKey("FeedPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FeedPost");
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostCommentMention", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.FeedPostComment", "FeedPostComment")
+                        .WithMany("Mentions")
+                        .HasForeignKey("FeedPostCommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "MentionedPortalUser")
+                        .WithMany()
+                        .HasForeignKey("MentionedPortalUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FeedPostComment");
+
+                    b.Navigation("MentionedPortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostLike", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.FeedPost", "FeedPost")
+                        .WithMany()
+                        .HasForeignKey("FeedPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FeedPost");
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostMedia", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.FeedPost", "FeedPost")
+                        .WithMany("Media")
+                        .HasForeignKey("FeedPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FeedPost");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostMediaComment", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.FeedPostMedia", "FeedPostMedia")
+                        .WithMany("Comments")
+                        .HasForeignKey("FeedPostMediaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FeedPostMedia");
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostMention", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.FeedPost", "FeedPost")
+                        .WithMany("Mentions")
+                        .HasForeignKey("FeedPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "MentionedPortalUser")
+                        .WithMany()
+                        .HasForeignKey("MentionedPortalUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FeedPost");
+
+                    b.Navigation("MentionedPortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostSave", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.FeedPost", "FeedPost")
+                        .WithMany()
+                        .HasForeignKey("FeedPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FeedPost");
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostShare", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.FeedPost", "FeedPost")
+                        .WithMany()
+                        .HasForeignKey("FeedPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FeedPost");
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.MoodSurveyAuditLog", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PortalUser");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.MoodSurveyVote", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.MoodSurveyFeedbackMessage", "FeedbackMessage")
+                        .WithMany()
+                        .HasForeignKey("FeedbackMessageId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FeedbackMessage");
+
+                    b.Navigation("PortalUser");
                 });
 
             modelBuilder.Entity("PortalRH.Api.Models.PollOption", b =>
@@ -733,9 +1912,52 @@ namespace PortalRH.Api.Data.Migrations
                     b.Navigation("PortalUser");
                 });
 
+            modelBuilder.Entity("PortalRH.Api.Models.PortalUserNotificationRead", b =>
+                {
+                    b.HasOne("PortalRH.Api.Models.Notification", "Notification")
+                        .WithMany("Reads")
+                        .HasForeignKey("NotificationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PortalRH.Api.Models.PortalUser", "PortalUser")
+                        .WithMany()
+                        .HasForeignKey("PortalUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Notification");
+
+                    b.Navigation("PortalUser");
+                });
+
             modelBuilder.Entity("PortalRH.Api.Models.AdminUser", b =>
                 {
                     b.Navigation("Sessions");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPost", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Media");
+
+                    b.Navigation("Mentions");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostComment", b =>
+                {
+                    b.Navigation("Mentions");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.FeedPostMedia", b =>
+                {
+                    b.Navigation("Comments");
+                });
+
+            modelBuilder.Entity("PortalRH.Api.Models.Notification", b =>
+                {
+                    b.Navigation("Reads");
                 });
 
             modelBuilder.Entity("PortalRH.Api.Models.Poll", b =>

@@ -33,3 +33,9 @@ test("carouselMapper preserva href do slide", () => {
 
   assert.equal(result.slides[0].href, "#comunicacao/leitura/exemplo");
 });
+
+test("carouselMapper nao usa slides default quando allowDefaults e false", () => {
+  const result = mapCarouselViewModel({ slides: [] }, { allowDefaults: false });
+
+  assert.equal(result.slides.length, 0);
+});

@@ -11,7 +11,7 @@ test("userMapper aplica defaults para estrutura ausente", () => {
   assert.equal(result.hero.title, "Bem-vindo à LIOCONNECTA!");
   assert.equal(result.navItems.length, 6);
   assert.equal(result.mood.items.length, 3);
-  assert.deepEqual(result.composer.actions, ["Foto", "Evento", "Comunicado", "Conquista"]);
+  assert.deepEqual(result.composer.actions, ["Adicionar fotos"]);
 });
 
 test("userMapper normaliza dados válidos do contexto da home", () => {

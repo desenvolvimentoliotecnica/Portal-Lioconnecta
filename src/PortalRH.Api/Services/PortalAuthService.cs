@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PortalRH.Api.Contracts.Admin.PortalUsers;
@@ -19,6 +20,7 @@ public class PortalAuthService : IPortalAuthService
     private readonly ILdapConfigurationService _ldapConfigurationService;
     private readonly ILdapDirectoryAuthenticator _ldapDirectoryAuthenticator;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IPasswordHasher<PortalUser> _passwordHasher;
     private readonly ILogger<PortalAuthService> _logger;
 
     public PortalAuthService(
@@ -26,12 +28,14 @@ public class PortalAuthService : IPortalAuthService
         ILdapConfigurationService ldapConfigurationService,
         ILdapDirectoryAuthenticator ldapDirectoryAuthenticator,
         IHttpContextAccessor httpContextAccessor,
+        IPasswordHasher<PortalUser> passwordHasher,
         ILogger<PortalAuthService> logger)
     {
         _dbContext = dbContext;
         _ldapConfigurationService = ldapConfigurationService;
         _ldapDirectoryAuthenticator = ldapDirectoryAuthenticator;
         _httpContextAccessor = httpContextAccessor;
+        _passwordHasher = passwordHasher;
         _logger = logger;
     }
 
@@ -51,6 +55,18 @@ public class PortalAuthService : IPortalAuthService
                 now,
                 cancellationToken);
             return null;
+        }
+
+        var portalUserWithLocalPassword = await FindPortalUserByLoginAsync(login, cancellationToken);
+        if (portalUserWithLocalPassword?.PasswordHash is not null)
+        {
+            return await LoginWithLocalPasswordAsync(
+                portalUserWithLocalPassword,
+                login,
+                request.Password,
+                authContext,
+                now,
+                cancellationToken);
         }
 
         var ldapConfiguration = await _ldapConfigurationService.GetRuntimeConfigurationAsync(cancellationToken);
@@ -88,13 +104,7 @@ public class PortalAuthService : IPortalAuthService
             return null;
         }
 
-        var portalUser = await _dbContext.PortalUsers
-            .FirstOrDefaultAsync(item =>
-                item.Login == login ||
-                (item.UserPrincipalName != null && item.UserPrincipalName == login) ||
-                (item.Email != null && item.Email == login) ||
-                (item.SamAccountName != null && item.SamAccountName == login),
-                cancellationToken);
+        var portalUser = await FindPortalUserByLoginAsync(login, cancellationToken);
 
         if (authenticatedUser is null)
         {
@@ -159,6 +169,63 @@ public class PortalAuthService : IPortalAuthService
         var currentAssignments = PortalModulePermissionCatalog.DeserializeOrDefault(portalUser.ModulePermissionsJson, portalUser.Role);
         portalUser.ModulePermissionsJson = PortalModulePermissionCatalog.Serialize(currentAssignments, portalUser.Role);
 
+        return await CompleteLoginAsync(portalUser, "LDAP", authContext, now, cancellationToken);
+    }
+
+    private async Task<PortalLoginResponse?> LoginWithLocalPasswordAsync(
+        PortalUser portalUser,
+        string login,
+        string password,
+        PortalRequestAuditContext authContext,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        var verification = _passwordHasher.VerifyHashedPassword(portalUser, portalUser.PasswordHash!, password);
+        if (verification == PasswordVerificationResult.Failed)
+        {
+            await RegisterFailedAuthenticationAsync(
+                portalUser,
+                login,
+                "Credenciais invalidas.",
+                authContext,
+                now,
+                cancellationToken);
+            return null;
+        }
+
+        if (!portalUser.IsActive)
+        {
+            await RegisterFailedAuthenticationAsync(
+                portalUser,
+                login,
+                "Usuario bloqueado no portal.",
+                authContext,
+                now,
+                cancellationToken);
+            return null;
+        }
+
+        portalUser.LastLoginAtUtc = now;
+        portalUser.LastKnownIpAddress = authContext.IpAddress;
+        portalUser.LastOrigin = authContext.Origin;
+        portalUser.LastFailedLoginAtUtc = null;
+        portalUser.FailedLoginCount = 0;
+        portalUser.UpdatedAtUtc = now;
+        portalUser.Role = PortalUserRoleCatalog.Normalize(portalUser.Role);
+
+        var currentAssignments = PortalModulePermissionCatalog.DeserializeOrDefault(portalUser.ModulePermissionsJson, portalUser.Role);
+        portalUser.ModulePermissionsJson = PortalModulePermissionCatalog.Serialize(currentAssignments, portalUser.Role);
+
+        return await CompleteLoginAsync(portalUser, "Local", authContext, now, cancellationToken);
+    }
+
+    private async Task<PortalLoginResponse> CompleteLoginAsync(
+        PortalUser portalUser,
+        string authenticationProvider,
+        PortalRequestAuditContext authContext,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
         var session = new PortalSession
         {
             Id = Guid.NewGuid(),
@@ -177,7 +244,7 @@ public class PortalAuthService : IPortalAuthService
             DisplayNameSnapshot = portalUser.DisplayName,
             EmailSnapshot = portalUser.Email,
             DepartmentSnapshot = portalUser.Department,
-            AuthenticationProvider = "LDAP",
+            AuthenticationProvider = authenticationProvider,
             EventType = PortalAuthEventTypes.LoginSuccess,
             IsSuccess = true,
             IpAddress = authContext.IpAddress,
@@ -191,6 +258,17 @@ public class PortalAuthService : IPortalAuthService
             session.Token,
             session.ExpiresAtUtc,
             MapProfile(portalUser));
+    }
+
+    private Task<PortalUser?> FindPortalUserByLoginAsync(string login, CancellationToken cancellationToken)
+    {
+        return _dbContext.PortalUsers
+            .FirstOrDefaultAsync(item =>
+                item.Login == login ||
+                (item.UserPrincipalName != null && item.UserPrincipalName == login) ||
+                (item.Email != null && item.Email == login) ||
+                (item.SamAccountName != null && item.SamAccountName == login),
+                cancellationToken);
     }
 
     public async Task<PortalLoginResponse?> GetSessionAsync(string token, CancellationToken cancellationToken)

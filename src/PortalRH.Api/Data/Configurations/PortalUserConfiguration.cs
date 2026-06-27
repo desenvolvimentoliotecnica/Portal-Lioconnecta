@@ -57,6 +57,9 @@ public class PortalUserConfiguration : IEntityTypeConfiguration<PortalUser>
         builder.Property(item => item.LastOrigin)
             .HasMaxLength(240);
 
+        builder.Property(item => item.PasswordHash)
+            .HasMaxLength(512);
+
         builder.Property(item => item.CreatedAtUtc)
             .IsRequired();
 

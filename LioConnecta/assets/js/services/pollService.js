@@ -1,5 +1,6 @@
 import { getJson, patchJson, postFormData, postJson, putJson } from "./apiClient.js";
 import { resolveApiEndpoint } from "../core/runtimeConfig.js";
+import { getStoredPortalSession } from "./portalAuthService.js";
 
 const STATUS_OPTIONS = Object.freeze([
   { key: "Draft", label: "Rascunho" },
@@ -72,7 +73,7 @@ function mapOption(option = {}) {
   };
 }
 
-function mapPollItem(item = {}) {
+export function mapPollItem(item = {}) {
   return {
     id: normalizeText(item.id),
     slug: normalizeText(item.slug),
@@ -124,6 +125,7 @@ function createEmptyPublicData(loadError = "") {
       loadError
     },
     featured: null,
+    homePolls: [],
     openPolls: [],
     closedPolls: [],
     allPolls: [],
@@ -136,9 +138,47 @@ function createEmptyPublicData(loadError = "") {
   };
 }
 
+function buildHomePolls(items = []) {
+  const now = Date.now();
+
+  return items
+    .filter((poll) => {
+      if (poll.status !== "Published" || poll.hasVoted) {
+        return false;
+      }
+
+      if (poll.publishedAtUtc) {
+        const publishedAt = new Date(poll.publishedAtUtc).getTime();
+        if (!Number.isNaN(publishedAt) && publishedAt > now) {
+          return false;
+        }
+      }
+
+      if (poll.closesAtUtc) {
+        const closesAt = new Date(poll.closesAtUtc).getTime();
+        if (!Number.isNaN(closesAt) && closesAt <= now) {
+          return false;
+        }
+      }
+
+      return true;
+    })
+    .sort((left, right) => {
+      if (left.isFeatured !== right.isFeatured) {
+        return left.isFeatured ? -1 : 1;
+      }
+
+      const leftTime = new Date(left.publishedAtUtc || 0).getTime();
+      const rightTime = new Date(right.publishedAtUtc || 0).getTime();
+      return rightTime - leftTime;
+    });
+}
+
 function buildPublicData(items = [], loadError = "") {
   const mappedItems = items.map(mapPollItem);
-  const featured = mappedItems.find((item) => item.status === "Published" && item.isFeatured)
+  const homePolls = buildHomePolls(mappedItems);
+  const featured = homePolls[0]
+    || mappedItems.find((item) => item.status === "Published" && item.isFeatured)
     || mappedItems.find((item) => item.status === "Published")
     || mappedItems[0]
     || null;
@@ -153,6 +193,7 @@ function buildPublicData(items = [], loadError = "") {
       loadError
     },
     featured,
+    homePolls,
     openPolls,
     closedPolls,
     allPolls: mappedItems,
@@ -168,8 +209,8 @@ function buildPublicData(items = [], loadError = "") {
 function createEmptyAdminData(loadError = "") {
   return {
     intro: {
-      eyebrow: "ADMINISTRACAO",
-      title: "Gestao de enquetes internas",
+      eyebrow: "ADMINISTRATIVO",
+      title: "Enquetes",
       subtitle: "Publique novas pesquisas, acompanhe votos e ajuste o ciclo de vida das enquetes em um unico fluxo.",
       loadError
     },
@@ -190,8 +231,8 @@ function createEmptyAdminData(loadError = "") {
 function buildAdminData(payload = {}, loadError = "") {
   return {
     intro: {
-      eyebrow: "ADMINISTRACAO",
-      title: "Gestao de enquetes internas",
+      eyebrow: "ADMINISTRATIVO",
+      title: "Enquetes",
       subtitle: "Publique novas pesquisas, acompanhe votos e ajuste o ciclo de vida das enquetes em um unico fluxo.",
       loadError
     },
@@ -241,6 +282,26 @@ export function getPollStatusOptions() {
 
 export function getPollResultsVisibilityOptions() {
   return [...RESULT_VISIBILITY_OPTIONS];
+}
+
+export function canManagePolls(session = getStoredPortalSession()) {
+  const user = session?.user;
+  if (!user) {
+    return false;
+  }
+
+  if (user.role === "PortalAdmin" || user.role === "HrManager") {
+    return true;
+  }
+
+  const permissions = user.modulePermissions || [];
+  const pollPermission = permissions.find((item) => item.moduleKey === "poll-admin");
+  if (pollPermission?.accessLevel === "Manage") {
+    return true;
+  }
+
+  const hrPermission = permissions.find((item) => item.moduleKey === "hr-profile");
+  return hrPermission?.accessLevel === "Manage";
 }
 
 export async function listPolls(options = {}) {

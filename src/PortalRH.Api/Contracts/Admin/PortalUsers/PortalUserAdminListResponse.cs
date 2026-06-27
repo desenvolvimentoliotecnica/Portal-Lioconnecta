@@ -1,3 +1,5 @@
+using PortalRH.Api.Contracts.MoodSurvey;
+
 namespace PortalRH.Api.Contracts.Admin.PortalUsers;
 
 public sealed record PortalUserAdminListResponse(
@@ -9,6 +11,7 @@ public sealed record PortalUserAdminListResponse(
     IReadOnlyList<PortalUserAccessLevelOptionDto> AccessLevelOptions,
     IReadOnlyList<PortalUserLoginEventDto> RecentLogins,
     IReadOnlyList<PortalUserAdminAuditLogDto> RecentAuditEntries,
+    IReadOnlyList<MoodSurveyAuditLogDto> RecentMoodSurveyEntries,
     int Page,
     int PageSize,
     int TotalItems,

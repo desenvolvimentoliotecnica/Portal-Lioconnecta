@@ -64,26 +64,26 @@ jobs:
     needs: resolve-context
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
 
-      - name: Restore API dependencies
-        run: dotnet restore ./src/PortalRH.Api/PortalRH.Api.csproj
+      - name: Restore dependencies
+        run: dotnet restore ./PortalRH.sln
 
-      - name: Build API
-        run: dotnet build ./src/PortalRH.Api/PortalRH.Api.csproj --configuration Release --no-restore
+      - name: Build solution
+        run: dotnet build ./PortalRH.sln --configuration Release --no-restore
 
       - name: Run API tests
-        run: dotnet test ./tests/PortalRH.Api.Tests/PortalRH.Api.Tests.csproj --configuration Release --no-restore --logger "trx;LogFileName=PortalRH.Api.Tests.trx"
+        run: dotnet test ./tests/PortalRH.Api.Tests/PortalRH.Api.Tests.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=PortalRH.Api.Tests.trx"
 
       - name: Run frontend unit tests
         working-directory: ./LioConnecta
@@ -97,7 +97,7 @@ jobs:
             -OutputRoot "${{ needs.resolve-context.outputs.package_directory }}"
 
       - name: Upload deploy package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ needs.resolve-context.outputs.artifact_name }}
           path: ${{ needs.resolve-context.outputs.package_directory }}
@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ needs.resolve-context.outputs.artifact_name }}-tests
           path: "**/*.trx"
@@ -113,14 +113,14 @@ jobs:
 
   deploy:
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, lioconnecta]
     needs:
       - resolve-context
       - build-test-package
     environment: ${{ needs.resolve-context.outputs.environment_name }}
     steps:
       - name: Download deploy package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: ${{ needs.resolve-context.outputs.artifact_name }}
           path: ./deploy-package
@@ -213,6 +213,7 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "set -e; \
              mkdir -p '${DEPLOY_PATH}/releases'; \
+             mkdir -p '${DEPLOY_PATH}/shared/uploads/feed'; \
              rm -rf '${RELEASE_DIR}'; \
              mkdir -p '${RELEASE_DIR}'; \
              tar -xzf '${ARCHIVE_NAME}' -C '${RELEASE_DIR}'; \

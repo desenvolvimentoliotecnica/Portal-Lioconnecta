@@ -59,10 +59,7 @@
                                   "title":  "No que vocÃª estÃ¡ pensando?",
                                   "placeholder":  "Compartilhe uma atualizaÃ§Ã£o com a equipe...",
                                   "actions":  [
-                                                  "Foto",
-                                                  "Evento",
-                                                  "Comunicado",
-                                                  "Conquista"
+                                                  "Adicionar fotos"
                                               ]
                               }
              }

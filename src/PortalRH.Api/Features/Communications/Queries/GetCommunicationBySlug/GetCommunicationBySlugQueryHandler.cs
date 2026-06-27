@@ -15,6 +15,6 @@ public class GetCommunicationBySlugQueryHandler : IRequestHandler<GetCommunicati
 
     public Task<CommunicationDto?> Handle(GetCommunicationBySlugQuery request, CancellationToken cancellationToken)
     {
-        return _communicationService.GetBySlugAsync(request.Slug, cancellationToken);
+        return _communicationService.GetBySlugAsync(request.Slug, request.PortalUserId, cancellationToken);
     }
 }

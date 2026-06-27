@@ -1,5 +1,6 @@
-import { getJson, postJson } from "./apiClient.js";
+import { deleteJson, getJson, postJson, putJson } from "./apiClient.js";
 import { resolveApiEndpoint } from "../core/runtimeConfig.js";
+import { getPortalAuthHeaders, getStoredPortalSession } from "./portalAuthService.js";
 
 const AVAILABLE_CATEGORIES = Object.freeze([
   "RH",
@@ -77,6 +78,9 @@ function sortByPublishedAtDesc(items = []) {
 }
 
 function mapCommunicationItem(item = {}) {
+  const bodyText = typeof item.body === "string" ? item.body : "";
+  const publishedAtRaw = normalizeText(item.publishedAt);
+
   return {
     id: normalizeText(item.id),
     slug: normalizeText(item.slug),
@@ -91,11 +95,17 @@ function mapCommunicationItem(item = {}) {
     attachmentLabel: normalizeText(item.attachmentLabel, "Abrir anexo"),
     owner: normalizeText(item.owner, "Comunicação Corporativa"),
     image: normalizeText(item.imageUrl),
+    imageUrl: normalizeText(item.imageUrl),
     imageAlt: normalizeText(item.title, "Comunicado oficial"),
-    body: normalizeParagraphs(item.body),
+    body: normalizeParagraphs(bodyText),
+    bodyText,
     isFeatured: Boolean(item.isFeatured),
+    likeCount: Number(item.likeCount ?? 0),
+    hasLiked: Boolean(item.hasLiked),
+    hasSaved: Boolean(item.hasSaved),
     updatedAtUtc: normalizeText(item.updatedAtUtc),
-    publishedAtRaw: normalizeText(item.publishedAt)
+    publishedAtRaw,
+    publishedAtEditorValue: publishedAtRaw ? String(publishedAtRaw).slice(0, 10) : ""
   };
 }
 
@@ -178,18 +188,60 @@ function mapCreatePayload(payload = {}) {
   };
 }
 
-export async function listCommunications() {
-  const payload = await getJson(resolveApiEndpoint("communications"));
+export async function listCommunications(options = {}) {
+  const payload = await getJson(resolveApiEndpoint("communications"), options);
   return Array.isArray(payload) ? payload : [];
+}
+
+export async function toggleCommunicationLike(id, options = {}) {
+  return postJson(`${resolveApiEndpoint("communications")}/${encodeURIComponent(id)}/like`, {}, options);
 }
 
 export async function createCommunication(payload = {}, options = {}) {
   return postJson(resolveApiEndpoint("communications"), mapCreatePayload(payload), options);
 }
 
+export async function getCommunicationById(id, options = {}) {
+  const payload = await getJson(`${resolveApiEndpoint("communications")}/${id}`, options);
+  return mapCommunicationItem(payload);
+}
+
+export async function updateCommunication(id, payload = {}, options = {}) {
+  const response = await putJson(`${resolveApiEndpoint("communications")}/${id}`, mapCreatePayload(payload), options);
+  return mapCommunicationItem(response);
+}
+
+export async function deleteCommunication(id, options = {}) {
+  await deleteJson(`${resolveApiEndpoint("communications")}/${id}`, options);
+}
+
+export function getCommunicationEditorHeaders() {
+  return getPortalAuthHeaders();
+}
+
+export function canManageCommunications(session = getStoredPortalSession()) {
+  const user = session?.user;
+  if (!user) {
+    return false;
+  }
+
+  if (["PortalAdmin", "HrManager", "CommunicationEditor"].includes(user.role)) {
+    return true;
+  }
+
+  const permissions = user.modulePermissions || [];
+  const communicationPermission = permissions.find((item) => item.moduleKey === "communication-admin");
+  if (communicationPermission?.accessLevel === "Manage") {
+    return true;
+  }
+
+  const hrPermission = permissions.find((item) => item.moduleKey === "hr-profile");
+  return hrPermission?.accessLevel === "Manage";
+}
+
 export async function getCommunicationCenterData() {
   try {
-    const apiItems = await listCommunications();
+    const apiItems = await listCommunications({ headers: getPortalAuthHeaders() });
     const normalizedItems = sortByPublishedAtDesc(apiItems).map(mapCommunicationItem);
     return buildCommunicationCenter(normalizedItems);
   } catch (error) {

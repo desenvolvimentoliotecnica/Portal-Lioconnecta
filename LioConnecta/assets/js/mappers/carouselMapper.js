@@ -9,12 +9,14 @@ function mapSlide(slide, index) {
   };
 }
 
-export function mapCarouselViewModel(raw = {}) {
+export function mapCarouselViewModel(raw = {}, { allowDefaults = true } = {}) {
+  const slides = asArray(raw.slides)
+    .map(mapSlide)
+    .filter((slide) => slide.src);
+
   return {
     title: asString(raw.title, DEFAULT_CAROUSEL_TITLE),
     errorMessage: asString(raw.errorMessage, ""),
-    slides: asArray(raw.slides).length
-      ? asArray(raw.slides).map(mapSlide).filter((slide) => slide.src)
-      : [...DEFAULT_SLIDES]
+    slides: slides.length > 0 ? slides : (allowDefaults ? [...DEFAULT_SLIDES] : [])
   };
 }

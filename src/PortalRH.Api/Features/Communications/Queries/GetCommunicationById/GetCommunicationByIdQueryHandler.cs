@@ -15,6 +15,6 @@ public class GetCommunicationByIdQueryHandler : IRequestHandler<GetCommunication
 
     public Task<CommunicationDto?> Handle(GetCommunicationByIdQuery request, CancellationToken cancellationToken)
     {
-        return _communicationService.GetByIdAsync(request.Id, cancellationToken);
+        return _communicationService.GetByIdAsync(request.Id, request.PortalUserId, cancellationToken);
     }
 }

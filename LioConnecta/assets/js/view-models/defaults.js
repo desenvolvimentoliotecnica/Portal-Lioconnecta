@@ -16,7 +16,7 @@ export const DEFAULT_HERO = Object.freeze({
 export const DEFAULT_COMPOSER = Object.freeze({
   title: "No que você está pensando?",
   placeholder: "Compartilhe uma atualização com a equipe...",
-  actions: ["Foto", "Evento", "Comunicado", "Conquista"]
+  actions: ["Adicionar fotos"]
 });
 
 export const DEFAULT_MOOD_TITLE = "Como você está se sentindo hoje?";

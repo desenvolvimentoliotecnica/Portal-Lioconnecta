@@ -13,6 +13,7 @@ public static class PortalRhDbInitializer
         var dbContext = scope.ServiceProvider.GetRequiredService<PortalRhDbContext>();
         var adminAuthService = scope.ServiceProvider.GetRequiredService<IAdminAuthService>();
         var ldapConfigurationService = scope.ServiceProvider.GetRequiredService<ILdapConfigurationService>();
+        var microsoftGraphConfigurationService = scope.ServiceProvider.GetRequiredService<IMicrosoftGraphConfigurationService>();
 
         if (dbContext.Database.IsRelational())
         {
@@ -25,5 +26,15 @@ public static class PortalRhDbInitializer
 
         await adminAuthService.EnsureDefaultSuperAdminAsync(cancellationToken);
         await ldapConfigurationService.EnsureDefaultConfigurationAsync(cancellationToken);
+        await microsoftGraphConfigurationService.EnsureDefaultConfigurationAsync(cancellationToken);
+
+        var moodSurveyFeedbackService = scope.ServiceProvider.GetRequiredService<IMoodSurveyFeedbackService>();
+        await moodSurveyFeedbackService.EnsureSeedAsync(cancellationToken);
+
+        var quickLinkService = scope.ServiceProvider.GetRequiredService<IQuickLinkService>();
+        await quickLinkService.EnsureSeedAsync(cancellationToken);
+
+        var portalUserSeedService = scope.ServiceProvider.GetRequiredService<IPortalUserSeedService>();
+        await portalUserSeedService.EnsureSeedAsync(cancellationToken);
     }
 }

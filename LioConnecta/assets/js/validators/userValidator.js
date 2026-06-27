@@ -37,6 +37,8 @@ export function validateUserContract(raw) {
       }
 
       ensureString(item.label, issues, `navItems[${index}].label`, { required: true });
+      ensureString(item.route, issues, `navItems[${index}].route`);
+      ensureString(item.moduleKey, issues, `navItems[${index}].moduleKey`);
       ensureBoolean(item.active, issues, `navItems[${index}].active`);
     });
   }
@@ -76,6 +78,9 @@ export function validateUserContract(raw) {
       ensureString(raw.composer.placeholder, issues, "composer.placeholder");
       if (raw.composer.actions !== undefined && ensureArray("user", raw.composer.actions, issues, "composer.actions")) {
         raw.composer.actions.forEach((item, index) => ensureString(item, issues, `composer.actions[${index}]`, { required: true }));
+      }
+      if (raw.composer.enabled !== undefined && typeof raw.composer.enabled !== "boolean") {
+        issues.push("composer.enabled deve ser booleano");
       }
     } else {
       issues.push("composer deve ser um objeto");

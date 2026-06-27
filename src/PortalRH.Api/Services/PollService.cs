@@ -421,9 +421,17 @@ public class PollService : IPollService
     private static string GetEffectiveStatus(Poll item, DateTime now)
     {
         var normalized = PollStatusCatalog.Normalize(item.Status);
-        if (normalized == PollStatusCatalog.Published && item.ClosesAtUtc.HasValue && item.ClosesAtUtc.Value <= now)
+        if (normalized == PollStatusCatalog.Published)
         {
-            return PollStatusCatalog.Closed;
+            if (item.PublishedAtUtc.HasValue && item.PublishedAtUtc.Value > now)
+            {
+                return PollStatusCatalog.Draft;
+            }
+
+            if (item.ClosesAtUtc.HasValue && item.ClosesAtUtc.Value <= now)
+            {
+                return PollStatusCatalog.Closed;
+            }
         }
 
         return normalized;

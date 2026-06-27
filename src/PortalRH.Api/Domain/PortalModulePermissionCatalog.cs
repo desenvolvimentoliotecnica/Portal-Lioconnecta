@@ -86,7 +86,7 @@ public static class PortalModulePermissionCatalog
                 CreateAssignments(
                     View,
                     [Feed, Polls],
-                    [HrProfile]),
+                    [HrProfile, PollAdmin, CommunicationAdmin]),
             PortalUserRoleCatalog.CommunicationEditor =>
                 CreateAssignments(
                     View,
@@ -115,7 +115,7 @@ public static class PortalModulePermissionCatalog
         try
         {
             var items = JsonSerializer.Deserialize<List<PortalModulePermissionAssignment>>(json, SerializerOptions);
-            return NormalizeAssignments(items, role);
+            return ReconcileWithRoleDefaults(NormalizeAssignments(items, role), role);
         }
         catch
         {
@@ -177,6 +177,40 @@ public static class PortalModulePermissionCatalog
 
                 return new PortalModulePermissionAssignment(item.Key, baseAccessLevel);
             })
+            .ToList();
+    }
+
+    private static readonly IReadOnlyDictionary<string, int> AccessLevelRank =
+        new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        {
+            [None] = 0,
+            [View] = 1,
+            [Interact] = 2,
+            [Manage] = 3
+        };
+
+    private static string MaxAccessLevel(string? current, string? roleDefault)
+    {
+        var currentLevel = NormalizeAccessLevel(current);
+        var defaultLevel = NormalizeAccessLevel(roleDefault);
+        var currentRank = AccessLevelRank.TryGetValue(currentLevel, out var currentValue) ? currentValue : 0;
+        var defaultRank = AccessLevelRank.TryGetValue(defaultLevel, out var defaultValue) ? defaultValue : 0;
+        return currentRank >= defaultRank ? currentLevel : defaultLevel;
+    }
+
+    private static IReadOnlyList<PortalModulePermissionAssignment> ReconcileWithRoleDefaults(
+        IReadOnlyList<PortalModulePermissionAssignment> assignments,
+        string? role)
+    {
+        var roleDefaults = GetDefaultAssignments(role).ToDictionary(
+            item => item.ModuleKey,
+            item => item.AccessLevel,
+            StringComparer.OrdinalIgnoreCase);
+
+        return assignments
+            .Select(item => roleDefaults.TryGetValue(item.ModuleKey, out var defaultLevel)
+                ? new PortalModulePermissionAssignment(item.ModuleKey, MaxAccessLevel(item.AccessLevel, defaultLevel))
+                : item)
             .ToList();
     }
 }

@@ -1,4 +1,5 @@
 import { escapeHtml } from "./html.js";
+import { renderMoodCardHtml } from "../services/moodSurveyService.js";
 
 function renderSkeletonLine(width = "100%") {
   return `<span class="skeleton-line" style="width:${escapeHtml(width)}"></span>`;
@@ -27,6 +28,14 @@ export function renderHero(hero) {
 }
 
 export function renderMoodCard(mood) {
+  if (mood?.hasVoted !== undefined || mood?.items?.some((item) => item.key)) {
+    return renderMoodCardHtml(mood);
+  }
+
+  return renderLegacyMoodCard(mood);
+}
+
+function renderLegacyMoodCard(mood) {
   return `
     <section class="card mood-card">
       <h2>${escapeHtml(mood.title)}</h2>

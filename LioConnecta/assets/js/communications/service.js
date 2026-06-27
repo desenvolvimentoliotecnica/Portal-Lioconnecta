@@ -1,2 +1,2 @@
 export { getCarouselData } from "../services/carouselService.js";
-export { getCommunicationCenterData } from "../services/communicationService.js";
+export { getCommunicationCenterData, canManageCommunications } from "../services/communicationService.js";

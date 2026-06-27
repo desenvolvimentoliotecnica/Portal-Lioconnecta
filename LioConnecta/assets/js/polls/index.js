@@ -3,7 +3,21 @@ export {
   renderPollsHub,
   renderPollDetailPage,
   renderAdminPollsPage
-} from "./renderer.js?v=0.12.5";
+} from "./renderer.js?v=0.15.0";
+
+export {
+  renderHomePollCarousel,
+  initPollHomeCarousel,
+  updateHomePollSlideAfterVote
+} from "./pollHomeCarousel.js?v=0.15.0";
+
+export {
+  renderPollAdminWizardModal,
+  initPollAdminWizard,
+  openPollAdminWizard,
+  closePollAdminWizard,
+  readPollWizardFormValues
+} from "./adminPollWizard.js?v=0.14.5";
 
 export {
   getPollStatusOptions,
@@ -19,5 +33,6 @@ export {
   uploadPollAsset,
   getPollCenterData,
   getPollDetailData,
-  getAdminPollData
-} from "./service.js?v=0.12.5";
+  getAdminPollData,
+  canManagePolls
+} from "./service.js?v=0.14.3";

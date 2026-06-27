@@ -12,5 +12,6 @@ export {
   uploadPollAsset,
   getPollCenterData,
   getPollDetailData,
-  getAdminPollData
+  getAdminPollData,
+  canManagePolls
 } from "../services/pollService.js";

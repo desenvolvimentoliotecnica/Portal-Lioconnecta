@@ -1,7 +1,14 @@
-import { createCommunication } from "../services/communicationService.js";
+import { createCommunication, canManageCommunications } from "../services/communicationService.js";
 import { getAdminAuthHeaders, logoutAdmin, redirectToAdminLogin } from "../services/adminAuthService.js";
+import { getPortalAuthHeaders } from "../services/portalAuthService.js";
 import { saveLdapSettings } from "../services/ldapSettingsService.js";
+import { saveMicrosoftGraphSettings, testMicrosoftGraphSettings } from "../services/microsoftGraphSettingsService.js";
+import { collectLdapWizardPayload } from "../settings/ldapWizard.js";
+import { collectMicrosoftGraphSettingsPayload } from "../settings/microsoftGraphSettings.js";
 import { updatePortalUserPermission, updatePortalUserRole, updatePortalUserStatus } from "../services/portalUsersAdminService.js";
+import { replaceMoodCardElement, submitMoodSurveyVote } from "../services/moodSurveyService.js";
+import { redirectToPortalLogin } from "../services/portalAuthService.js";
+import { DATA_MODES, getRuntimeConfig } from "./runtimeConfig.js";
 
 let feedbackBound = false;
 let selectedImageDataUrl = "";
@@ -15,6 +22,10 @@ function notifyPortalUsersRefresh(message = "", tone = "success", options = {}) 
       preserveModalMode: options.preserveModalMode || "edit"
     }
   }));
+}
+
+function getCommunicationEditorHeaders() {
+  return canManageCommunications() ? getPortalAuthHeaders() : getAdminAuthHeaders();
 }
 
 function getCurrentHashOrDefault(defaultHash = "#comunicacao/restrita") {
@@ -65,12 +76,54 @@ export function showToast(message, tone = "info") {
   }, 2600);
 }
 
+export async function confirmAction({
+  title = "Confirmar acao",
+  text = "",
+  confirmButtonText = "Confirmar",
+  cancelButtonText = "Cancelar",
+  icon = "warning",
+  tone = "danger"
+} = {}) {
+  if (!window.Swal) {
+    return window.confirm(text ? `${title}\n\n${text}` : title);
+  }
+
+  const result = await window.Swal.fire({
+    title,
+    text,
+    icon,
+    showCancelButton: true,
+    confirmButtonText,
+    cancelButtonText,
+    reverseButtons: true,
+    focusCancel: true,
+    buttonsStyling: false,
+    customClass: {
+      popup: "lio-swal-popup",
+      title: "lio-swal-title",
+      htmlContainer: "lio-swal-text",
+      actions: "lio-swal-actions",
+      confirmButton: tone === "danger"
+        ? "lio-swal-button lio-swal-button--danger"
+        : "lio-swal-button lio-swal-button--primary",
+      cancelButton: "lio-swal-button lio-swal-button--secondary",
+      icon: "lio-swal-icon"
+    }
+  });
+
+  return result.isConfirmed;
+}
+
 export function bindInteractionFeedback(root = document) {
   if (feedbackBound) {
     return;
   }
 
   feedbackBound = true;
+
+  root.addEventListener("ldap-wizard:validation", (event) => {
+    showToast(event.detail?.message || "Revise os campos obrigatorios.", "info");
+  });
 
   root.addEventListener("change", (event) => {
     const permissionSelect = event.target.closest("[data-action='update-portal-user-permission']");
@@ -203,6 +256,10 @@ export function bindInteractionFeedback(root = document) {
 
   root.addEventListener("submit", async (event) => {
     const form = event.target.closest("#communication-admin-form");
+    if (form?.closest("#communication-admin-modal")) {
+      return;
+    }
+
     if (form) {
       event.preventDefault();
 
@@ -242,26 +299,32 @@ export function bindInteractionFeedback(root = document) {
           isFeatured: Boolean(formData.get("highlighted")),
           body: bodyText
         }, {
-          headers: getAdminAuthHeaders()
+          headers: getCommunicationEditorHeaders()
         });
 
         showToast(`Comunicado publicado com sucesso no backend local${publishedValue ? ` em ${formatAdminDate(publishedValue)}` : ""}.`, "success");
         window.setTimeout(() => {
-          window.location.hash = "#comunicacao";
+          window.location.hash = canManageCommunications() ? "#comunicacao/restrita" : "#comunicacao";
           window.location.reload();
         }, 500);
       } catch (error) {
         console.error("Falha ao publicar comunicado na API.", error);
 
         const message = error instanceof Error && error.message.includes("HTTP 401")
-          ? "Sua sessao administrativa expirou. Faca login novamente para publicar."
-          : "Nao foi possivel publicar o comunicado agora. Verifique se a API do ambiente esta ativa.";
+          ? "Sua sessao expirou. Faca login novamente para publicar."
+          : error instanceof Error && error.message.includes("HTTP 403")
+            ? "Seu perfil nao possui permissao para publicar comunicados."
+            : "Nao foi possivel publicar o comunicado agora. Verifique se a API do ambiente esta ativa.";
 
         showToast(message, "danger");
 
         if (error instanceof Error && error.message.includes("HTTP 401")) {
           window.setTimeout(() => {
-            redirectToAdminLogin(getCurrentHashOrDefault());
+            if (canManageCommunications()) {
+              redirectToPortalLogin(getCurrentHashOrDefault("#comunicacao/restrita"));
+            } else {
+              redirectToAdminLogin(getCurrentHashOrDefault());
+            }
           }, 700);
         }
       } finally {
@@ -277,33 +340,17 @@ export function bindInteractionFeedback(root = document) {
     if (ldapForm) {
       event.preventDefault();
 
-      const formData = new FormData(ldapForm);
       const submitter = event.submitter;
       const submitMode = submitter?.value || "save";
       const originalLabel = submitter?.textContent;
 
       if (submitter) {
         submitter.disabled = true;
-        submitter.textContent = submitMode === "save-test" ? "Salvando..." : "Salvando...";
+        submitter.textContent = "Salvando...";
       }
 
       try {
-        await saveLdapSettings({
-          isEnabled: Boolean(formData.get("isEnabled")),
-          server: String(formData.get("server") || ""),
-          port: Number(formData.get("port") || 389),
-          useLdaps: Boolean(formData.get("useLdaps")),
-          useStartTls: Boolean(formData.get("useStartTls")),
-          ignoreCertificateValidation: Boolean(formData.get("ignoreCertificateValidation")),
-          baseDn: String(formData.get("baseDn") || ""),
-          userSearchBase: String(formData.get("userSearchBase") || ""),
-          netbiosDomain: String(formData.get("netbiosDomain") || ""),
-          loginFormat: String(formData.get("loginFormat") || ""),
-          bindDn: String(formData.get("bindDn") || ""),
-          serviceAccountPassword: String(formData.get("serviceAccountPassword") || ""),
-          searchFilter: String(formData.get("searchFilter") || ""),
-          displayNameAttribute: String(formData.get("displayNameAttribute") || "")
-        }, {
+        await saveLdapSettings(collectLdapWizardPayload(ldapForm), {
           headers: getAdminAuthHeaders()
         });
 
@@ -312,8 +359,12 @@ export function bindInteractionFeedback(root = document) {
           : "Configuracao LDAP salva com sucesso no banco.";
 
         showToast(message, "success");
-        ldapForm.reset();
-        window.setTimeout(() => window.location.reload(), 500);
+
+        const passwordInput = ldapForm.querySelector("[name='serviceAccountPassword']");
+        if (passwordInput) {
+          passwordInput.value = "";
+          passwordInput.placeholder = "Senha ja cadastrada";
+        }
       } catch (error) {
         console.error("Falha ao salvar configuracao LDAP.", error);
 
@@ -325,19 +376,89 @@ export function bindInteractionFeedback(root = document) {
 
         if (error instanceof Error && error.message.includes("HTTP 401")) {
           window.setTimeout(() => {
-            redirectToAdminLogin(getCurrentHashOrDefault("#configuracoes"));
+            redirectToAdminLogin(getCurrentHashOrDefault("#configuracoes/ldap"));
           }, 700);
         }
       } finally {
         if (submitter) {
           submitter.disabled = false;
-          submitter.textContent = originalLabel || (submitMode === "save-test" ? "Salvar e testar conexao" : "Salvar");
+          submitter.textContent = originalLabel || (submitMode === "save-test" ? "Salvar e testar conexao" : "Salvar configuracao");
         }
       }
+      return;
+    }
+
+    const microsoftGraphForm = event.target.closest("#microsoft-graph-settings-form");
+    if (microsoftGraphForm) {
+      event.preventDefault();
+
+      const submitter = event.submitter;
+      const submitMode = submitter?.value || "save";
+      const originalLabel = submitter?.textContent;
+      const isTest = submitMode === "test";
+
+      if (submitter) {
+        submitter.disabled = true;
+        submitter.textContent = isTest ? "Testando..." : "Salvando...";
+      }
+
+      try {
+        const payload = collectMicrosoftGraphSettingsPayload(microsoftGraphForm);
+
+        if (isTest) {
+          const result = await testMicrosoftGraphSettings(payload, {
+            headers: getAdminAuthHeaders()
+          });
+
+          const toastMessage = result.detail
+            ? `${result.message} ${result.detail}`
+            : result.message;
+
+          showToast(toastMessage, result.success ? "success" : "danger");
+        } else {
+          await saveMicrosoftGraphSettings(payload, {
+            headers: getAdminAuthHeaders()
+          });
+
+          showToast("Configuracao Microsoft Graph salva com sucesso no banco.", "success");
+
+          const secretInput = microsoftGraphForm.querySelector("[name='clientSecret']");
+          if (secretInput) {
+            secretInput.value = "";
+            secretInput.placeholder = "Segredo ja cadastrado";
+          }
+        }
+      } catch (error) {
+        console.error(`Falha ao ${isTest ? "testar" : "salvar"} configuracao Microsoft Graph.`, error);
+
+        const message = error instanceof Error && error.message.includes("HTTP 401")
+          ? "Sua sessao administrativa expirou. Faca login novamente para continuar."
+          : isTest
+            ? "Nao foi possivel testar a conexao Microsoft Graph agora."
+            : "Nao foi possivel salvar a configuracao Microsoft Graph agora.";
+
+        showToast(message, "danger");
+
+        if (error instanceof Error && error.message.includes("HTTP 401")) {
+          window.setTimeout(() => {
+            redirectToAdminLogin(getCurrentHashOrDefault("#configuracoes/microsoft-graph"));
+          }, 700);
+        }
+      } finally {
+        if (submitter) {
+          submitter.disabled = false;
+          submitter.textContent = originalLabel || (isTest ? "Testar conexao" : "Salvar configuracao");
+        }
+      }
+      return;
     }
   });
 
   root.addEventListener("click", async (event) => {
+    if (event.target.closest("[data-action='open-feed-photo-viewer'], .post-gallery__item")) {
+      return;
+    }
+
     const customFeedback = event.target.closest("[data-feedback-message]");
     if (customFeedback) {
       showToast(
@@ -420,23 +541,79 @@ export function bindInteractionFeedback(root = document) {
 
     const moodButton = event.target.closest(".mood-option");
     if (moodButton) {
+      const optionKey = moodButton.dataset.moodOptionKey;
       const label = moodButton.querySelector("strong")?.textContent?.trim() || "Humor";
-      showToast(`Humor registrado: ${label}.`, "success");
+
+      if (!optionKey) {
+        showToast(`Humor registrado: ${label}.`, "success");
+        return;
+      }
+
+      if (moodButton.disabled || moodButton.classList.contains("mood-option--submitting")) {
+        return;
+      }
+
+      const moodCard = moodButton.closest(".mood-card");
+      moodCard?.querySelectorAll(".mood-option").forEach((button) => {
+        button.disabled = true;
+        button.classList.add("mood-option--submitting");
+      });
+
+      try {
+        const moodSurvey = await submitMoodSurveyVote(optionKey);
+        replaceMoodCardElement(moodSurvey);
+        showToast("Obrigado por compartilhar como você está hoje.", "success");
+      } catch (error) {
+        moodCard?.querySelectorAll(".mood-option").forEach((button) => {
+          button.disabled = false;
+          button.classList.remove("mood-option--submitting");
+        });
+
+        const message = error instanceof Error && error.message.includes("HTTP 401")
+          ? "Sua sessão expirou. Faça login novamente para registrar seu humor."
+          : error instanceof Error && error.message.includes("HTTP 400")
+            ? "Seu humor de hoje já foi registrado."
+            : "Não foi possível registrar seu humor agora. Tente novamente.";
+
+        showToast(message, error instanceof Error && error.message.includes("HTTP 400") ? "info" : "danger");
+
+        if (error instanceof Error && error.message.includes("HTTP 401")) {
+          window.setTimeout(() => {
+            redirectToPortalLogin(getCurrentHashOrDefault("#inicio"));
+          }, 700);
+        }
+      }
+
       return;
     }
 
     const publishButton = event.target.closest(".feed-composer-submit");
-    if (
-      publishButton &&
-      !publishButton.closest("#communication-admin-form") &&
-      !publishButton.closest("#ldap-settings-form")
-    ) {
-      showToast("Publicacao mockada enviada para revisao do mural.", "success");
+    if (publishButton) {
+      const isAdminOrBoundAction = Boolean(
+        publishButton.getAttribute("data-action") ||
+        publishButton.closest("#communication-admin-form") ||
+        publishButton.closest("#ldap-settings-form") ||
+        publishButton.closest("#admin-poll-form") ||
+        publishButton.closest("#poll-admin-modal") ||
+        publishButton.closest("#communication-admin-modal") ||
+        publishButton.closest("#mood-feedback-admin") ||
+        publishButton.closest(".poll-vote-form") ||
+        publishButton.closest(".feed-composer-form") ||
+        publishButton.tagName === "A"
+      );
+
+      if (!isAdminOrBoundAction) {
+        showToast("Publicacao mockada enviada para revisao do mural.", "success");
+      }
       return;
     }
 
     const composerAction = event.target.closest(".feed-action-chip");
     if (composerAction) {
+      if (composerAction.dataset.action || composerAction.disabled) {
+        return;
+      }
+
       const label = composerAction.querySelector("span")?.textContent?.trim() || "Item";
       showToast(`${label} adicionado ao rascunho do post.`, "info");
       return;
@@ -452,6 +629,13 @@ export function bindInteractionFeedback(root = document) {
 
     const postAction = event.target.closest(".post-actions button");
     if (postAction) {
+      if (
+        postAction.getAttribute("data-action") ||
+        getRuntimeConfig().dataMode === DATA_MODES.API
+      ) {
+        return;
+      }
+
       const action = postAction.textContent?.trim() || "Acao";
       const author = postAction.dataset.postAuthor || "post";
       showToast(`${action} registrado no conteudo de ${author}.`, "success");

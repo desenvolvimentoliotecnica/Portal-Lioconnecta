@@ -33,7 +33,9 @@ public static class PortalUserRoleCatalog
                 "Responder enquetes internas",
                 "Interagir com o feed interno",
                 "Usar atalhos e servicos do portal",
-                "Consultar paineis e atalhos de RH"
+                "Consultar paineis e atalhos de RH",
+                "Gerenciar enquetes internas",
+                "Publicar comunicados editoriais"
             ]),
         new(
             CommunicationEditor,

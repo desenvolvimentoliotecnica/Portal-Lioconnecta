@@ -1,0 +1,33 @@
+{
+  "brand": {
+    "name": "LIOCONNECTA",
+    "tagline": "Capacidade e Transformacao Digital"
+  },
+  "user": {
+    "name": "Colaborador",
+    "greeting": "Ola,",
+    "area": "",
+    "notificationCount": 0
+  },
+  "navItems": [
+    { "label": "INICIO", "route": "inicio", "moduleKey": "home", "active": false }
+  ],
+  "hero": {
+    "title": "Bem-vindo a LIOCONNECTA!",
+    "subtitle": "O seu ponto central de acesso e colaboracao."
+  },
+  "mood": {
+    "title": "Como voce esta se sentindo hoje?",
+    "items": [
+      { "emoji": "😄", "label": "Motivado", "rank": "1º mais votado" },
+      { "emoji": "🙂", "label": "Bem", "rank": "2º mais votado" },
+      { "emoji": "😴", "label": "Cansado", "rank": "3º mais votado" }
+    ]
+  },
+  "composer": {
+    "enabled": true,
+    "title": "No que voce esta pensando?",
+    "placeholder": "Compartilhe uma atualizacao com a equipe...",
+    "actions": ["Adicionar fotos"]
+  }
+}

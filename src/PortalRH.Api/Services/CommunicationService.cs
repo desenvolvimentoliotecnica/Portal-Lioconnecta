@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PortalRH.Api.Contracts.Communications;
 using PortalRH.Api.Data;
+using PortalRH.Api.Domain;
 using PortalRH.Api.Interfaces;
 using PortalRH.Api.Models;
 using System.Globalization;
@@ -17,7 +18,7 @@ public class CommunicationService : ICommunicationService
         _dbContext = dbContext;
     }
 
-    public async Task<IReadOnlyList<CommunicationDto>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<CommunicationDto>> GetAllAsync(Guid? portalUserId, CancellationToken cancellationToken)
     {
         var items = await _dbContext.Communications
             .AsNoTracking()
@@ -25,19 +26,32 @@ public class CommunicationService : ICommunicationService
             .ThenByDescending(item => item.CreatedAtUtc)
             .ToListAsync(cancellationToken);
 
-        return items.Select(MapToDto).ToList();
+        var engagement = await LoadEngagementAsync(
+            items.Select(item => item.Id).ToList(),
+            portalUserId,
+            cancellationToken);
+
+        return items
+            .Select(item => MapToDto(item, engagement))
+            .ToList();
     }
 
-    public async Task<CommunicationDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<CommunicationDto?> GetByIdAsync(Guid id, Guid? portalUserId, CancellationToken cancellationToken)
     {
         var entity = await _dbContext.Communications
             .AsNoTracking()
             .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
 
-        return entity is null ? null : MapToDto(entity);
+        if (entity is null)
+        {
+            return null;
+        }
+
+        var engagement = await LoadEngagementAsync([entity.Id], portalUserId, cancellationToken);
+        return MapToDto(entity, engagement);
     }
 
-    public async Task<CommunicationDto?> GetBySlugAsync(string slug, CancellationToken cancellationToken)
+    public async Task<CommunicationDto?> GetBySlugAsync(string slug, Guid? portalUserId, CancellationToken cancellationToken)
     {
         var normalizedSlug = NormalizeSlug(slug);
 
@@ -45,7 +59,13 @@ public class CommunicationService : ICommunicationService
             .AsNoTracking()
             .FirstOrDefaultAsync(item => item.Slug == normalizedSlug, cancellationToken);
 
-        return entity is null ? null : MapToDto(entity);
+        if (entity is null)
+        {
+            return null;
+        }
+
+        var engagement = await LoadEngagementAsync([entity.Id], portalUserId, cancellationToken);
+        return MapToDto(entity, engagement);
     }
 
     public async Task<CommunicationDto> CreateAsync(UpsertCommunicationRequest request, CancellationToken cancellationToken)
@@ -77,7 +97,7 @@ public class CommunicationService : ICommunicationService
         _dbContext.Communications.Add(entity);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(entity);
+        return MapToDto(entity, EngagementSnapshot.Empty);
     }
 
     public async Task<CommunicationDto?> UpdateAsync(Guid id, UpsertCommunicationRequest request, CancellationToken cancellationToken)
@@ -108,7 +128,8 @@ public class CommunicationService : ICommunicationService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(entity);
+        var engagement = await LoadEngagementAsync([entity.Id], null, cancellationToken);
+        return MapToDto(entity, engagement);
     }
 
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -127,8 +148,268 @@ public class CommunicationService : ICommunicationService
         return true;
     }
 
-    private static CommunicationDto MapToDto(Communication item)
+    public async Task<CommunicationLikeResponse?> ToggleLikeAsync(
+        Guid communicationId,
+        Guid portalUserId,
+        CommunicationAuditContext auditContext,
+        CancellationToken cancellationToken)
     {
+        var communication = await _dbContext.Communications
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == communicationId, cancellationToken);
+
+        if (communication is null)
+        {
+            return null;
+        }
+
+        if (!IsLikeableStatus(communication.Status))
+        {
+            throw new InvalidOperationException("Somente comunicados publicados podem receber curtidas.");
+        }
+
+        var existingLike = await _dbContext.CommunicationLikes
+            .FirstOrDefaultAsync(
+                item => item.CommunicationId == communicationId && item.PortalUserId == portalUserId,
+                cancellationToken);
+
+        var now = DateTime.UtcNow;
+        string actionType;
+        bool hasLiked;
+
+        if (existingLike is not null)
+        {
+            _dbContext.CommunicationLikes.Remove(existingLike);
+            actionType = CommunicationInteractionAuditActionTypes.LikeRemoved;
+            hasLiked = false;
+        }
+        else
+        {
+            _dbContext.CommunicationLikes.Add(new CommunicationLike
+            {
+                Id = Guid.NewGuid(),
+                CommunicationId = communicationId,
+                PortalUserId = portalUserId,
+                CreatedAtUtc = now,
+                IpAddress = auditContext.IpAddress,
+                Origin = auditContext.Origin
+            });
+            actionType = CommunicationInteractionAuditActionTypes.LikeRegistered;
+            hasLiked = true;
+        }
+
+        _dbContext.CommunicationInteractionAuditLogs.Add(new CommunicationInteractionAuditLog
+        {
+            Id = Guid.NewGuid(),
+            CommunicationId = communicationId,
+            PortalUserId = portalUserId,
+            ActionType = actionType,
+            ActorLogin = auditContext.ActorLogin,
+            ActorDisplayName = auditContext.ActorDisplayName,
+            IpAddress = auditContext.IpAddress,
+            Origin = auditContext.Origin,
+            UserAgent = auditContext.UserAgent,
+            CreatedAtUtc = now
+        });
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        var likeCount = await _dbContext.CommunicationLikes
+            .AsNoTracking()
+            .CountAsync(item => item.CommunicationId == communicationId, cancellationToken);
+
+        return new CommunicationLikeResponse(communicationId, likeCount, hasLiked);
+    }
+
+    public async Task<CommunicationSaveResponse?> ToggleSaveAsync(
+        Guid communicationId,
+        Guid portalUserId,
+        CommunicationAuditContext auditContext,
+        CancellationToken cancellationToken)
+    {
+        var communication = await _dbContext.Communications
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == communicationId, cancellationToken);
+
+        if (communication is null)
+        {
+            return null;
+        }
+
+        if (!IsLikeableStatus(communication.Status))
+        {
+            throw new InvalidOperationException("Somente comunicados publicados podem ser salvos.");
+        }
+
+        var existingSave = await _dbContext.CommunicationSaves
+            .FirstOrDefaultAsync(
+                item => item.CommunicationId == communicationId && item.PortalUserId == portalUserId,
+                cancellationToken);
+
+        var now = DateTime.UtcNow;
+        string actionType;
+        bool hasSaved;
+
+        if (existingSave is not null)
+        {
+            _dbContext.CommunicationSaves.Remove(existingSave);
+            actionType = CommunicationInteractionAuditActionTypes.SaveRemoved;
+            hasSaved = false;
+        }
+        else
+        {
+            _dbContext.CommunicationSaves.Add(new CommunicationSave
+            {
+                Id = Guid.NewGuid(),
+                CommunicationId = communicationId,
+                PortalUserId = portalUserId,
+                CreatedAtUtc = now,
+                IpAddress = auditContext.IpAddress,
+                Origin = auditContext.Origin
+            });
+            actionType = CommunicationInteractionAuditActionTypes.SaveRegistered;
+            hasSaved = true;
+        }
+
+        _dbContext.CommunicationInteractionAuditLogs.Add(new CommunicationInteractionAuditLog
+        {
+            Id = Guid.NewGuid(),
+            CommunicationId = communicationId,
+            PortalUserId = portalUserId,
+            ActionType = actionType,
+            ActorLogin = auditContext.ActorLogin,
+            ActorDisplayName = auditContext.ActorDisplayName,
+            IpAddress = auditContext.IpAddress,
+            Origin = auditContext.Origin,
+            UserAgent = auditContext.UserAgent,
+            CreatedAtUtc = now
+        });
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return new CommunicationSaveResponse(communicationId, hasSaved);
+    }
+
+    public async Task<CommunicationShareResponse?> ToggleShareAsync(
+        Guid communicationId,
+        Guid portalUserId,
+        CommunicationAuditContext auditContext,
+        CancellationToken cancellationToken)
+    {
+        var communication = await _dbContext.Communications
+            .AsNoTracking()
+            .FirstOrDefaultAsync(item => item.Id == communicationId, cancellationToken);
+
+        if (communication is null)
+        {
+            return null;
+        }
+
+        if (!IsLikeableStatus(communication.Status))
+        {
+            throw new InvalidOperationException("Somente comunicados publicados podem ser compartilhados.");
+        }
+
+        var existingShare = await _dbContext.CommunicationShares
+            .FirstOrDefaultAsync(
+                item => item.CommunicationId == communicationId && item.PortalUserId == portalUserId,
+                cancellationToken);
+
+        var now = DateTime.UtcNow;
+        string actionType;
+        bool hasShared;
+
+        if (existingShare is not null)
+        {
+            _dbContext.CommunicationShares.Remove(existingShare);
+            actionType = CommunicationInteractionAuditActionTypes.ShareRemoved;
+            hasShared = false;
+        }
+        else
+        {
+            _dbContext.CommunicationShares.Add(new CommunicationShare
+            {
+                Id = Guid.NewGuid(),
+                CommunicationId = communicationId,
+                PortalUserId = portalUserId,
+                CreatedAtUtc = now,
+                IpAddress = auditContext.IpAddress,
+                Origin = auditContext.Origin
+            });
+            actionType = CommunicationInteractionAuditActionTypes.ShareRegistered;
+            hasShared = true;
+        }
+
+        _dbContext.CommunicationInteractionAuditLogs.Add(new CommunicationInteractionAuditLog
+        {
+            Id = Guid.NewGuid(),
+            CommunicationId = communicationId,
+            PortalUserId = portalUserId,
+            ActionType = actionType,
+            ActorLogin = auditContext.ActorLogin,
+            ActorDisplayName = auditContext.ActorDisplayName,
+            IpAddress = auditContext.IpAddress,
+            Origin = auditContext.Origin,
+            UserAgent = auditContext.UserAgent,
+            CreatedAtUtc = now
+        });
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        var shareCount = await _dbContext.CommunicationShares
+            .AsNoTracking()
+            .CountAsync(item => item.CommunicationId == communicationId, cancellationToken);
+
+        return new CommunicationShareResponse(communicationId, shareCount, hasShared);
+    }
+
+    private async Task<EngagementSnapshot> LoadEngagementAsync(
+        IReadOnlyCollection<Guid> communicationIds,
+        Guid? portalUserId,
+        CancellationToken cancellationToken)
+    {
+        if (communicationIds.Count == 0)
+        {
+            return EngagementSnapshot.Empty;
+        }
+
+        var likeCounts = await _dbContext.CommunicationLikes
+            .AsNoTracking()
+            .Where(item => communicationIds.Contains(item.CommunicationId))
+            .GroupBy(item => item.CommunicationId)
+            .Select(group => new { CommunicationId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(item => item.CommunicationId, item => item.Count, cancellationToken);
+
+        HashSet<Guid> likedIds = [];
+        HashSet<Guid> savedIds = [];
+        if (portalUserId.HasValue)
+        {
+            var userLikes = await _dbContext.CommunicationLikes
+                .AsNoTracking()
+                .Where(item => item.PortalUserId == portalUserId.Value && communicationIds.Contains(item.CommunicationId))
+                .Select(item => item.CommunicationId)
+                .ToListAsync(cancellationToken);
+
+            likedIds = userLikes.ToHashSet();
+
+            var userSaves = await _dbContext.CommunicationSaves
+                .AsNoTracking()
+                .Where(item => item.PortalUserId == portalUserId.Value && communicationIds.Contains(item.CommunicationId))
+                .Select(item => item.CommunicationId)
+                .ToListAsync(cancellationToken);
+
+            savedIds = userSaves.ToHashSet();
+        }
+
+        return new EngagementSnapshot(likeCounts, likedIds, savedIds);
+    }
+
+    private static CommunicationDto MapToDto(Communication item, EngagementSnapshot engagement)
+    {
+        engagement.LikeCounts.TryGetValue(item.Id, out var likeCount);
+        var hasLiked = engagement.LikedCommunicationIds.Contains(item.Id);
+        var hasSaved = engagement.SavedCommunicationIds.Contains(item.Id);
+
         return new CommunicationDto(
             item.Id,
             item.Slug,
@@ -146,7 +427,15 @@ public class CommunicationService : ICommunicationService
             item.IsFeatured,
             item.PublishedAt,
             item.CreatedAtUtc,
-            item.UpdatedAtUtc);
+            item.UpdatedAtUtc,
+            likeCount,
+            hasLiked,
+            hasSaved);
+    }
+
+    private static bool IsLikeableStatus(string status)
+    {
+        return string.Equals(status?.Trim(), "Publicado", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<string> GenerateUniqueSlugAsync(string title, Guid? currentId, CancellationToken cancellationToken)
@@ -187,5 +476,13 @@ public class CommunicationService : ICommunicationService
         }
 
         return slug.Trim('-');
+    }
+
+    private sealed record EngagementSnapshot(
+        IReadOnlyDictionary<Guid, int> LikeCounts,
+        HashSet<Guid> LikedCommunicationIds,
+        HashSet<Guid> SavedCommunicationIds)
+    {
+        public static EngagementSnapshot Empty { get; } = new(new Dictionary<Guid, int>(), [], []);
     }
 }

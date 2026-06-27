@@ -15,6 +15,6 @@ public class GetCommunicationsQueryHandler : IRequestHandler<GetCommunicationsQu
 
     public Task<IReadOnlyList<CommunicationDto>> Handle(GetCommunicationsQuery request, CancellationToken cancellationToken)
     {
-        return _communicationService.GetAllAsync(cancellationToken);
+        return _communicationService.GetAllAsync(request.PortalUserId, cancellationToken);
     }
 }
