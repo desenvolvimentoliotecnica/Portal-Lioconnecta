@@ -40,6 +40,7 @@ public interface IHrWorkspaceService
 {
     Task<HrVacationResponse> GetVacationAsync(PortalUser user, CancellationToken cancellationToken);
     Task<HrPayslipResponse> GetPayslipsAsync(PortalUser user, CancellationToken cancellationToken);
+    Task<HrPayslipDetailDto?> GetPayslipDetailAsync(PortalUser user, string payslipId, CancellationToken cancellationToken);
     Task<HrBenefitsResponse> GetBenefitsAsync(PortalUser user, CancellationToken cancellationToken);
     Task<HrEvaluationResponse> GetEvaluationAsync(PortalUser user, CancellationToken cancellationToken);
     Task<HrPersonalDataResponse> GetPersonalDataAsync(PortalUser user, CancellationToken cancellationToken);

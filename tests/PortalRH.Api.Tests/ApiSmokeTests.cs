@@ -636,6 +636,61 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    public async Task FeedEndpoint_NotifiesPostOwnerOnLikeShareAndComment_AndShowsShareInFeed()
+    {
+        await EnsureLdapEnabledAsync();
+        var portalSession = await LoginPortalUserAsync();
+
+        _client.DefaultRequestHeaders.Authorization = null;
+        _client.DefaultRequestHeaders.Remove("X-Portal-Token");
+        _client.DefaultRequestHeaders.Add("X-Portal-Token", portalSession.Token);
+
+        var otherUserPostId = await SeedFeedPostForAnotherPortalUserAsync("Post do colega para validar interacoes.");
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<PortalRhDbContext>();
+            var owner = await dbContext.PortalUsers.AsNoTracking()
+                .FirstAsync(item => item.Login == "colega.teste@liotecnica.com.br");
+
+            var likeResponse = await _client.PostAsJsonAsync($"/api/feed/{otherUserPostId}/like", new ToggleFeedLikeRequest
+            {
+                Source = "UserPost"
+            });
+            Assert.Equal(HttpStatusCode.OK, likeResponse.StatusCode);
+
+            var shareResponse = await _client.PostAsJsonAsync($"/api/feed/{otherUserPostId}/share", new ToggleFeedShareRequest
+            {
+                Source = "UserPost"
+            });
+            Assert.Equal(HttpStatusCode.OK, shareResponse.StatusCode);
+
+            var commentResponse = await _client.PostAsJsonAsync($"/api/feed/{otherUserPostId}/comments", new CreateFeedPostCommentRequest
+            {
+                Text = "Comentario de teste para notificar o autor."
+            });
+            Assert.Equal(HttpStatusCode.Created, commentResponse.StatusCode);
+
+            var ownerNotifications = await dbContext.Notifications
+                .AsNoTracking()
+                .Where(item =>
+                    item.IsActive &&
+                    item.RecipientPortalUserId == owner.Id &&
+                    item.Category == "Interações no Feed")
+                .ToListAsync();
+
+            Assert.Equal(3, ownerNotifications.Count);
+            Assert.Contains(ownerNotifications, item => item.SourceType == "feed_like");
+            Assert.Contains(ownerNotifications, item => item.SourceType == "feed_share");
+            Assert.Contains(ownerNotifications, item => item.SourceType == "feed_comment");
+        }
+
+        var feed = await _client.GetFromJsonAsync<FeedResponse>("/api/feed");
+        Assert.NotNull(feed);
+        Assert.Contains(feed.Items, item => item.Source == "UserPostShare" && item.OriginalPostId == otherUserPostId);
+    }
+
+    [Fact]
     public async Task FeedEndpoint_SoftDeletesOwnPostAndHidesItFromFeed()
     {
         await EnsureLdapEnabledAsync();
@@ -809,6 +864,15 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
         Assert.NotNull(holerite);
         Assert.True(holerite.IsSimulated);
         Assert.NotEmpty(holerite.Items);
+
+        var holeriteDetail = await _client.GetFromJsonAsync<HrPayslipDetailDto>("/api/hr/holerite/2026-05");
+        Assert.NotNull(holeriteDetail);
+        Assert.Equal("2026-05", holeriteDetail.Id);
+        Assert.NotEmpty(holeriteDetail.Earnings);
+        Assert.NotEmpty(holeriteDetail.Deductions);
+
+        var missingHolerite = await _client.GetAsync("/api/hr/holerite/inexistente");
+        Assert.Equal(HttpStatusCode.NotFound, missingHolerite.StatusCode);
         Assert.NotNull(beneficios);
         Assert.True(beneficios.IsSimulated);
         Assert.NotEmpty(beneficios.Items);
