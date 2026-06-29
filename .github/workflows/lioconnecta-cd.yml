@@ -77,13 +77,13 @@ jobs:
           node-version: 22
 
       - name: Restore dependencies
-        run: dotnet restore ./PortalRH.sln
+        run: dotnet restore ./PortalLioConnecta.sln
 
       - name: Build solution
-        run: dotnet build ./PortalRH.sln --configuration Release --no-restore
+        run: dotnet build ./PortalLioConnecta.sln --configuration Release --no-restore
 
       - name: Run API tests
-        run: dotnet test ./tests/PortalRH.Api.Tests/PortalRH.Api.Tests.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=PortalRH.Api.Tests.trx"
+        run: dotnet test ./tests/PortalLioConnecta.Api.Tests/PortalLioConnecta.Api.Tests.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=PortalLioConnecta.Api.Tests.trx"
 
       - name: Run frontend unit tests
         working-directory: ./LioConnecta

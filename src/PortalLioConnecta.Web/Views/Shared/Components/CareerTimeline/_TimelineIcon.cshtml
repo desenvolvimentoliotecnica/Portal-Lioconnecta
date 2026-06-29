@@ -1,0 +1,20 @@
+@model PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind
+
+@switch (Model)
+{
+    case PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.Admission:
+        <i class="fa-solid fa-user-plus timeline-icon" aria-hidden="true"></i>
+        break;
+    case PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.Promotion:
+        <i class="fa-solid fa-arrow-trend-up timeline-icon" aria-hidden="true"></i>
+        break;
+    case PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.CollectiveAgreement:
+        <i class="fa-solid fa-handshake timeline-icon" aria-hidden="true"></i>
+        break;
+    case PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.SalaryPlan:
+        <i class="fa-solid fa-briefcase timeline-icon" aria-hidden="true"></i>
+        break;
+    case PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.SalaryBracket:
+        <i class="fa-solid fa-dollar-sign timeline-icon" aria-hidden="true"></i>
+        break;
+}
