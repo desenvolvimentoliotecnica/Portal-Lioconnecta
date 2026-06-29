@@ -31,6 +31,34 @@ Uma conversa pode gerar **uma ou mais tarefas**, se o pedido for claramente comp
 
 - O Leonardo valida no HTML e cola no Planner.
 
+## Regra obrigatória — promoção HML
+
+**Nenhuma promoção DEV → HML pode ser considerada concluída sem atualizar `tasks.json` na mesma sessão.**
+
+Isso vale sempre, inclusive quando:
+- o pedido foi só “promover para HML”;
+- a entrega é só infra, Planner, documentação ou correção pontual;
+- houve mais de um commit na mesma conversa (cada entrega de negócio = tarefa, ou fechar a tarefa já aberta);
+- o `tasks.json` já foi alterado no mesmo trabalho (fechar/atualizar a tarefa correta, não assumir que “já está registrado”).
+
+**Ordem obrigatória ao promover:**
+
+1. Implementar e commitar em `Lioconnecta_DEV`
+2. **Atualizar `tasks.json`** (abrir, fechar ou criar tarefa com commits, horários e `totalHoras`)
+3. Commitar o Planner **junto** com o código ou **imediatamente em seguida** (antes do push para HML)
+4. Push `Lioconnecta_DEV` → merge/push `Lioconnecta_HML` → acompanhar CI/CD
+5. Preencher `horarioConclusao` com o horário real do deploy HML (fim do pipeline) se ainda não estava fechado
+6. Se o passo 5 alterou horários, commitar o ajuste e promover de novo o JSON para HML
+
+**Proibido:** encerrar a conversa ou informar “promovido com sucesso” só com git/CI, deixando o Planner para depois.
+
+**Referências mínimas em `referencias`:**
+- `commits`: hashes promovidos
+- `branch`: `Lioconnecta_HML`
+- `prHml`: merge, PR ou `pipeline <id>` do GitHub Actions
+
+Atualizar `meta.atualizadoEm` e `meta.totalTarefas` ao incluir tarefas novas.
+
 ## Campos do JSON
 
 ```json
@@ -124,8 +152,18 @@ Uma conversa pode gerar **uma ou mais tarefas**, se o pedido for claramente comp
 1. Leonardo pede algo no chat
 2. Assistente cria entrada em `tasks.json` (`Em andamento`, `inicio` e `horarioInicio` = agora)
 3. Trabalho em DEV → atualizar `percentualConcluido`, `entregavel`, `commits`
-4. Promoção HML → `Concluído`, `conclusao`, `horarioConclusao` e `totalHoras` = momento do encerramento, `prHml` se existir
-5. Leonardo abre `index.html`, copia linhas para o Planner
+4. **Antes de promover HML** → fechar tarefa(s) no Planner (`Concluído`, `conclusao`, `horarioConclusao`, `totalHoras`, `prHml`)
+5. Promoção HML (merge/push + CI/CD)
+6. Ajustar `horarioConclusao` se o deploy terminou depois do commit do JSON; re-promover `tasks.json` se necessário
+7. Leonardo abre `index.html`, copia linhas para o Planner
+
+## Checklist do assistente — antes de dizer “promovido para HML”
+
+- [ ] Toda entrega desta conversa tem entrada em `tasks.json` (nova ou fechada)
+- [ ] `horarioInicio` / `horarioConclusao` e `totalHoras` coerentes com a regra de jornada
+- [ ] `referencias.commits` e `prHml` (ou pipeline) preenchidos
+- [ ] `meta.atualizadoEm` e `meta.totalTarefas` atualizados
+- [ ] Alterações do Planner commitadas e incluídas na promoção HML (ou em commit imediato promovido em seguida)
 
 ## Como abrir o HTML
 
