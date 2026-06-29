@@ -843,7 +843,7 @@
       "inicio": "2026-06-29",
       "horarioInicio": "12:27",
       "conclusao": "2026-06-29",
-      "horarioConclusao": "12:32",
+      "horarioConclusao": "12:46",
       "totalHoras": 0.5,
       "bucket": "Concluído",
       "percentualConcluido": 100,
@@ -854,10 +854,11 @@
       "ambiente": "HML",
       "referencias": {
         "commits": [
-          "3f8a455"
+          "3f8a455",
+          "50f8949"
         ],
         "branch": "Lioconnecta_HML",
-        "prHml": "Promocao DEV para HML (pipeline 28383523316)"
+        "prHml": "Promocao DEV para HML (pipeline 28384371535)"
       },
       "observacoes": "Registrado retroativamente; commit ja estava em HML sem entrada no JSON."
     }
