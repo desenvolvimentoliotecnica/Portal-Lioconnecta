@@ -28,18 +28,19 @@
     }
 
     .wrap {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 24px;
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 16px 20px 24px;
     }
 
     header {
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 16px;
-      padding: 20px 24px;
-      margin-bottom: 20px;
-      box-shadow: 0 8px 24px rgba(23, 63, 112, 0.06);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(23, 63, 112, 0.05);
     }
 
     h1 {
@@ -87,7 +88,7 @@
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
-      margin: 16px 0;
+      margin: 0 0 16px;
     }
 
     .stat {
@@ -96,6 +97,7 @@
       border-radius: 12px;
       padding: 10px 14px;
       min-width: 120px;
+      flex: 1 1 140px;
     }
 
     .stat strong {
@@ -112,24 +114,26 @@
     .card {
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 8px 24px rgba(23, 63, 112, 0.06);
+      box-shadow: 0 4px 16px rgba(23, 63, 112, 0.05);
     }
 
     .table-wrap {
       overflow: auto;
+      width: 100%;
     }
 
     table {
       width: 100%;
+      min-width: 1280px;
       border-collapse: collapse;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
     }
 
     th, td {
       border-bottom: 1px solid var(--line);
-      padding: 10px 12px;
+      padding: 8px 10px;
       text-align: left;
       vertical-align: top;
     }
@@ -142,7 +146,70 @@
       white-space: nowrap;
     }
 
+    th.col-time,
+    td.col-time {
+      white-space: nowrap;
+      width: 1%;
+    }
+
+    th.col-date,
+    td.col-date {
+      white-space: nowrap;
+      width: 1%;
+    }
+
+    th.col-hours,
+    td.col-hours,
+    th.col-prio,
+    td.col-prio,
+    th.col-bucket,
+    td.col-bucket {
+      text-align: center;
+      vertical-align: top;
+      white-space: nowrap;
+      width: 1%;
+    }
+
     tr:hover td { background: #f9fbfe; }
+
+    tr.day-header td {
+      background: #dde8f3;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.95rem;
+      border-top: 2px solid var(--accent);
+      border-bottom: 1px solid #b8cbe0;
+      padding: 12px 10px;
+    }
+
+    tr.day-header:hover td { background: #dde8f3; }
+
+    tr.day-subtotal td {
+      background: #f0f5fa;
+      font-weight: 600;
+      color: var(--text);
+      border-bottom: 3px solid var(--accent);
+      padding: 10px;
+    }
+
+    tr.day-subtotal:hover td { background: #f0f5fa; }
+
+    tr.day-gap td {
+      height: 14px;
+      padding: 0;
+      border: none;
+      background: var(--bg);
+    }
+
+    tr.day-gap:hover td { background: var(--bg); }
+
+    .day-part {
+      display: inline-block;
+      margin-left: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
 
     .copy {
       cursor: copy;
@@ -166,23 +233,10 @@
     .badge.todo { background: #eef2f7; color: var(--muted); }
     .badge.blocked { background: #fdecec; color: #b42318; }
 
-    .prio-media { color: #9a6700; }
-    .prio-alta, .prio-urgente { color: #b42318; }
-    .prio-baixa { color: var(--muted); }
-
-    .progress {
-      height: 8px;
-      background: #e8eef5;
-      border-radius: 999px;
-      overflow: hidden;
-      min-width: 80px;
-    }
-
-    .progress > span {
-      display: block;
-      height: 100%;
-      background: linear-gradient(90deg, #2f6faa, #173f70);
-    }
+    .badge.prio-urgente { background: #fdecec; color: #b42318; }
+    .badge.prio-alta { background: #ffe8e0; color: #c4320a; }
+    .badge.prio-media { background: #fff6df; color: #9a6700; }
+    .badge.prio-baixa { background: #eef2f7; color: var(--muted); }
 
     .empty {
       padding: 40px;
@@ -228,18 +282,16 @@
           <thead>
             <tr>
               <th>Nome da tarefa</th>
-              <th>Atribuída a</th>
-              <th>Início</th>
-              <th>Concluir</th>
-              <th>Duração</th>
-              <th>Bucket</th>
-              <th>% concluída</th>
-              <th>Prioridade</th>
+              <th class="col-date">Início</th>
+              <th class="col-date">Concluir</th>
+              <th class="col-hours">Duração</th>
+              <th class="col-bucket">Bucket</th>
+              <th class="col-prio">Prioridade</th>
               <th>Descrição (notas)</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td class="empty" colspan="9">Carregando…</td></tr>
+            <tr><td class="empty" colspan="7">Carregando…</td></tr>
           </tbody>
         </table>
       </div>
@@ -249,6 +301,7 @@
   <div class="toast" id="toast">Copiado!</div>
 
   <script>
+    const COLSPAN = 7;
     const tbody = document.getElementById("tbody");
     const stats = document.getElementById("stats");
     const toast = document.getElementById("toast");
@@ -265,6 +318,108 @@
       showToast("Copiado!");
     }
 
+    const HORAS_POR_DIA_UTIL = 8;
+    const JORNADA_INICIO = 8;
+    const JORNADA_FIM = 18;
+    const MINUTOS_MINIMOS = 30;
+    const HORAS_MINIMAS = MINUTOS_MINIMOS / 60;
+
+    function parseTime(value) {
+      if (!value) return null;
+      const [h, m] = String(value).split(":").map(Number);
+      if (Number.isNaN(h) || Number.isNaN(m)) return null;
+      return h + m / 60;
+    }
+
+    function eachCalendarDay(start, end, fn) {
+      const cursor = new Date(start);
+      while (cursor <= end) {
+        fn(new Date(cursor));
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    function countCalendarDays(start, end) {
+      let total = 0;
+      eachCalendarDay(start, end, () => { total += 1; });
+      return total;
+    }
+
+    function calcHoursBetweenTimes(timeStart, timeEnd) {
+      if (timeStart == null || timeEnd == null) return null;
+      const diff = Math.max(0, timeEnd - timeStart);
+      return Math.round(Math.min(HORAS_POR_DIA_UTIL, diff) * 100) / 100;
+    }
+
+    function normalizeSameDayHours(hours, task, dayCount) {
+      const timeStart = parseTime(task.horarioInicio);
+      const timeEnd = parseTime(task.horarioConclusao);
+      if (dayCount !== 1 || timeStart == null || timeEnd == null) return hours;
+      if (hours < HORAS_MINIMAS) return HORAS_MINIMAS;
+      return hours;
+    }
+
+    function hoursForTaskOnDay(task, dayIndex, dayCount) {
+      const timeStart = parseTime(task.horarioInicio);
+      const timeEnd = parseTime(task.horarioConclusao);
+
+      if (dayCount === 1) {
+        const between = calcHoursBetweenTimes(timeStart, timeEnd);
+        const hours = between != null ? between : HORAS_POR_DIA_UTIL;
+        return normalizeSameDayHours(hours, task, dayCount);
+      }
+
+      if (dayIndex === 0) {
+        if (timeStart == null) return HORAS_POR_DIA_UTIL;
+        const from = Math.max(timeStart, JORNADA_INICIO);
+        if (from >= JORNADA_FIM) return 0;
+        const partial = Math.round(Math.min(HORAS_POR_DIA_UTIL, JORNADA_FIM - from) * 100) / 100;
+        return partial > 0 ? partial : 0;
+      }
+
+      if (dayIndex === dayCount - 1) {
+        if (timeEnd == null) return HORAS_POR_DIA_UTIL;
+        const to = Math.min(timeEnd, JORNADA_FIM);
+        if (to <= JORNADA_INICIO) return 0;
+        const partial = Math.round(Math.min(HORAS_POR_DIA_UTIL, to - JORNADA_INICIO) * 100) / 100;
+        return partial > 0 ? partial : 0;
+      }
+
+      return HORAS_POR_DIA_UTIL;
+    }
+
+    function calcTotalHoras(task) {
+      const startDate = parseDate(task.inicio);
+      const endDate = parseDate(task.conclusao || task.inicio);
+      if (!startDate || !endDate) return null;
+
+      const dayCount = countCalendarDays(startDate, endDate);
+      let total = 0;
+      for (let i = 0; i < dayCount; i += 1) {
+        total += hoursForTaskOnDay(task, i, dayCount);
+      }
+      return Math.round(total * 100) / 100;
+    }
+
+    function resolveTotalHoras(task) {
+      return calcTotalHoras(task);
+    }
+
+    function formatHoursAsDuration(hours) {
+      if (hours == null || Number.isNaN(hours)) return "—";
+      const totalMinutes = Math.round(Number(hours) * 60);
+      if (totalMinutes <= 0) return "0min";
+      if (totalMinutes < 60) return `${totalMinutes}min`;
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      return m ? `${h}h ${m}min` : `${h}h`;
+    }
+
+    function formatTime(value) {
+      if (!value) return "—";
+      return String(value);
+    }
+
     function parseDate(value) {
       if (!value) return null;
       const [y, m, d] = value.split("-").map(Number);
@@ -275,14 +430,6 @@
       const date = parseDate(value);
       if (!date) return "—";
       return date.toLocaleDateString("pt-BR");
-    }
-
-    function calcDuration(start, end) {
-      const a = parseDate(start);
-      const b = parseDate(end);
-      if (!a || !b) return "—";
-      const diff = Math.round((b - a) / 86400000) + 1;
-      return diff === 1 ? "1 dia" : `${diff} dias`;
     }
 
     function bucketClass(bucket) {
@@ -301,8 +448,167 @@
       return "prio-media";
     }
 
-    function cell(text, copyValue = text) {
+    function toDayKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDayHeader(dayKey) {
+      const date = parseDate(dayKey);
+      if (!date) return dayKey;
+      const weekday = date.toLocaleDateString("pt-BR", { weekday: "long" });
+      const label = date.toLocaleDateString("pt-BR");
+      return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${label}`;
+    }
+
+    function allocateHoursPerDay(task) {
+      const start = parseDate(task.inicio);
+      const end = parseDate(task.conclusao || task.inicio);
+      if (!start || !end) return [];
+
+      const days = [];
+      eachCalendarDay(start, end, (day) => days.push(day));
+      const dayCount = days.length;
+
+      return days.map((day, index) => ({
+        dayKey: toDayKey(day),
+        hours: hoursForTaskOnDay(task, index, dayCount),
+        dayIndex: index + 1,
+        dayCount,
+        task
+      }));
+    }
+
+    function entrySortKey(entry) {
+      const { task, dayKey, dayIndex, dayCount } = entry;
+      let time = "12:00";
+
+      if (dayCount === 1) {
+        time = task.horarioConclusao || task.horarioInicio || "00:00";
+      } else if (dayIndex === dayCount) {
+        time = task.horarioConclusao || "23:59";
+      } else if (dayIndex === 1) {
+        time = task.horarioInicio || "00:00";
+      }
+
+      return `${dayKey}T${time}`;
+    }
+
+    function groupByDay(tasks) {
+      const groups = new Map();
+
+      for (const task of tasks) {
+        for (const entry of allocateHoursPerDay(task)) {
+          if (!groups.has(entry.dayKey)) {
+            groups.set(entry.dayKey, { dayKey: entry.dayKey, entries: [] });
+          }
+          groups.get(entry.dayKey).entries.push(entry);
+        }
+      }
+
+      return [...groups.values()]
+        .sort((a, b) => b.dayKey.localeCompare(a.dayKey))
+        .map((group) => {
+          group.entries.sort((a, b) => {
+            const byTime = entrySortKey(b).localeCompare(entrySortKey(a));
+            if (byTime !== 0) return byTime;
+            return String(b.task.id || "").localeCompare(String(a.task.id || ""));
+          });
+          group.subtotal = group.entries.reduce((sum, entry) => sum + (Number(entry.hours) || 0), 0);
+          return group;
+        });
+    }
+
+    function appendDayHeader(dayKey) {
+      const tr = document.createElement("tr");
+      tr.className = "day-header";
       const td = document.createElement("td");
+      td.colSpan = COLSPAN;
+      td.textContent = formatDayHeader(dayKey);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    }
+
+    function appendDaySubtotal(subtotal) {
+      const tr = document.createElement("tr");
+      tr.className = "day-subtotal";
+      const td = document.createElement("td");
+      td.colSpan = COLSPAN;
+      td.textContent = `Subtotal do dia: ${formatHoursAsDuration(subtotal)}`;
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    }
+
+    function appendDayGap() {
+      const tr = document.createElement("tr");
+      tr.className = "day-gap";
+      tr.innerHTML = `<td colspan="${COLSPAN}"></td>`;
+      tbody.appendChild(tr);
+    }
+
+    function appendTaskRow(entry) {
+      const { task, hours, dayIndex, dayCount } = entry;
+      const tr = document.createElement("tr");
+      const dayPartLabel = dayCount > 1 ? ` (dia ${dayIndex}/${dayCount})` : "";
+
+      const nameTd = document.createElement("td");
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "copy";
+      nameSpan.textContent = task.nome || "—";
+      nameSpan.title = "Clique para copiar";
+      nameSpan.addEventListener("click", () => copyText(String(task.nome || "")));
+      nameTd.appendChild(nameSpan);
+      if (dayCount > 1) {
+        const part = document.createElement("span");
+        part.className = "day-part";
+        part.textContent = dayPartLabel;
+        nameTd.appendChild(part);
+      }
+      tr.appendChild(nameTd);
+
+      const inicioLabel = formatBrDate(task.inicio);
+      const conclusaoLabel = formatBrDate(task.conclusao);
+      const durationLabel = formatHoursAsDuration(hours);
+
+      tr.appendChild(cell(inicioLabel, inicioLabel, "col-date"));
+      tr.appendChild(cell(conclusaoLabel, conclusaoLabel, "col-date"));
+      tr.appendChild(cell(durationLabel, durationLabel, "col-hours"));
+
+      const bucketTd = document.createElement("td");
+      bucketTd.className = "col-bucket";
+      const bucket = document.createElement("span");
+      bucket.className = `badge ${bucketClass(task.bucket)} copy`;
+      bucket.textContent = task.bucket || "—";
+      bucket.title = "Clique para copiar";
+      bucket.addEventListener("click", () => copyText(task.bucket || ""));
+      bucketTd.appendChild(bucket);
+      tr.appendChild(bucketTd);
+
+      const prioTd = document.createElement("td");
+      prioTd.className = "col-prio";
+      const prio = document.createElement("span");
+      prio.className = `badge copy ${prioClass(task.prioridade)}`;
+      prio.textContent = task.prioridade || "Média";
+      prio.title = "Clique para copiar";
+      prio.addEventListener("click", () => copyText(task.prioridade || "Média"));
+      prioTd.appendChild(prio);
+      tr.appendChild(prioTd);
+
+      const notes = [
+        task.descricaoAmigavel,
+        task.entregavel ? `Entregável: ${task.entregavel}` : "",
+        task.pedidoOriginal ? `Pedido: ${task.pedidoOriginal}` : ""
+      ].filter(Boolean).join("\n\n");
+
+      tr.appendChild(cell(notes || "—", notes));
+      tbody.appendChild(tr);
+    }
+
+    function cell(text, copyValue = text, className = "") {
+      const td = document.createElement("td");
+      if (className) td.className = className;
       const span = document.createElement("span");
       span.className = "copy";
       span.textContent = text ?? "—";
@@ -315,82 +621,43 @@
     function render(data) {
       currentData = data;
       const tasks = Array.isArray(data.tarefas) ? data.tarefas : [];
-      const defaultAssignee = data.meta?.responsavelPadrao || "Leonardo Sabino Mendes";
 
       const total = tasks.length;
       const done = tasks.filter((t) => Number(t.percentualConcluido) >= 100).length;
       const open = total - done;
 
+      const totalHours = tasks.reduce((sum, task) => {
+        const hours = resolveTotalHoras(task);
+        return sum + (Number(hours) || 0);
+      }, 0);
+
       stats.innerHTML = `
         <div class="stat"><strong>${total}</strong><span>Total de tarefas</span></div>
         <div class="stat"><strong>${done}</strong><span>Concluídas</span></div>
         <div class="stat"><strong>${open}</strong><span>Em aberto</span></div>
+        <div class="stat"><strong>${formatHoursAsDuration(totalHours)}</strong><span>Tempo total</span></div>
         <div class="stat"><strong>${formatBrDate(data.meta?.atualizadoEm)}</strong><span>JSON atualizado</span></div>
       `;
 
       tbody.innerHTML = "";
 
       if (!tasks.length) {
-        tbody.innerHTML = '<tr><td class="empty" colspan="9">Nenhuma tarefa em tasks.json. Peça ao assistente para registrar ou alimente o histórico desde 23/06.</td></tr>';
+        tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">Nenhuma tarefa em tasks.json. Peça ao assistente para registrar ou alimente o histórico desde 23/06.</td></tr>`;
         return;
       }
 
-      const sorted = [...tasks].sort((a, b) => String(b.inicio || "").localeCompare(String(a.inicio || "")));
+      const dayGroups = groupByDay(tasks);
 
-      for (const task of sorted) {
-        const tr = document.createElement("tr");
-        const assignee = task.atribuidaA || defaultAssignee;
-        const pct = Math.max(0, Math.min(100, Number(task.percentualConcluido || 0)));
-
-        tr.appendChild(cell(task.nome, task.nome));
-        tr.appendChild(cell(assignee, assignee));
-        tr.appendChild(cell(formatBrDate(task.inicio), formatBrDate(task.inicio)));
-        tr.appendChild(cell(formatBrDate(task.conclusao), formatBrDate(task.conclusao)));
-        tr.appendChild(cell(calcDuration(task.inicio, task.conclusao), calcDuration(task.inicio, task.conclusao)));
-
-        const bucketTd = document.createElement("td");
-        const bucket = document.createElement("span");
-        bucket.className = `badge ${bucketClass(task.bucket)} copy`;
-        bucket.textContent = task.bucket || "—";
-        bucket.title = "Clique para copiar";
-        bucket.addEventListener("click", () => copyText(task.bucket || ""));
-        bucketTd.appendChild(bucket);
-        tr.appendChild(bucketTd);
-
-        const pctTd = document.createElement("td");
-        const pctWrap = document.createElement("div");
-        pctWrap.style.display = "grid";
-        pctWrap.style.gap = "6px";
-        const bar = document.createElement("div");
-        bar.className = "progress";
-        bar.innerHTML = `<span style="width:${pct}%"></span>`;
-        const pctLabel = document.createElement("span");
-        pctLabel.className = "copy";
-        pctLabel.textContent = `${pct}%`;
-        pctLabel.title = "Clique para copiar";
-        pctLabel.addEventListener("click", () => copyText(String(pct)));
-        pctWrap.append(bar, pctLabel);
-        pctTd.appendChild(pctWrap);
-        tr.appendChild(pctTd);
-
-        const prioTd = document.createElement("td");
-        const prio = document.createElement("span");
-        prio.className = `copy ${prioClass(task.prioridade)}`;
-        prio.textContent = task.prioridade || "Média";
-        prio.title = "Clique para copiar";
-        prio.addEventListener("click", () => copyText(task.prioridade || "Média"));
-        prioTd.appendChild(prio);
-        tr.appendChild(prioTd);
-
-        const notes = [
-          task.descricaoAmigavel,
-          task.entregavel ? `Entregável: ${task.entregavel}` : "",
-          task.pedidoOriginal ? `Pedido: ${task.pedidoOriginal}` : ""
-        ].filter(Boolean).join("\n\n");
-
-        tr.appendChild(cell(notes || "—", notes));
-        tbody.appendChild(tr);
-      }
+      dayGroups.forEach((group, index) => {
+        appendDayHeader(group.dayKey);
+        for (const entry of group.entries) {
+          appendTaskRow(entry);
+        }
+        appendDaySubtotal(group.subtotal);
+        if (index < dayGroups.length - 1) {
+          appendDayGap();
+        }
+      });
     }
 
     async function loadFromUrl() {
@@ -403,7 +670,7 @@
       try {
         render(await loadFromUrl());
       } catch (error) {
-        tbody.innerHTML = `<tr><td class="empty" colspan="9">${error.message}. Use &quot;Carregar JSON do disco&quot; ou rode: python -m http.server 8765</td></tr>`;
+        tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">${error.message}. Use &quot;Carregar JSON do disco&quot; ou rode: python -m http.server 8765</td></tr>`;
       }
     });
 
@@ -415,26 +682,42 @@
     });
 
     document.getElementById("copy-all-btn").addEventListener("click", async () => {
-      const rows = [["Nome da tarefa", "Atribuída a", "Início", "Concluir", "Duração", "Bucket", "% concluída", "Prioridade", "Descrição"]];
-      for (const task of currentData.tarefas || []) {
-        rows.push([
-          task.nome || "",
-          task.atribuidaA || currentData.meta?.responsavelPadrao || "",
-          formatBrDate(task.inicio),
-          formatBrDate(task.conclusao),
-          calcDuration(task.inicio, task.conclusao),
-          task.bucket || "",
-          String(task.percentualConcluido ?? ""),
-          task.prioridade || "Média",
-          task.descricaoAmigavel || ""
-        ]);
+      const rows = [[
+        "Nome da tarefa",
+        "Início",
+        "Concluir",
+        "Duração",
+        "Bucket",
+        "Prioridade",
+        "Descrição"
+      ]];
+
+      const dayGroups = groupByDay(currentData.tarefas || []);
+      for (const group of dayGroups) {
+        rows.push([formatDayHeader(group.dayKey), "", "", "", "", "", ""]);
+        for (const entry of group.entries) {
+          const { task, hours, dayIndex, dayCount } = entry;
+          const name = dayCount > 1 ? `${task.nome || ""} (dia ${dayIndex}/${dayCount})` : (task.nome || "");
+          rows.push([
+            name,
+            formatBrDate(task.inicio),
+            formatBrDate(task.conclusao),
+            formatHoursAsDuration(hours),
+            task.bucket || "",
+            task.prioridade || "Média",
+            task.descricaoAmigavel || ""
+          ]);
+        }
+        rows.push([`Subtotal do dia: ${formatHoursAsDuration(group.subtotal)}`, "", "", formatHoursAsDuration(group.subtotal), "", "", ""]);
+        rows.push(["", "", "", "", "", "", ""]);
       }
+
       const tsv = rows.map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join("\t")).join("\n");
       await copyText(tsv);
     });
 
     loadFromUrl().then(render).catch(() => {
-      tbody.innerHTML = '<tr><td class="empty" colspan="9">Abra via servidor local (python -m http.server 8765) ou use &quot;Carregar JSON do disco&quot;.</td></tr>';
+      tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">Abra via servidor local (python -m http.server 8765) ou use &quot;Carregar JSON do disco&quot;.</td></tr>`;
     });
   </script>
 </body>

@@ -16,8 +16,8 @@ Registrar no projeto tudo o que for solicitado e entregue, em um JSON único, pa
 
 | Momento | Regra |
 |---------|--------|
-| **Início** | Quando o Leonardo faz um pedido no chat (nova solicitação de trabalho) |
-| **Fim** | Quando o Pull Request / promoção para **HML** (`Lioconnecta_HML`) for concluída |
+| **Início** | Quando o Leonardo faz um pedido no chat (nova solicitação de trabalho) — registrar **data e horário** |
+| **Fim** | Quando o Pull Request / promoção para **HML** (`Lioconnecta_HML`) for concluída — registrar **data e horário** do merge/deploy |
 | **Em andamento** | Pedido feito, trabalho em DEV ou aguardando deploy/validação antes do HML |
 
 Uma conversa pode gerar **uma ou mais tarefas**, se o pedido for claramente composto (ex.: "implementar X e depois subir para HML" = 1 tarefa; "ajuste A" e "ajuste B" independentes = 2 tarefas).
@@ -25,9 +25,9 @@ Uma conversa pode gerar **uma ou mais tarefas**, se o pedido for claramente comp
 ## Quem registra
 
 - O **assistente (Cursor)** deve atualizar `tasks.json` ao:
-  1. **Abrir** uma tarefa nova quando o usuário pedir algo executável
+  1. **Abrir** uma tarefa nova quando o usuário pedir algo executável (com `horarioInicio` do pedido)
   2. **Atualizar** percentual, bucket e datas enquanto o trabalho avança
-  3. **Fechar** a tarefa (100%, bucket `Concluído`, data de conclusão) após promoção/PR em HML
+  3. **Fechar** a tarefa (100%, bucket `Concluído`, data, `horarioConclusao` e `totalHoras`) após promoção/PR em HML
 
 - O Leonardo valida no HTML e cola no Planner.
 
@@ -39,7 +39,10 @@ Uma conversa pode gerar **uma ou mais tarefas**, se o pedido for claramente comp
   "nome": "[LIOCONNECTA] Texto curto para o Planner",
   "descricaoAmigavel": "Texto humano, 1–3 frases, sem jargão excessivo.",
   "inicio": "2026-06-23",
+  "horarioInicio": "14:35",
   "conclusao": "2026-06-27",
+  "horarioConclusao": "11:20",
+  "totalHoras": 32,
   "bucket": "Concluído",
   "percentualConcluido": 100,
   "prioridade": "Média",
@@ -73,6 +76,31 @@ Uma conversa pode gerar **uma ou mais tarefas**, se o pedido for claramente comp
 - `inicio` = data do pedido (ou primeiro dia útil se pedido virou tarefa no dia seguinte)
 - `conclusao` = data em que entrou em HML (merge/push em `Lioconnecta_HML`)
 
+**horarioInicio** / **horarioConclusao**
+- Formato `HH:mm` (24 horas), fuso **America/Sao_Paulo (Brasília)**
+- `horarioInicio` = horário em que o Leonardo fez o pedido no chat (momento da mensagem)
+- `horarioConclusao` = horário em que a promoção para HML foi concluída (merge/push ou fim do deploy no CI, o que ocorrer por último)
+- Enquanto a tarefa estiver aberta: `horarioConclusao` = `null`
+- Em backfill histórico sem horário exato: usar `null` ou estimativa documentada em `observacoes` (ex.: `"Horário estimado a partir do merge"`)
+
+**Duração (dias)**
+- Exibida na tabela HTML como dias corridos entre `inicio` e `conclusao` (inclusive)
+- **Sábado e domingo** entram na contagem, assim como os demais dias
+
+**totalHoras**
+- Número decimal com até 2 casas (ex.: `0,5`, `8`, `16`)
+- Jornada comercial para cálculo parcial: **08:00–18:00** (Brasília)
+- **Mesmo dia** com `horarioInicio` e `horarioConclusao`: diferença real em horas (máx. 8h), com **mínimo de 30 minutos (0,5 h)** quando o intervalo for menor
+- **Mesmo dia** sem horários: **8**
+- **Vários dias**
+  - **Primeiro dia**: de `horarioInicio` até **18:00** (ex.: início `17:04` → `56min`)
+  - **Último dia**: de **08:00** até `horarioConclusao`
+  - **Dias intermediários**: **8h** cada
+  - Horário fora da jornada comercial (antes das 08:00 ou após as 18:00) no 1º/último dia → **0h** naquele dia (não usar fallback de 8h)
+  - Sem horário no extremo → **8h** naquele dia
+- **Sábado e domingo** contam normalmente nos dias corridos
+- O `index.html` **recalcula** a exibição e o subtotal diário; o assistente deve manter `totalHoras` no JSON alinhado
+
 **bucket**
 - `A fazer` | `Em andamento` | `Concluído` | `Bloqueado`
 
@@ -94,9 +122,9 @@ Uma conversa pode gerar **uma ou mais tarefas**, se o pedido for claramente comp
 ## Fluxo recomendado
 
 1. Leonardo pede algo no chat
-2. Assistente cria entrada em `tasks.json` (`Em andamento`, `inicio` = hoje)
+2. Assistente cria entrada em `tasks.json` (`Em andamento`, `inicio` e `horarioInicio` = agora)
 3. Trabalho em DEV → atualizar `percentualConcluido`, `entregavel`, `commits`
-4. Promoção HML → `Concluído`, `conclusao` = hoje, `prHml` se existir
+4. Promoção HML → `Concluído`, `conclusao`, `horarioConclusao` e `totalHoras` = momento do encerramento, `prHml` se existir
 5. Leonardo abre `index.html`, copia linhas para o Planner
 
 ## Como abrir o HTML
@@ -112,18 +140,22 @@ Abrir: `http://localhost:8765/index.html`
 
 Ou usar o botão **Carregar JSON** na página se abrir o arquivo direto do disco.
 
+A tabela agrupa as tarefas **por dia** (cada dia entre `inicio` e `conclusao` da tarefa), com cabeçalho do dia, linha em branco entre blocos e **subtotal de horas** ao final de cada dia.
+
 ## Backfill histórico
 
 Tarefas já concluídas (desde 23/06/2026) devem ser reconstruídas a partir de:
 - histórico de commits / merges em `Lioconnecta_HML`
 - conversas e entregas conhecidas (holerite, cadastro, rename, etc.)
 
-Cada entrada histórica segue as mesmas regras de `nome` amigável e datas de início/fim.
+Cada entrada histórica segue as mesmas regras de `nome` amigável e datas de início/fim. No backfill, `horarioInicio` e `horarioConclusao` podem ser estimados a partir do primeiro e do último commit listado em `referencias.commits`; `totalHoras` segue a regra de dias corridos × 8h (incluindo sábado e domingo).
 
 ## Checklist antes de colar no Planner
 
 - [ ] Nome legível para gestor
 - [ ] Início e conclusão coerentes com pedido e HML
+- [ ] Horário de início e término preenchidos (ou `null` justificado em `observacoes`)
+- [ ] `totalHoras` coerente com datas, horários e regra de 8h/dia (incluindo fim de semana)
 - [ ] Duração conferida na tabela HTML
 - [ ] % = 100 só se já está em HML
 - [ ] Prioridade e bucket corretos
