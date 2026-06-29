@@ -1,7 +1,7 @@
 import { PAYSLIP_PRINT_CSS } from "./payslipPrintStyles.js";
 
 const HTML2PDF_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-const PAYSLIP_BUILD = "holerite-v2";
+const PAYSLIP_BUILD = "holerite-v3";
 let html2PdfPromise;
 
 export function getPayslipBuildLabel() {
@@ -77,26 +77,16 @@ function waitForPrintDocument(printDocument, root = document) {
   });
 }
 
-function openPrintWindow(payslipHtml, root = document) {
-  const printWindow = root.defaultView?.open("", "_blank", "noopener,noreferrer");
-  if (!printWindow) {
-    return null;
-  }
-
-  printWindow.document.open();
-  printWindow.document.write(buildPayslipPrintHtml(payslipHtml));
-  printWindow.document.close();
-  return printWindow;
-}
-
-function openPrintFrame(payslipHtml, root = document) {
+function createPrintFrame(payslipHtml, root = document) {
   const frame = root.createElement("iframe");
   frame.setAttribute("aria-hidden", "true");
+  frame.className = "payslip-print-frame";
   frame.style.cssText = "border:0;height:1200px;left:-10000px;position:fixed;top:0;width:900px;";
   root.body.appendChild(frame);
 
+  const frameWindow = frame.contentWindow;
   const frameDocument = frame.contentDocument;
-  if (!frameDocument) {
+  if (!frameWindow || !frameDocument) {
     frame.remove();
     return null;
   }
@@ -104,7 +94,8 @@ function openPrintFrame(payslipHtml, root = document) {
   frameDocument.open();
   frameDocument.write(buildPayslipPrintHtml(payslipHtml));
   frameDocument.close();
-  return frame;
+
+  return { frame, frameWindow, frameDocument };
 }
 
 export async function printPayslipDocument(root = document) {
@@ -113,34 +104,12 @@ export async function printPayslipDocument(root = document) {
     throw new Error("Holerite nao carregado para impressao.");
   }
 
-  const payslipHtml = payslip.outerHTML;
-  const printWindow = openPrintWindow(payslipHtml, root);
-
-  if (printWindow) {
-    await waitForPrintDocument(printWindow.document, root);
-
-    const cleanup = () => {
-      if (!printWindow.closed) {
-        printWindow.close();
-      }
-      printWindow.removeEventListener("afterprint", cleanup);
-    };
-
-    printWindow.addEventListener("afterprint", cleanup);
-    printWindow.focus();
-    printWindow.print();
-    root.defaultView?.setTimeout(cleanup, 1000);
-    return;
-  }
-
-  const frame = openPrintFrame(payslipHtml, root);
-  const frameWindow = frame?.contentWindow;
-  const frameDocument = frame?.contentDocument;
-
-  if (!frame || !frameWindow || !frameDocument) {
+  const printTarget = createPrintFrame(payslip.outerHTML, root);
+  if (!printTarget) {
     throw new Error("Nao foi possivel preparar a impressao do holerite.");
   }
 
+  const { frame, frameWindow, frameDocument } = printTarget;
   await waitForPrintDocument(frameDocument, root);
 
   const cleanup = () => {
@@ -149,7 +118,6 @@ export async function printPayslipDocument(root = document) {
   };
 
   frameWindow.addEventListener("afterprint", cleanup);
-  frameWindow.focus();
   frameWindow.print();
   root.defaultView?.setTimeout(cleanup, 1000);
 }

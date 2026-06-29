@@ -5954,6 +5954,16 @@ body.agenda-event-modal-open {
   }
 }
 
+.payslip-print-frame {
+  border: 0;
+  height: 0;
+  left: -10000px;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  width: 900px;
+}
+
 .payslip-export-host {
   left: -10000px;
   pointer-events: none;
