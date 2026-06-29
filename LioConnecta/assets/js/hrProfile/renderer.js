@@ -275,7 +275,6 @@ function renderPersonalDataPage(data = {}) {
                   <div class="hr-profile-field">
                     <span>${escapeHtml(field.label)}</span>
                     <strong>${escapeHtml(field.value)}</strong>
-                    ${field.isEditable ? `<small>Editavel via RH</small>` : `<small>Somente leitura</small>`}
                   </div>
                 `).join("")}
               </div>
