@@ -6,11 +6,286 @@
     "instrucao": "totalHoras = tempo real entre horarios no mesmo dia; multi-dia = parcial + 8h/dia.",
     "horasUteisPorDia": 8,
     "minutosMinimos": 30,
-    "jornadaComercial": "08:00-18:00"
+    "jornadaComercial": "08:00-18:00",
+    "backfillPre23Em": "2026-06-29",
+    "totalTarefas": 28
   },
   "tarefas": [
     {
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "ambiente": "HML",
+      "observacoes": "Backfill a partir de commits git (anterior a 23/06).",
       "id": "TASK-2026-001",
+      "nome": "[Portal RH] Bootstrap da solution e estrutura inicial",
+      "descricaoAmigavel": "Criação da solution .NET do Portal RH com projetos Web, API e base para evolução do produto.",
+      "pedidoOriginal": "Iniciar o projeto Portal RH com estrutura técnica mínima executável.",
+      "entregavel": "Solution Portal RH criada no repositório com build inicial.",
+      "inicio": "2026-06-10",
+      "horarioInicio": "09:54",
+      "conclusao": "2026-06-10",
+      "horarioConclusao": "09:54",
+      "referencias": {
+        "commits": [
+          "1d7035b"
+        ],
+        "branch": "Lioconnecta_DEV",
+        "prHml": "Incluído no Merge PR #1 (23/06)"
+      },
+      "totalHoras": 0.5
+    },
+    {
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "ambiente": "HML",
+      "observacoes": "Backfill a partir de commits git (anterior a 23/06).",
+      "id": "TASK-2026-002",
+      "nome": "[Portal RH] Protótipo visual da timeline Minha Jornada",
+      "descricaoAmigavel": "Iterações no layout da linha do tempo de carreira, com conectores curvos e ajustes visuais no painel de demonstração.",
+      "pedidoOriginal": "Evoluir o protótipo da timeline para apresentação da jornada do colaborador.",
+      "entregavel": "Timeline com conectores e layout refinado no showcase.",
+      "inicio": "2026-06-10",
+      "horarioInicio": "10:12",
+      "conclusao": "2026-06-10",
+      "horarioConclusao": "11:38",
+      "referencias": {
+        "commits": [
+          "90afc4b",
+          "86d0a63",
+          "d7118fb",
+          "a07bbeb",
+          "f684726",
+          "60cf889",
+          "32fee7e",
+          "1256b5e",
+          "0d7ab53",
+          "51c8b28"
+        ],
+        "branch": "Lioconnecta_DEV",
+        "prHml": "Incluído no Merge PR #1 (23/06)"
+      },
+      "totalHoras": 1.43
+    },
+    {
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "ambiente": "HML",
+      "observacoes": "Backfill a partir de commits git (anterior a 23/06).",
+      "id": "TASK-2026-003",
+      "nome": "[Portal RH] Seção de testes e grid da timeline",
+      "descricaoAmigavel": "Montagem da área de testes do showcase com cards, badges e expansão do grid para validação visual.",
+      "pedidoOriginal": "Ampliar cenários de teste visual da timeline no ambiente de demonstração.",
+      "entregavel": "Grid de testes com múltiplas linhas e badges no showcase.",
+      "inicio": "2026-06-10",
+      "horarioInicio": "11:55",
+      "conclusao": "2026-06-10",
+      "horarioConclusao": "12:41",
+      "referencias": {
+        "commits": [
+          "9528277",
+          "068cb3e",
+          "8b04c94",
+          "172f797",
+          "dd5a487",
+          "3398f0a",
+          "eb4529b",
+          "2d5fcb7"
+        ],
+        "branch": "Lioconnecta_DEV",
+        "prHml": "Incluído no Merge PR #1 (23/06)"
+      },
+      "totalHoras": 0.77
+    },
+    {
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "ambiente": "HML",
+      "observacoes": "Backfill a partir de commits git (anterior a 23/06).",
+      "id": "TASK-2026-004",
+      "nome": "[LIOCONNECTA] Protótipo do portal e backend de comunicados",
+      "descricaoAmigavel": "Primeira versão navegável do LioConnecta com API e listagem de comunicados corporativos.",
+      "pedidoOriginal": "Subir protótipo do portal com módulo de comunicados.",
+      "entregavel": "Frontend LioConnecta e backend de comunicados integrados.",
+      "inicio": "2026-06-19",
+      "horarioInicio": "14:32",
+      "conclusao": "2026-06-19",
+      "horarioConclusao": "14:45",
+      "referencias": {
+        "commits": [
+          "7b49d5e",
+          "328239d"
+        ],
+        "branch": "Lioconnecta_DEV",
+        "prHml": "Incluído no Merge PR #1 (23/06)"
+      },
+      "totalHoras": 0.5
+    },
+    {
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "ambiente": "HML",
+      "observacoes": "Backfill a partir de commits git (anterior a 23/06).",
+      "id": "TASK-2026-005",
+      "nome": "[LIOCONNECTA] Área administrativa e configuração LDAP",
+      "descricaoAmigavel": "Painel admin para parametrização do LDAP e validação local do fluxo de configuração.",
+      "pedidoOriginal": "Criar área admin com cadastro de LDAP.",
+      "entregavel": "Tela admin e fluxo de configuração LDAP operacional em DEV.",
+      "inicio": "2026-06-19",
+      "horarioInicio": "17:01",
+      "conclusao": "2026-06-19",
+      "horarioConclusao": "17:08",
+      "referencias": {
+        "commits": [
+          "d27d365",
+          "8826b1b"
+        ],
+        "branch": "Lioconnecta_DEV",
+        "prHml": "Incluído no Merge PR #1 (23/06)"
+      },
+      "totalHoras": 0.5
+    },
+    {
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "ambiente": "HML",
+      "observacoes": "Backfill a partir de commits git (anterior a 23/06).",
+      "id": "TASK-2026-006",
+      "nome": "[LIOCONNECTA] Login do colaborador via LDAP",
+      "descricaoAmigavel": "Autenticação do colaborador no portal usando credenciais do diretório corporativo.",
+      "pedidoOriginal": "Habilitar login LDAP no portal.",
+      "entregavel": "Endpoint e experiência de login LDAP publicados em DEV.",
+      "inicio": "2026-06-19",
+      "horarioInicio": "17:29",
+      "conclusao": "2026-06-19",
+      "horarioConclusao": "17:46",
+      "referencias": {
+        "commits": [
+          "6d4ff7a",
+          "9f671d5"
+        ],
+        "branch": "Lioconnecta_DEV",
+        "prHml": "Incluído no Merge PR #1 (23/06)"
+      },
+      "totalHoras": 0.5
+    },
+    {
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "ambiente": "HML",
+      "observacoes": "Backfill a partir de commits git (anterior a 23/06).",
+      "id": "TASK-2026-007",
+      "nome": "[LIOCONNECTA] Evolução do portal DEV com enquetes",
+      "descricaoAmigavel": "Consolidação das funcionalidades de enquetes e ajustes gerais do portal em ambiente de desenvolvimento.",
+      "pedidoOriginal": "Avançar portal DEV com LDAP, admin e enquetes.",
+      "entregavel": "Portal DEV com enquetes e integrações LDAP estáveis.",
+      "inicio": "2026-06-22",
+      "horarioInicio": "11:13",
+      "conclusao": "2026-06-22",
+      "horarioConclusao": "11:13",
+      "referencias": {
+        "commits": [
+          "16d56ca"
+        ],
+        "branch": "Lioconnecta_DEV",
+        "prHml": "Incluído no Merge PR #1 (23/06)"
+      },
+      "totalHoras": 0.5
+    },
+    {
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "ambiente": "HML",
+      "observacoes": "Backfill a partir de commits git (anterior a 23/06).",
+      "id": "TASK-2026-008",
+      "nome": "[Infra] Gestor de deploy e padronização de portas DEV",
+      "descricaoAmigavel": "Ferramenta de gestão de deploy do LioConnecta e definição das portas padrão do ambiente de desenvolvimento.",
+      "pedidoOriginal": "Padronizar deploy e portas DEV/HML do portal.",
+      "entregavel": "Deploy manager e portas 3020/3030 documentadas e automatizadas.",
+      "inicio": "2026-06-22",
+      "horarioInicio": "17:04",
+      "conclusao": "2026-06-22",
+      "horarioConclusao": "17:04",
+      "referencias": {
+        "commits": [
+          "ddda902"
+        ],
+        "branch": "Lioconnecta_DEV",
+        "prHml": "Incluído no Merge PR #1 (23/06)"
+      },
+      "totalHoras": 0.5
+    },
+    {
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "ambiente": "HML",
+      "observacoes": "Backfill a partir de commits git (anterior a 23/06).",
+      "id": "TASK-2026-009",
+      "nome": "[Infra] Correções do deployer, health check e host da API",
+      "descricaoAmigavel": "Ajustes no script de publicação com health check resiliente, restart via sudo e resolução do host da API no frontend publicado.",
+      "pedidoOriginal": "Corrigir deployer e conectividade API após publicação.",
+      "entregavel": "Deployer estável com health check e frontend apontando para API correta.",
+      "inicio": "2026-06-22",
+      "horarioInicio": "20:25",
+      "conclusao": "2026-06-22",
+      "horarioConclusao": "21:27",
+      "referencias": {
+        "commits": [
+          "37f8941",
+          "dc91d54",
+          "bab7901",
+          "48feea4",
+          "d27278b"
+        ],
+        "branch": "Lioconnecta_DEV",
+        "prHml": "Incluído no Merge PR #1 (23/06)"
+      },
+      "totalHoras": 1.03
+    },
+    {
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "ambiente": "HML",
+      "observacoes": "Backfill a partir de commits git (anterior a 23/06).",
+      "id": "TASK-2026-010",
+      "nome": "[LIOCONNECTA] CORS da API para origens do frontend publicado",
+      "descricaoAmigavel": "Liberação das origens do frontend implantado no CORS da API para permitir acesso em DEV/HML.",
+      "pedidoOriginal": "Corrigir bloqueio CORS após deploy do frontend.",
+      "entregavel": "API aceitando origens do portal publicado.",
+      "inicio": "2026-06-23",
+      "horarioInicio": "09:06",
+      "conclusao": "2026-06-23",
+      "horarioConclusao": "09:06",
+      "referencias": {
+        "commits": [
+          "4809122"
+        ],
+        "branch": "Lioconnecta_DEV",
+        "prHml": "Incluído no Merge PR #1 (23/06)"
+      },
+      "totalHoras": 0.5
+    },
+    {
+      "id": "TASK-2026-011",
       "nome": "[Infra] Documentação de provisionamento do ambiente HML",
       "descricaoAmigavel": "Preparação da documentação e checklist para subir o ambiente de homologação do portal, incluindo servidor, banco e serviços necessários.",
       "inicio": "2026-06-23",
@@ -35,7 +310,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-002",
+      "id": "TASK-2026-012",
       "nome": "[Infra] Documentação de provisionamento do ambiente PRD",
       "descricaoAmigavel": "Registro das configurações e passos para o ambiente de produção, alinhado ao padrão já usado em homologação.",
       "inicio": "2026-06-24",
@@ -60,7 +335,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-003",
+      "id": "TASK-2026-013",
       "nome": "[LIOCONNECTA] Módulos de RH, humor, enquetes e comunicados",
       "descricaoAmigavel": "Evolução do portal com áreas de RH, pesquisa de humor, enquetes e comunicados, usando fluxos mais próximos do uso real no dia a dia.",
       "inicio": "2026-06-23",
@@ -85,7 +360,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-004",
+      "id": "TASK-2026-014",
       "nome": "[LIOCONNECTA] Curtidas no feed e nos comunicados",
       "descricaoAmigavel": "Permitir que colaboradores curtam publicações do feed e comunicados, com registro para acompanhamento interno.",
       "inicio": "2026-06-24",
@@ -111,7 +386,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-005",
+      "id": "TASK-2026-015",
       "nome": "[LIOCONNECTA] Estrutura principal do portal com painéis e permissões",
       "descricaoAmigavel": "Organização da área logada do colaborador com painéis laterais, menu personalizado e regras de acesso por perfil.",
       "inicio": "2026-06-25",
@@ -136,7 +411,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-006",
+      "id": "TASK-2026-016",
       "nome": "[LIOCONNECTA] Fotos, galeria e comentários no feed",
       "descricaoAmigavel": "Melhoria da experiência social do portal com publicação de fotos, visualização em galeria e comentários nos posts.",
       "inicio": "2026-06-25",
@@ -163,7 +438,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-007",
+      "id": "TASK-2026-017",
       "nome": "[LIOCONNECTA] Menções, compartilhamento e posts salvos no feed",
       "descricaoAmigavel": "Refinamentos no feed: marcar colegas com @, compartilhar posts, salvar conteúdos e pequenos ajustes visuais da timeline.",
       "inicio": "2026-06-26",
@@ -190,7 +465,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-008",
+      "id": "TASK-2026-018",
       "nome": "[LIOCONNECTA] Área Perfil RH para o colaborador",
       "descricaoAmigavel": "Criação das telas de Perfil RH (holerite, cadastro, benefícios etc.) com navegação interna e visual alinhado ao restante do portal.",
       "inicio": "2026-06-26",
@@ -216,7 +491,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-009",
+      "id": "TASK-2026-019",
       "nome": "[LIOCONNECTA] Integração da agenda com Microsoft 365",
       "descricaoAmigavel": "Conexão da agenda corporativa do portal com o calendário Microsoft 365, exibindo próximos compromissos e detalhes ao clicar no evento.",
       "inicio": "2026-06-26",
@@ -244,7 +519,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-010",
+      "id": "TASK-2026-020",
       "nome": "[LIOCONNECTA] Melhorias da home, Minha Jornada e agenda",
       "descricaoAmigavel": "Ajustes de usabilidade na página inicial, nova área Minha Jornada, botão de ingresso em reuniões, participantes no modal da agenda e foto do usuário no topo.",
       "inicio": "2026-06-26",
@@ -275,7 +550,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-011",
+      "id": "TASK-2026-021",
       "nome": "[Infra] Pipeline de deploy automático DEV e HML",
       "descricaoAmigavel": "Configuração do fluxo de publicação automática do portal com testes, empacotamento e deploy nos servidores internos via GitHub Actions.",
       "inicio": "2026-06-27",
@@ -301,7 +576,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-012",
+      "id": "TASK-2026-022",
       "nome": "[LIOCONNECTA] Visualização de holerite no portal",
       "descricaoAmigavel": "Disponibilizar consulta do holerite em tela dedicada, com layout de recibo e dados simulados para validação da jornada do colaborador.",
       "inicio": "2026-06-27",
@@ -327,7 +602,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-013",
+      "id": "TASK-2026-023",
       "nome": "[LIOCONNECTA] Impressão e download em PDF do holerite",
       "descricaoAmigavel": "Inclusão das ações de imprimir e baixar PDF diretamente na visualização do holerite, facilitando o uso pelo colaborador.",
       "inicio": "2026-06-27",
@@ -353,7 +628,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-014",
+      "id": "TASK-2026-024",
       "nome": "[LIOCONNECTA] Correções na impressão do holerite",
       "descricaoAmigavel": "Ajustes para garantir que a impressão do holerite funcione corretamente no navegador, sem página em branco nem aba extra.",
       "inicio": "2026-06-29",
@@ -381,7 +656,7 @@
       "observacoes": "Inclui iterações de correção no mesmo dia."
     },
     {
-      "id": "TASK-2026-015",
+      "id": "TASK-2026-025",
       "nome": "[LIOCONNECTA] Layout da tela de dados cadastrais",
       "descricaoAmigavel": "Simplificação da tela de cadastro do colaborador: cards mais limpos, duas informações por linha e remoção de textos técnicos de edição.",
       "inicio": "2026-06-29",
@@ -407,7 +682,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-016",
+      "id": "TASK-2026-026",
       "nome": "[LIOCONNECTA] Renomeação do projeto para Portal-LioConnecta",
       "descricaoAmigavel": "Padronização do nome do produto no repositório e na solução técnica, alinhando GitHub, API e projetos internos à marca LioConnecta.",
       "inicio": "2026-06-29",
@@ -434,7 +709,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-017",
+      "id": "TASK-2026-027",
       "nome": "[LIOCONNECTA] Título do portal, favicon e correção da API",
       "descricaoAmigavel": "Ajuste da identidade da aba do navegador para Portal do Colaborador, inclusão do favicon e correção do serviço da API após a renomeação dos projetos.",
       "inicio": "2026-06-29",
@@ -461,7 +736,7 @@
       "observacoes": ""
     },
     {
-      "id": "TASK-2026-018",
+      "id": "TASK-2026-028",
       "nome": "[LIOCONNECTA] Ferramenta de exportação de tarefas para o Planner",
       "descricaoAmigavel": "Criação de um registro estruturado das entregas do projeto e de uma página HTML para copiar os dados diretamente no Planner do gestor.",
       "inicio": "2026-06-29",
@@ -474,7 +749,7 @@
       "prioridade": "Baixa",
       "atribuidaA": "Leonardo Sabino Mendes",
       "pedidoOriginal": "Criar diretriz, JSON e HTML para controle de tarefas diárias no Planner.",
-      "entregavel": "Diretriz, tasks.json e index.html em tools/planner-tasks com histórico desde 23/06.",
+      "entregavel": "Diretriz, tasks.json e index.html em tools/planner-tasks com histórico desde 10/06.",
       "ambiente": "HML",
       "referencias": {
         "commits": [

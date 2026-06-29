@@ -62,7 +62,7 @@
       align-items: center;
     }
 
-    button, label.file-btn {
+    button, .filter-btn {
       border: 1px solid var(--line);
       background: #fff;
       color: var(--text);
@@ -78,11 +78,29 @@
       color: #fff;
     }
 
-    button:hover, label.file-btn:hover {
+    button.filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .filter-group .label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-right: 4px;
+    }
+
+    button:hover {
       filter: brightness(0.98);
     }
 
-    input[type="file"] { display: none; }
 
     .stats {
       display: flex;
@@ -267,9 +285,12 @@
       <h1>Exportação para Microsoft Planner</h1>
       <p class="sub">Leia <code>tasks.json</code>, copie os campos e cole no Planner do gestor.</p>
       <div class="toolbar">
-        <button class="primary" id="reload-btn" type="button">Recarregar tasks.json</button>
-        <label class="file-btn" for="file-input">Carregar JSON do disco</label>
-        <input id="file-input" type="file" accept="application/json,.json">
+        <div class="filter-group" role="group" aria-label="Período">
+          <span class="label">Período:</span>
+          <button class="filter-btn" type="button" data-period="semana">Esta Semana</button>
+          <button class="filter-btn" type="button" data-period="mes">Mês Atual</button>
+          <button class="filter-btn active" type="button" data-period="todos">Todos</button>
+        </div>
         <button id="copy-all-btn" type="button">Copiar tabela (TSV)</button>
       </div>
     </header>
@@ -306,6 +327,7 @@
     const stats = document.getElementById("stats");
     const toast = document.getElementById("toast");
     let currentData = { tarefas: [] };
+    let currentPeriod = "todos";
 
     function showToast(message) {
       toast.textContent = message;
@@ -481,6 +503,51 @@
       }));
     }
 
+    function getPeriodRange(period) {
+      if (period === "todos") return null;
+
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      if (period === "mes") {
+        return {
+          start: new Date(today.getFullYear(), today.getMonth(), 1),
+          end: new Date(today.getFullYear(), today.getMonth() + 1, 0)
+        };
+      }
+
+      if (period === "semana") {
+        const weekday = today.getDay();
+        const daysFromMonday = weekday === 0 ? 6 : weekday - 1;
+        const start = new Date(today);
+        start.setDate(start.getDate() - daysFromMonday);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 6);
+        return { start, end };
+      }
+
+      return null;
+    }
+
+    function dayInPeriod(dayKey, range) {
+      if (!range) return true;
+      const day = parseDate(dayKey);
+      if (!day) return false;
+      return day >= range.start && day <= range.end;
+    }
+
+    function setActivePeriodButton(period) {
+      document.querySelectorAll(".filter-btn[data-period]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.period === period);
+      });
+    }
+
+    function periodLabel(period) {
+      if (period === "semana") return "Esta Semana";
+      if (period === "mes") return "Mês Atual";
+      return "Todos";
+    }
+
     function entrySortKey(entry) {
       const { task, dayKey, dayIndex, dayCount } = entry;
       let time = "12:00";
@@ -496,11 +563,13 @@
       return `${dayKey}T${time}`;
     }
 
-    function groupByDay(tasks) {
+    function groupByDay(tasks, period = "todos") {
+      const range = getPeriodRange(period);
       const groups = new Map();
 
       for (const task of tasks) {
         for (const entry of allocateHoursPerDay(task)) {
+          if (!dayInPeriod(entry.dayKey, range)) continue;
           if (!groups.has(entry.dayKey)) {
             groups.set(entry.dayKey, { dayKey: entry.dayKey, entries: [] });
           }
@@ -618,35 +687,50 @@
       return td;
     }
 
-    function render(data) {
+    function render(data, period = currentPeriod) {
       currentData = data;
-      const tasks = Array.isArray(data.tarefas) ? data.tarefas : [];
+      currentPeriod = period;
+      setActivePeriodButton(period);
+
+      const allTasks = Array.isArray(data.tarefas) ? data.tarefas : [];
+      const dayGroups = groupByDay(allTasks, period);
+      const visibleTaskIds = new Set();
+
+      for (const group of dayGroups) {
+        for (const entry of group.entries) {
+          visibleTaskIds.add(entry.task.id);
+        }
+      }
+
+      const tasks = period === "todos"
+        ? allTasks
+        : allTasks.filter((task) => visibleTaskIds.has(task.id));
 
       const total = tasks.length;
       const done = tasks.filter((t) => Number(t.percentualConcluido) >= 100).length;
       const open = total - done;
 
-      const totalHours = tasks.reduce((sum, task) => {
-        const hours = resolveTotalHoras(task);
-        return sum + (Number(hours) || 0);
-      }, 0);
+      const totalHours = dayGroups.reduce((sum, group) => sum + (Number(group.subtotal) || 0), 0);
 
       stats.innerHTML = `
-        <div class="stat"><strong>${total}</strong><span>Total de tarefas</span></div>
+        <div class="stat"><strong>${total}</strong><span>Tarefas (${periodLabel(period)})</span></div>
         <div class="stat"><strong>${done}</strong><span>Concluídas</span></div>
         <div class="stat"><strong>${open}</strong><span>Em aberto</span></div>
-        <div class="stat"><strong>${formatHoursAsDuration(totalHours)}</strong><span>Tempo total</span></div>
+        <div class="stat"><strong>${formatHoursAsDuration(totalHours)}</strong><span>Tempo no período</span></div>
         <div class="stat"><strong>${formatBrDate(data.meta?.atualizadoEm)}</strong><span>JSON atualizado</span></div>
       `;
 
       tbody.innerHTML = "";
 
-      if (!tasks.length) {
-        tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">Nenhuma tarefa em tasks.json. Peça ao assistente para registrar ou alimente o histórico desde 23/06.</td></tr>`;
+      if (!allTasks.length) {
+        tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">Nenhuma tarefa em tasks.json. Peça ao assistente para registrar o histórico.</td></tr>`;
         return;
       }
 
-      const dayGroups = groupByDay(tasks);
+      if (!dayGroups.length) {
+        tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">Nenhuma tarefa no período &quot;${periodLabel(period)}&quot;. Selecione outro filtro.</td></tr>`;
+        return;
+      }
 
       dayGroups.forEach((group, index) => {
         appendDayHeader(group.dayKey);
@@ -666,19 +750,10 @@
       return response.json();
     }
 
-    document.getElementById("reload-btn").addEventListener("click", async () => {
-      try {
-        render(await loadFromUrl());
-      } catch (error) {
-        tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">${error.message}. Use &quot;Carregar JSON do disco&quot; ou rode: python -m http.server 8765</td></tr>`;
-      }
-    });
-
-    document.getElementById("file-input").addEventListener("change", async (event) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      const text = await file.text();
-      render(JSON.parse(text));
+    document.querySelectorAll(".filter-btn[data-period]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        render(currentData, btn.dataset.period);
+      });
     });
 
     document.getElementById("copy-all-btn").addEventListener("click", async () => {
@@ -692,7 +767,7 @@
         "Descrição"
       ]];
 
-      const dayGroups = groupByDay(currentData.tarefas || []);
+      const dayGroups = groupByDay(currentData.tarefas || [], currentPeriod);
       for (const group of dayGroups) {
         rows.push([formatDayHeader(group.dayKey), "", "", "", "", "", ""]);
         for (const entry of group.entries) {
@@ -716,8 +791,8 @@
       await copyText(tsv);
     });
 
-    loadFromUrl().then(render).catch(() => {
-      tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">Abra via servidor local (python -m http.server 8765) ou use &quot;Carregar JSON do disco&quot;.</td></tr>`;
+    loadFromUrl().then((data) => render(data, "todos")).catch(() => {
+      tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">Não foi possível carregar tasks.json. Abra via servidor local: python -m http.server 8765</td></tr>`;
     });
   </script>
 </body>

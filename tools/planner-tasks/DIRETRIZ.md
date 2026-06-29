@@ -138,17 +138,34 @@ python -m http.server 8765
 
 Abrir: `http://localhost:8765/index.html`
 
-Ou usar o botão **Carregar JSON** na página se abrir o arquivo direto do disco.
-
-A tabela agrupa as tarefas **por dia** (cada dia entre `inicio` e `conclusao` da tarefa), com cabeçalho do dia, linha em branco entre blocos e **subtotal de horas** ao final de cada dia.
+A tabela agrupa as tarefas **por dia** (cada dia entre `inicio` e `conclusao` da tarefa), com cabeçalho do dia, linha em branco entre blocos e **subtotal de horas** ao final de cada dia. Use os filtros **Esta Semana**, **Mês Atual** ou **Todos** (padrão) na barra superior.
 
 ## Backfill histórico
 
-Tarefas já concluídas (desde 23/06/2026) devem ser reconstruídas a partir de:
-- histórico de commits / merges em `Lioconnecta_HML`
-- conversas e entregas conhecidas (holerite, cadastro, rename, etc.)
+Tarefas já concluídas devem ser reconstruídas a partir de:
+- histórico de commits em `Lioconnecta_DEV` e merges em `Lioconnecta_HML`
+- conversas e entregas conhecidas
 
-Cada entrada histórica segue as mesmas regras de `nome` amigável e datas de início/fim. No backfill, `horarioInicio` e `horarioConclusao` podem ser estimados a partir do primeiro e do último commit listado em `referencias.commits`; `totalHoras` segue a regra de dias corridos × 8h (incluindo sábado e domingo).
+### Período anterior a 23/06/2026 (backfill git)
+
+| Marco | Conteúdo típico | Referência |
+|-------|-----------------|------------|
+| **10/06** | Bootstrap Portal RH, timeline Minha Jornada, showcase de testes | commits `1d7035b` … `2d5fcb7` |
+| **19/06** | Protótipo LioConnecta, comunicados, admin, LDAP, login | commits `7b49d5e` … `9f671d5` |
+| **22/06** | Portal DEV, deploy manager, health check, host da API | commits `16d56ca` … `d27278b` |
+| **23/06 (manhã)** | CORS da API (`4809122`) — antes da doc HML e do Merge PR #1 | |
+
+Regras do backfill pré-23/06:
+- **Agrupar por entrega de negócio**, não um commit = uma tarefa
+- `inicio` / `horarioInicio` = primeiro commit do grupo (`git log -1 --format=%ci`)
+- `conclusao` / `horarioConclusao` = último commit do grupo (trabalho em DEV na data real)
+- `prHml` = `Incluído no Merge PR #1 (23/06)` quando promovido depois
+- `totalHoras` = mesma regra do HTML (jornada 08:00–18:00, mínimo 30 min no mesmo dia)
+- Script reprodutível: `tools/planner-tasks/backfill-pre23.mjs`
+
+### Período a partir de 23/06/2026
+
+Mesmas regras, com `conclusao` preferencialmente na data do merge/promoção HML quando houver PR documentado em `referencias.prHml`.
 
 ## Checklist antes de colar no Planner
 
