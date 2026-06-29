@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PortalLioConnecta.Api.Contracts.Agenda;
 using PortalLioConnecta.Api.Data;
+using PortalLioConnecta.Api.Infrastructure;
 using PortalLioConnecta.Api.Interfaces;
 using PortalLioConnecta.Api.Models;
 using System.Security.Cryptography;
@@ -11,7 +12,7 @@ namespace PortalLioConnecta.Api.Services;
 public class AgendaService : IAgendaService
 {
     private const int MaxUpcomingItems = 10;
-    private static readonly TimeZoneInfo SaoPauloTimeZone = ResolveSaoPauloTimeZone();
+    private static TimeZoneInfo SaoPauloTimeZone => BrazilTimeZone.SaoPauloTimeZone;
 
     private readonly PortalLioConnectaDbContext _dbContext;
     private readonly IMicrosoftGraphCalendarService _microsoftGraphCalendarService;
@@ -153,21 +154,5 @@ public class AgendaService : IAgendaService
         var guidBytes = new byte[16];
         Array.Copy(hash, guidBytes, 16);
         return new Guid(guidBytes);
-    }
-
-    private static TimeZoneInfo ResolveSaoPauloTimeZone()
-    {
-        try
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
-        }
-        catch (InvalidTimeZoneException)
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
-        }
     }
 }

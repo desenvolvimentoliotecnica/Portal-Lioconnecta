@@ -34,11 +34,24 @@ public static class PortalShellDefaults
     private static string ReadTemplate(string fileName)
     {
         var path = Path.Combine(AppContext.BaseDirectory, "Defaults", fileName);
-        if (!File.Exists(path))
+        if (File.Exists(path))
         {
-            throw new FileNotFoundException($"Template de shell nao encontrado: {path}", path);
+            return File.ReadAllText(path);
         }
 
-        return File.ReadAllText(path);
+        var resourceName = $"{typeof(PortalShellDefaults).Assembly.GetName().Name}.Defaults.{fileName}";
+        var stream = typeof(PortalShellDefaults).Assembly.GetManifestResourceStream(resourceName);
+        if (stream is null)
+        {
+            throw new FileNotFoundException(
+                $"Template de shell nao encontrado em disco nem como recurso embutido: {fileName}",
+                path);
+        }
+
+        using (stream)
+        using (var reader = new StreamReader(stream))
+        {
+            return reader.ReadToEnd();
+        }
     }
 }

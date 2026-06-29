@@ -26,6 +26,8 @@
     <Content Update="Defaults\**\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Defaults\me-ui.template.json" />
+    <EmbeddedResource Include="Defaults\panels.template.json" />
   </ItemGroup>
 
 </Project>

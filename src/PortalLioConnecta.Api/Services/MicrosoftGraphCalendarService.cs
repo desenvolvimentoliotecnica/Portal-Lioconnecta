@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using PortalLioConnecta.Api.Contracts.Agenda;
+using PortalLioConnecta.Api.Infrastructure;
 using PortalLioConnecta.Api.Interfaces;
 using PortalLioConnecta.Api.Models;
 
@@ -11,7 +12,7 @@ public class MicrosoftGraphCalendarService : IMicrosoftGraphCalendarService
 {
     private const int DefaultLookaheadDays = 120;
 
-    private static readonly TimeZoneInfo SaoPauloTimeZone = ResolveSaoPauloTimeZone();
+    private static TimeZoneInfo SaoPauloTimeZone => BrazilTimeZone.SaoPauloTimeZone;
 
     private readonly IMicrosoftGraphConfigurationService _configurationService;
     private readonly MicrosoftGraphAuthClient _authClient;
@@ -425,21 +426,5 @@ public class MicrosoftGraphCalendarService : IMicrosoftGraphCalendarService
             "America/Sao_Paulo" => "E. South America Standard Time",
             _ => timeZoneId
         };
-    }
-
-    private static TimeZoneInfo ResolveSaoPauloTimeZone()
-    {
-        try
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
-        }
-        catch (InvalidTimeZoneException)
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
-        }
     }
 }

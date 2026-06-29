@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PortalLioConnecta.Api.Contracts.MoodSurvey;
 using PortalLioConnecta.Api.Data;
 using PortalLioConnecta.Api.Domain;
+using PortalLioConnecta.Api.Infrastructure;
 using PortalLioConnecta.Api.Interfaces;
 using PortalLioConnecta.Api.Models;
 
@@ -10,7 +11,7 @@ namespace PortalLioConnecta.Api.Services;
 public class MoodSurveyService : IMoodSurveyService
 {
     private const string DefaultTitle = "Como voce esta se sentindo hoje?";
-    private static readonly TimeZoneInfo SaoPauloTimeZone = ResolveSaoPauloTimeZone();
+    private static TimeZoneInfo SaoPauloTimeZone => BrazilTimeZone.SaoPauloTimeZone;
 
     private readonly PortalLioConnectaDbContext _dbContext;
     private readonly IMoodSurveyFeedbackService _feedbackService;
@@ -329,21 +330,5 @@ public class MoodSurveyService : IMoodSurveyService
     {
         var nowLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, SaoPauloTimeZone);
         return DateOnly.FromDateTime(nowLocal);
-    }
-
-    private static TimeZoneInfo ResolveSaoPauloTimeZone()
-    {
-        try
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
-        }
-        catch (InvalidTimeZoneException)
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
-        }
     }
 }

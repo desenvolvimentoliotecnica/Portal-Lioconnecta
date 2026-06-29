@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PortalLioConnecta.Api.Contracts.Admin.MicrosoftGraph;
 using PortalLioConnecta.Api.Data;
 using PortalLioConnecta.Api.Interfaces;
@@ -20,13 +21,16 @@ public class MicrosoftGraphConfigurationService : IMicrosoftGraphConfigurationSe
 
     private readonly PortalLioConnectaDbContext _dbContext;
     private readonly MicrosoftGraphConnectionTester _connectionTester;
+    private readonly ILogger<MicrosoftGraphConfigurationService> _logger;
 
     public MicrosoftGraphConfigurationService(
         PortalLioConnectaDbContext dbContext,
-        MicrosoftGraphConnectionTester connectionTester)
+        MicrosoftGraphConnectionTester connectionTester,
+        ILogger<MicrosoftGraphConfigurationService> logger)
     {
         _dbContext = dbContext;
         _connectionTester = connectionTester;
+        _logger = logger;
     }
 
     public async Task<MicrosoftGraphConfigurationDto> GetAsync(CancellationToken cancellationToken)
@@ -61,7 +65,7 @@ public class MicrosoftGraphConfigurationService : IMicrosoftGraphConfigurationSe
             entity.IsEnabled,
             entity.TenantId,
             entity.ClientId,
-            string.IsNullOrWhiteSpace(entity.ClientSecretProtected) ? null : UnprotectSecret(entity.ClientSecretProtected),
+            TryUnprotectSecret(entity),
             entity.UserIdentifier);
     }
 
@@ -72,9 +76,7 @@ public class MicrosoftGraphConfigurationService : IMicrosoftGraphConfigurationSe
         var entity = await EnsureAndGetEntityAsync(cancellationToken);
         var clientSecret = !string.IsNullOrWhiteSpace(request.ClientSecret)
             ? request.ClientSecret.Trim()
-            : string.IsNullOrWhiteSpace(entity.ClientSecretProtected)
-                ? null
-                : UnprotectSecret(entity.ClientSecretProtected);
+            : TryUnprotectSecret(entity);
 
         return await _connectionTester.TestAsync(
             Normalize(request.TenantId),
@@ -159,13 +161,28 @@ public class MicrosoftGraphConfigurationService : IMicrosoftGraphConfigurationSe
         return Convert.ToBase64String(output.ToArray());
     }
 
-    private static string? UnprotectSecret(string? protectedValue)
+    private string? TryUnprotectSecret(MicrosoftGraphConfiguration entity)
     {
-        if (string.IsNullOrWhiteSpace(protectedValue))
+        if (!entity.IsEnabled || string.IsNullOrWhiteSpace(entity.ClientSecretProtected))
         {
             return null;
         }
 
+        try
+        {
+            return UnprotectSecret(entity.ClientSecretProtected);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(
+                exception,
+                "Falha ao descriptografar segredo do Microsoft Graph. A integracao sera tratada como indisponivel.");
+            return null;
+        }
+    }
+
+    private static string? UnprotectSecret(string protectedValue)
+    {
         var protectedBytes = Convert.FromBase64String(protectedValue);
         using var aes = Aes.Create();
         aes.Key = SHA256.HashData(Encoding.UTF8.GetBytes("PortalLioConnecta.Api::MicrosoftGraphConfiguration::Secret::v1"));
