@@ -55,6 +55,8 @@ function mapPostComment(item = {}) {
 function mapFeedItemToPost(item = {}) {
   const source = String(item.source || "");
   const isCommunication = source === "Communication";
+  const isShare = source === "UserPostShare";
+  const originalPostId = String(item.originalPostId || item.OriginalPostId || "");
   const media = Array.isArray(item.media) ? item.media : [];
   const images = media.map((entry) => ({
     id: String(entry.id || ""),
@@ -67,12 +69,16 @@ function mapFeedItemToPost(item = {}) {
   return {
     postId: String(item.id || ""),
     source,
+    originalPostId: isShare ? originalPostId : "",
     communicationId: isCommunication ? String(item.communicationId || item.id || "") : "",
     slug: "",
     author: String(item.author || "Colaborador"),
     authorUserId: String(item.authorUserId || item.AuthorUserId || item.author_user_id || ""),
+    sharedByName: String(item.sharedByName || item.SharedByName || ""),
+    sharedByUserId: String(item.sharedByUserId || item.SharedByUserId || ""),
+    sharedAtUtc: item.sharedAtUtc || item.SharedAtUtc || null,
     area: String(item.area || "Companhia"),
-    timeAgo: formatTimeAgo(item.publishedAtUtc),
+    timeAgo: formatTimeAgo(isShare ? (item.sharedAtUtc || item.publishedAtUtc) : item.publishedAtUtc),
     text: String(item.text || ""),
     mentions: mapMentions(item.mentions || item.Mentions),
     highlightTitle: String(item.highlightTitle || ""),
