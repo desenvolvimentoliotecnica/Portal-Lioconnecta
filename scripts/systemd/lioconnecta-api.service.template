@@ -1,0 +1,14 @@
+[Unit]
+Description=LIOCONNECTA API (%i)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%DEPLOY_PATH%/current/api
+ExecStart=/usr/bin/dotnet %DEPLOY_PATH%/current/api/PortalLioConnecta.Api.dll
+EnvironmentFile=/etc/lioconnecta/lioconnecta-api-%i.env
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

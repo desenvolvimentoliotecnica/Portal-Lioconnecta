@@ -13,7 +13,7 @@ O pipeline foi desenhado para:
 1. restaurar e compilar a API
 2. executar testes da API
 3. executar testes do frontend
-4. empacotar `PortalRH.Api` + frontend estático `LioConnecta`
+4. empacotar `PortalLioConnecta.Api` + frontend estático `LioConnecta`
 5. publicar o artefato
 6. fazer deploy remoto por SSH quando os secrets do ambiente estiverem configurados
 
@@ -50,7 +50,7 @@ Sem deploy. Isso serve como validação técnica antes da promoção.
 O script `scripts/package-lioconnecta.ps1` gera:
 
 - `api/`
-  - saída de `dotnet publish` da `PortalRH.Api`
+  - saída de `dotnet publish` da `PortalLioConnecta.Api`
 - `frontend/`
   - arquivos estáticos do frontend LIOCONNECTA
 - `deploy-manifest.json`

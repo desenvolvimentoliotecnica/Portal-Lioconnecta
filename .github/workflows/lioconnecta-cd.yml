@@ -77,13 +77,13 @@ jobs:
           node-version: 22
 
       - name: Restore dependencies
-        run: dotnet restore ./PortalRH.sln
+        run: dotnet restore ./PortalLioConnecta.sln
 
       - name: Build solution
-        run: dotnet build ./PortalRH.sln --configuration Release --no-restore
+        run: dotnet build ./PortalLioConnecta.sln --configuration Release --no-restore
 
       - name: Run API tests
-        run: dotnet test ./tests/PortalRH.Api.Tests/PortalRH.Api.Tests.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=PortalRH.Api.Tests.trx"
+        run: dotnet test ./tests/PortalLioConnecta.Api.Tests/PortalLioConnecta.Api.Tests.csproj --configuration Release --no-build --no-restore --logger "trx;LogFileName=PortalLioConnecta.Api.Tests.trx"
 
       - name: Run frontend unit tests
         working-directory: ./LioConnecta
@@ -218,6 +218,10 @@ jobs:
              mkdir -p '${RELEASE_DIR}'; \
              tar -xzf '${ARCHIVE_NAME}' -C '${RELEASE_DIR}'; \
              ln -sfn '${RELEASE_DIR}' '${CURRENT_DIR}'; \
+             API_DIR='${CURRENT_DIR}/api'; \
+             if [ -f \"\$API_DIR/PortalLioConnecta.Api.dll\" ]; then \
+               ln -sfn PortalLioConnecta.Api.dll \"\$API_DIR/PortalRH.Api.dll\"; \
+             fi; \
              if [ -e /lib/x86_64-linux-gnu/libldap.so.2 ]; then \
                sudo ln -sfn /lib/x86_64-linux-gnu/libldap.so.2 /usr/lib/x86_64-linux-gnu/libldap-2.5.so.0; \
              fi; \

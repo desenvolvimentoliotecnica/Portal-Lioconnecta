@@ -16,13 +16,13 @@ Adicionar na area administrativa restrita da LIOCONNECTA uma tela para configura
 
 ### Backend
 
-- `src/PortalRH.Api/Models/LdapConfiguration.cs`
-- `src/PortalRH.Api/Data/Configurations/LdapConfigurationConfiguration.cs`
-- `src/PortalRH.Api/Contracts/Admin/Ldap/*`
-- `src/PortalRH.Api/Interfaces/ILdapConfigurationService.cs`
-- `src/PortalRH.Api/Services/LdapConfigurationService.cs`
-- `src/PortalRH.Api/Features/Admin/Ldap/*`
-- `src/PortalRH.Api/Controllers/AdminLdapController.cs`
+- `src/PortalLioConnecta.Api/Models/LdapConfiguration.cs`
+- `src/PortalLioConnecta.Api/Data/Configurations/LdapConfigurationConfiguration.cs`
+- `src/PortalLioConnecta.Api/Contracts/Admin/Ldap/*`
+- `src/PortalLioConnecta.Api/Interfaces/ILdapConfigurationService.cs`
+- `src/PortalLioConnecta.Api/Services/LdapConfigurationService.cs`
+- `src/PortalLioConnecta.Api/Features/Admin/Ldap/*`
+- `src/PortalLioConnecta.Api/Controllers/AdminLdapController.cs`
 
 ### Frontend
 

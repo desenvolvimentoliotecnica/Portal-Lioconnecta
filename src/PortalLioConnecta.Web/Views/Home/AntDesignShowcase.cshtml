@@ -1,0 +1,17 @@
+@model PortalLioConnecta.Web.Models.AntDesignShowcase.AntDesignHrShowcaseViewModel
+
+@{
+    ViewData["Title"] = "Showcase Ant Design Blazor";
+}
+
+<div class="showcase-shell showcase-shell--antdesign">
+    <div class="showcase-header">
+        <div>
+            <p class="showcase-eyebrow">Showcase</p>
+            <h1>Ant Design Blazor</h1>
+            <p class="showcase-lead">Experimento híbrido com componentes Blazor hospedados dentro da aplicação MVC atual, usando dados mockados via service/controller.</p>
+        </div>
+    </div>
+
+    <component type="typeof(PortalLioConnecta.Web.Components.AntDesign.AntDesignHrShowcase)" render-mode="ServerPrerendered" param-Data="Model" />
+</div>

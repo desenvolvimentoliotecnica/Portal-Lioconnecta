@@ -1,0 +1,25 @@
+namespace PortalLioConnecta.Api.Contracts.Admin.Polls;
+
+public record PollAdminDto(
+    Guid Id,
+    string Slug,
+    string Title,
+    string Summary,
+    string Body,
+    string? ImageUrl,
+    string? AttachmentLabel,
+    string? AttachmentUrl,
+    string Audience,
+    string Status,
+    string StatusLabel,
+    bool AllowMultipleChoices,
+    string ResultsVisibility,
+    string ResultsVisibilityLabel,
+    bool IsFeatured,
+    DateTime? PublishedAtUtc,
+    DateTime? ClosesAtUtc,
+    int TotalVotes,
+    int UniqueVoters,
+    DateTime CreatedAtUtc,
+    DateTime UpdatedAtUtc,
+    IReadOnlyList<PollAdminOptionDto> Options);

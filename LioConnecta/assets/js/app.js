@@ -68,7 +68,7 @@ import { DATA_MODES, getRuntimeConfig } from "./core/runtimeConfig.js?v=0.21.4";
 import { getPanelData } from "./services/panelService.js?v=0.12.8";
 import { getUserHomeContext } from "./services/userService.js?v=0.12.8";
 import { applyAgendaToShellData, collectAgendaEventsFromPanels, getAgendaDayData } from "./services/agendaService.js?v=0.23.7";
-import { bindAgendaEventModalActions, setAgendaEvents } from "./components/agendaEventModal.js?v=0.23.10";
+import { bindAgendaEventModalActions, setAgendaEvents } from "./components/agendaEventModal.js?v=0.23.11";
 import { applyNotificationsToShellData, getNotificationCenterData } from "./services/notificationService.js?v=0.13.0";
 import { fetchAdminSession, getAdminAuthHeaders, getStoredAdminSession, isSuperAdminSession, redirectToAdminLogin } from "./services/adminAuthService.js?v=0.12.8";
 import { ensureValidPortalSession, getPortalAuthHeaders, getStoredPortalSession, logoutPortal, redirectToPortalLogin } from "./services/portalAuthService.js?v=0.13.0";
@@ -89,7 +89,7 @@ import {
   getHrProfileModuleData,
   renderHrProfileModulePage,
   bindPayslipModal
-} from "./hrProfile/index.js?v=0.23.10";
+} from "./hrProfile/index.js?v=0.23.11";
 import {
   JOURNEY_ROUTE,
   isJourneyModuleSlug,

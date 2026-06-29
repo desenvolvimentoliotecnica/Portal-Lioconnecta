@@ -6,12 +6,12 @@
 - Layout visual inspirado na timeline enviada pelo time
 
 ## Estrutura adicionada
-- Modelos de apoio em `src/PortalRH.Web/Models/CareerTimeline`
+- Modelos de apoio em `src/PortalLioConnecta.Web/Models/CareerTimeline`
 - Partial de icones SVG para manter o componente independente de bibliotecas extras
 - Estilos especificos em `wwwroot/css/site.css`
 
 ## Cobertura de teste
-- Smoke test da pagina de showcase em `tests/PortalRH.Web.Tests/CareerTimelineShowcaseTests.cs`
+- Smoke test da pagina de showcase em `tests/PortalLioConnecta.Web.Tests/CareerTimelineShowcaseTests.cs`
 
 ## Observacao
 - Os dados estao mockados de proposito para servir como base visual e de integracao futura com o TOTVS RM.

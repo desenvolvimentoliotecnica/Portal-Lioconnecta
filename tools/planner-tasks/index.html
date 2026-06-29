@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LioConnecta — Export Planner</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --line: #d7e2ef;
+      --text: #17324a;
+      --muted: #5b7086;
+      --accent: #173f70;
+      --ok: #1f7a4d;
+      --warn: #9a6700;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    header {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 24px rgba(23, 63, 112, 0.06);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.5rem;
+      color: var(--accent);
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+      align-items: center;
+    }
+
+    button, label.file-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button:hover, label.file-btn:hover {
+      filter: brightness(0.98);
+    }
+
+    input[type="file"] { display: none; }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 14px;
+      min-width: 120px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.25rem;
+      color: var(--accent);
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(23, 63, 112, 0.06);
+    }
+
+    .table-wrap {
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef4fa;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      white-space: nowrap;
+    }
+
+    tr:hover td { background: #f9fbfe; }
+
+    .copy {
+      cursor: copy;
+      border-bottom: 1px dashed transparent;
+    }
+
+    .copy:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .badge.done { background: #e7f6ee; color: var(--ok); }
+    .badge.progress { background: #fff6df; color: var(--warn); }
+    .badge.todo { background: #eef2f7; color: var(--muted); }
+    .badge.blocked { background: #fdecec; color: #b42318; }
+
+    .prio-media { color: #9a6700; }
+    .prio-alta, .prio-urgente { color: #b42318; }
+    .prio-baixa { color: var(--muted); }
+
+    .progress {
+      height: 8px;
+      background: #e8eef5;
+      border-radius: 999px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+
+    .progress > span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #2f6faa, #173f70);
+    }
+
+    .empty {
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .toast.show { opacity: 1; }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Exportação para Microsoft Planner</h1>
+      <p class="sub">Leia <code>tasks.json</code>, copie os campos e cole no Planner do gestor.</p>
+      <div class="toolbar">
+        <button class="primary" id="reload-btn" type="button">Recarregar tasks.json</button>
+        <label class="file-btn" for="file-input">Carregar JSON do disco</label>
+        <input id="file-input" type="file" accept="application/json,.json">
+        <button id="copy-all-btn" type="button">Copiar tabela (TSV)</button>
+      </div>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome da tarefa</th>
+              <th>Atribuída a</th>
+              <th>Início</th>
+              <th>Concluir</th>
+              <th>Duração</th>
+              <th>Bucket</th>
+              <th>% concluída</th>
+              <th>Prioridade</th>
+              <th>Descrição (notas)</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td class="empty" colspan="9">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copiado!</div>
+
+  <script>
+    const tbody = document.getElementById("tbody");
+    const stats = document.getElementById("stats");
+    const toast = document.getElementById("toast");
+    let currentData = { tarefas: [] };
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+
+    async function copyText(text) {
+      await navigator.clipboard.writeText(text);
+      showToast("Copiado!");
+    }
+
+    function parseDate(value) {
+      if (!value) return null;
+      const [y, m, d] = value.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function formatBrDate(value) {
+      const date = parseDate(value);
+      if (!date) return "—";
+      return date.toLocaleDateString("pt-BR");
+    }
+
+    function calcDuration(start, end) {
+      const a = parseDate(start);
+      const b = parseDate(end);
+      if (!a || !b) return "—";
+      const diff = Math.round((b - a) / 86400000) + 1;
+      return diff === 1 ? "1 dia" : `${diff} dias`;
+    }
+
+    function bucketClass(bucket) {
+      const key = String(bucket || "").toLowerCase();
+      if (key.includes("conclu")) return "done";
+      if (key.includes("andamento")) return "progress";
+      if (key.includes("bloq")) return "blocked";
+      return "todo";
+    }
+
+    function prioClass(priority) {
+      const key = String(priority || "média").toLowerCase();
+      if (key.includes("urgent")) return "prio-urgente";
+      if (key.includes("alta")) return "prio-alta";
+      if (key.includes("baixa")) return "prio-baixa";
+      return "prio-media";
+    }
+
+    function cell(text, copyValue = text) {
+      const td = document.createElement("td");
+      const span = document.createElement("span");
+      span.className = "copy";
+      span.textContent = text ?? "—";
+      span.title = "Clique para copiar";
+      span.addEventListener("click", () => copyText(String(copyValue ?? "")));
+      td.appendChild(span);
+      return td;
+    }
+
+    function render(data) {
+      currentData = data;
+      const tasks = Array.isArray(data.tarefas) ? data.tarefas : [];
+      const defaultAssignee = data.meta?.responsavelPadrao || "Leonardo Sabino Mendes";
+
+      const total = tasks.length;
+      const done = tasks.filter((t) => Number(t.percentualConcluido) >= 100).length;
+      const open = total - done;
+
+      stats.innerHTML = `
+        <div class="stat"><strong>${total}</strong><span>Total de tarefas</span></div>
+        <div class="stat"><strong>${done}</strong><span>Concluídas</span></div>
+        <div class="stat"><strong>${open}</strong><span>Em aberto</span></div>
+        <div class="stat"><strong>${formatBrDate(data.meta?.atualizadoEm)}</strong><span>JSON atualizado</span></div>
+      `;
+
+      tbody.innerHTML = "";
+
+      if (!tasks.length) {
+        tbody.innerHTML = '<tr><td class="empty" colspan="9">Nenhuma tarefa em tasks.json. Peça ao assistente para registrar ou alimente o histórico desde 23/06.</td></tr>';
+        return;
+      }
+
+      const sorted = [...tasks].sort((a, b) => String(b.inicio || "").localeCompare(String(a.inicio || "")));
+
+      for (const task of sorted) {
+        const tr = document.createElement("tr");
+        const assignee = task.atribuidaA || defaultAssignee;
+        const pct = Math.max(0, Math.min(100, Number(task.percentualConcluido || 0)));
+
+        tr.appendChild(cell(task.nome, task.nome));
+        tr.appendChild(cell(assignee, assignee));
+        tr.appendChild(cell(formatBrDate(task.inicio), formatBrDate(task.inicio)));
+        tr.appendChild(cell(formatBrDate(task.conclusao), formatBrDate(task.conclusao)));
+        tr.appendChild(cell(calcDuration(task.inicio, task.conclusao), calcDuration(task.inicio, task.conclusao)));
+
+        const bucketTd = document.createElement("td");
+        const bucket = document.createElement("span");
+        bucket.className = `badge ${bucketClass(task.bucket)} copy`;
+        bucket.textContent = task.bucket || "—";
+        bucket.title = "Clique para copiar";
+        bucket.addEventListener("click", () => copyText(task.bucket || ""));
+        bucketTd.appendChild(bucket);
+        tr.appendChild(bucketTd);
+
+        const pctTd = document.createElement("td");
+        const pctWrap = document.createElement("div");
+        pctWrap.style.display = "grid";
+        pctWrap.style.gap = "6px";
+        const bar = document.createElement("div");
+        bar.className = "progress";
+        bar.innerHTML = `<span style="width:${pct}%"></span>`;
+        const pctLabel = document.createElement("span");
+        pctLabel.className = "copy";
+        pctLabel.textContent = `${pct}%`;
+        pctLabel.title = "Clique para copiar";
+        pctLabel.addEventListener("click", () => copyText(String(pct)));
+        pctWrap.append(bar, pctLabel);
+        pctTd.appendChild(pctWrap);
+        tr.appendChild(pctTd);
+
+        const prioTd = document.createElement("td");
+        const prio = document.createElement("span");
+        prio.className = `copy ${prioClass(task.prioridade)}`;
+        prio.textContent = task.prioridade || "Média";
+        prio.title = "Clique para copiar";
+        prio.addEventListener("click", () => copyText(task.prioridade || "Média"));
+        prioTd.appendChild(prio);
+        tr.appendChild(prioTd);
+
+        const notes = [
+          task.descricaoAmigavel,
+          task.entregavel ? `Entregável: ${task.entregavel}` : "",
+          task.pedidoOriginal ? `Pedido: ${task.pedidoOriginal}` : ""
+        ].filter(Boolean).join("\n\n");
+
+        tr.appendChild(cell(notes || "—", notes));
+        tbody.appendChild(tr);
+      }
+    }
+
+    async function loadFromUrl() {
+      const response = await fetch("./tasks.json", { cache: "no-store" });
+      if (!response.ok) throw new Error("Não foi possível carregar tasks.json");
+      return response.json();
+    }
+
+    document.getElementById("reload-btn").addEventListener("click", async () => {
+      try {
+        render(await loadFromUrl());
+      } catch (error) {
+        tbody.innerHTML = `<tr><td class="empty" colspan="9">${error.message}. Use &quot;Carregar JSON do disco&quot; ou rode: python -m http.server 8765</td></tr>`;
+      }
+    });
+
+    document.getElementById("file-input").addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      render(JSON.parse(text));
+    });
+
+    document.getElementById("copy-all-btn").addEventListener("click", async () => {
+      const rows = [["Nome da tarefa", "Atribuída a", "Início", "Concluir", "Duração", "Bucket", "% concluída", "Prioridade", "Descrição"]];
+      for (const task of currentData.tarefas || []) {
+        rows.push([
+          task.nome || "",
+          task.atribuidaA || currentData.meta?.responsavelPadrao || "",
+          formatBrDate(task.inicio),
+          formatBrDate(task.conclusao),
+          calcDuration(task.inicio, task.conclusao),
+          task.bucket || "",
+          String(task.percentualConcluido ?? ""),
+          task.prioridade || "Média",
+          task.descricaoAmigavel || ""
+        ]);
+      }
+      const tsv = rows.map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join("\t")).join("\n");
+      await copyText(tsv);
+    });
+
+    loadFromUrl().then(render).catch(() => {
+      tbody.innerHTML = '<tr><td class="empty" colspan="9">Abra via servidor local (python -m http.server 8765) ou use &quot;Carregar JSON do disco&quot;.</td></tr>';
+    });
+  </script>
+</body>
+</html>

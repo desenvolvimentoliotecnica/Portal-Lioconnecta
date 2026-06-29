@@ -1,0 +1,370 @@
+{
+  "meta": {
+    "projeto": "LioConnecta / Portal do Colaborador",
+    "responsavelPadrao": "Leonardo Sabino Mendes",
+    "atualizadoEm": "2026-06-29",
+    "instrucao": "Inicio = pedido ou inicio da entrega. Conclusao = promocao/merge em Lioconnecta_HML."
+  },
+  "tarefas": [
+    {
+      "id": "TASK-2026-001",
+      "nome": "[Infra] Documentação de provisionamento do ambiente HML",
+      "descricaoAmigavel": "Preparação da documentação e checklist para subir o ambiente de homologação do portal, incluindo servidor, banco e serviços necessários.",
+      "inicio": "2026-06-23",
+      "conclusao": "2026-06-23",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Preparar ambiente HML para o LioConnecta.",
+      "entregavel": "Documentação de provisionamento HML publicada no repositório.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["cac790b"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Merge PR #1"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-002",
+      "nome": "[Infra] Documentação de provisionamento do ambiente PRD",
+      "descricaoAmigavel": "Registro das configurações e passos para o ambiente de produção, alinhado ao padrão já usado em homologação.",
+      "inicio": "2026-06-24",
+      "conclusao": "2026-06-24",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Documentar provisionamento de produção.",
+      "entregavel": "Guia de provisionamento PRD disponível para a equipe.",
+      "ambiente": "PRD",
+      "referencias": {
+        "commits": ["7703a72"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Merge PR #2"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-003",
+      "nome": "[LIOCONNECTA] Módulos de RH, humor, enquetes e comunicados",
+      "descricaoAmigavel": "Evolução do portal com áreas de RH, pesquisa de humor, enquetes e comunicados, usando fluxos mais próximos do uso real no dia a dia.",
+      "inicio": "2026-06-23",
+      "conclusao": "2026-06-24",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Entregar workspace RH e módulos corporativos na intranet.",
+      "entregavel": "Funcionalidades de RH, humor, enquetes e comunicados integradas ao portal.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["958e01e"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Merge PR #4 e #5"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-004",
+      "nome": "[LIOCONNECTA] Curtidas no feed e nos comunicados",
+      "descricaoAmigavel": "Permitir que colaboradores curtam publicações do feed e comunicados, com registro para acompanhamento interno.",
+      "inicio": "2026-06-24",
+      "conclusao": "2026-06-25",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Ativar curtidas reais e integração com a API nos ambientes publicados.",
+      "entregavel": "Curtidas funcionando no feed e comunicados em homologação.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["eca8fac", "6a30044"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Merge PR #7 e #8"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-005",
+      "nome": "[LIOCONNECTA] Estrutura principal do portal com painéis e permissões",
+      "descricaoAmigavel": "Organização da área logada do colaborador com painéis laterais, menu personalizado e regras de acesso por perfil.",
+      "inicio": "2026-06-25",
+      "conclusao": "2026-06-25",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Completar shell operacional do portal.",
+      "entregavel": "Home e painéis carregando dados reais conforme permissão do usuário.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["9b6a9f1"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Merge PR #10"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-006",
+      "nome": "[LIOCONNECTA] Fotos, galeria e comentários no feed",
+      "descricaoAmigavel": "Melhoria da experiência social do portal com publicação de fotos, visualização em galeria e comentários nos posts.",
+      "inicio": "2026-06-25",
+      "conclusao": "2026-06-26",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Evoluir o feed com mídia e interação entre colaboradores.",
+      "entregavel": "Feed com fotos, galeria e comentários disponível em homologação.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["b2f91ba", "031d15b", "a97b62f"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Merge PR #12 a #17"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-007",
+      "nome": "[LIOCONNECTA] Menções, compartilhamento e posts salvos no feed",
+      "descricaoAmigavel": "Refinamentos no feed: marcar colegas com @, compartilhar posts, salvar conteúdos e pequenos ajustes visuais da timeline.",
+      "inicio": "2026-06-26",
+      "conclusao": "2026-06-26",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Completar interações sociais do feed.",
+      "entregavel": "Menções, compartilhamento, salvos e correções visuais publicados em HML.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["0da6edd", "852a28a", "f23e614"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Merge PR #21 a #24"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-008",
+      "nome": "[LIOCONNECTA] Área Perfil RH para o colaborador",
+      "descricaoAmigavel": "Criação das telas de Perfil RH (holerite, cadastro, benefícios etc.) com navegação interna e visual alinhado ao restante do portal.",
+      "inicio": "2026-06-26",
+      "conclusao": "2026-06-26",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Disponibilizar módulo Perfil RH no menu do colaborador.",
+      "entregavel": "Rotas e telas do Perfil RH acessíveis no portal.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["ca47158", "3a3520e"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Merge PR #26 e #27"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-009",
+      "nome": "[LIOCONNECTA] Integração da agenda com Microsoft 365",
+      "descricaoAmigavel": "Conexão da agenda corporativa do portal com o calendário Microsoft 365, exibindo próximos compromissos e detalhes ao clicar no evento.",
+      "inicio": "2026-06-26",
+      "conclusao": "2026-06-26",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Integrar agenda M365 e tela admin de credenciais Graph.",
+      "entregavel": "Painel Agenda com eventos reais e configuração administrativa do Graph.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["13db55b", "21d6051", "713fad1", "c735235"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Merge PR #29 a #33"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-010",
+      "nome": "[LIOCONNECTA] Melhorias da home, Minha Jornada e agenda",
+      "descricaoAmigavel": "Ajustes de usabilidade na página inicial, nova área Minha Jornada, botão de ingresso em reuniões, participantes no modal da agenda e foto do usuário no topo.",
+      "inicio": "2026-06-26",
+      "conclusao": "2026-06-27",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Refinar sidebars, jornada do colaborador e experiência da agenda.",
+      "entregavel": "Home reorganizada, Minha Jornada, modal da agenda aprimorado e avatar na topbar.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["f994c9a", "436df9a", "34c174d", "a976d91", "2ce9eb8", "8b178b1", "68a1b67"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Merge PR #34 a #39"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-011",
+      "nome": "[Infra] Pipeline de deploy automático DEV e HML",
+      "descricaoAmigavel": "Configuração do fluxo de publicação automática do portal com testes, empacotamento e deploy nos servidores internos via GitHub Actions.",
+      "inicio": "2026-06-27",
+      "conclusao": "2026-06-27",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Automatizar build, testes e deploy para DEV/HML.",
+      "entregavel": "CI/CD com runner interno publicando releases em DEV e HML.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["ef16ac6", "655d7d0"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promoção pipeline 27/06"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-012",
+      "nome": "[LIOCONNECTA] Visualização de holerite no portal",
+      "descricaoAmigavel": "Disponibilizar consulta do holerite em tela dedicada, com layout de recibo e dados simulados para validação da jornada do colaborador.",
+      "inicio": "2026-06-27",
+      "conclusao": "2026-06-27",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Implementar botão Visualizar holerite com modal e API mock.",
+      "entregavel": "Lista de holerites com visualização em modal publicada em HML.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["181b6a9", "58b869b"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promoção holerite modal 27/06"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-013",
+      "nome": "[LIOCONNECTA] Impressão e download em PDF do holerite",
+      "descricaoAmigavel": "Inclusão das ações de imprimir e baixar PDF diretamente na visualização do holerite, facilitando o uso pelo colaborador.",
+      "inicio": "2026-06-27",
+      "conclusao": "2026-06-27",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Adicionar botões Imprimir e Baixar PDF no holerite.",
+      "entregavel": "Exportação PDF e impressão do holerite em homologação.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["a3f35aa", "b132f07"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promoção imprimir/PDF 27/06"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-014",
+      "nome": "[LIOCONNECTA] Correções na impressão do holerite",
+      "descricaoAmigavel": "Ajustes para garantir que a impressão do holerite funcione corretamente no navegador, sem página em branco nem aba extra.",
+      "inicio": "2026-06-29",
+      "conclusao": "2026-06-29",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Corrigir holerite em branco e aba about:blank ao imprimir.",
+      "entregavel": "Impressão do holerite estável em DEV e HML (v0.23.9).",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["6f4e324", "7387b64", "49b3654", "552df05"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promoções correção impressão 29/06"
+      },
+      "observacoes": "Inclui iterações de correção no mesmo dia."
+    },
+    {
+      "id": "TASK-2026-015",
+      "nome": "[LIOCONNECTA] Layout da tela de dados cadastrais",
+      "descricaoAmigavel": "Simplificação da tela de cadastro do colaborador: cards mais limpos, duas informações por linha e remoção de textos técnicos de edição.",
+      "inicio": "2026-06-29",
+      "conclusao": "2026-06-29",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Remover legendas Somente leitura / Editável via RH e limitar a 2 cards por linha.",
+      "entregavel": "Tela de dados cadastrais revisada publicada em HML (v0.23.10).",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["1adf500", "4c7794c"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promoção cadastro 29/06"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-016",
+      "nome": "[LIOCONNECTA] Renomeação do projeto para Portal-LioConnecta",
+      "descricaoAmigavel": "Padronização do nome do produto no repositório e na solução técnica, alinhando GitHub, API e projetos internos à marca LioConnecta.",
+      "inicio": "2026-06-29",
+      "conclusao": "2026-06-29",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Renomear repositório e projetos PortalRH para Portal-LioConnecta.",
+      "entregavel": "Refactor PortalLioConnecta publicado em DEV e HML.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["0ee1aaa", "bcd2d92"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promoção rename + API DEV para HML"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-017",
+      "nome": "[LIOCONNECTA] Título do portal, favicon e correção da API",
+      "descricaoAmigavel": "Ajuste da identidade da aba do navegador para Portal do Colaborador, inclusão do favicon e correção do serviço da API após a renomeação dos projetos.",
+      "inicio": "2026-06-29",
+      "conclusao": "2026-06-29",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Mudar título Wireframe; corrigir API offline após deploy.",
+      "entregavel": "Título LioConnecta - Portal do Colaborador, favicon e API estável em HML (v0.23.11).",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": ["8597436", "bcd2d92"],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promoção título/favicon/API DEV para HML"
+      },
+      "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-018",
+      "nome": "[LIOCONNECTA] Ferramenta de exportação de tarefas para o Planner",
+      "descricaoAmigavel": "Criação de um registro estruturado das entregas do projeto e de uma página HTML para copiar os dados diretamente no Planner do gestor.",
+      "inicio": "2026-06-29",
+      "conclusao": "2026-06-29",
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Baixa",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Criar diretriz, JSON e HTML para controle de tarefas diárias no Planner.",
+      "entregavel": "Diretriz, tasks.json e index.html em tools/planner-tasks com histórico desde 23/06.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": [],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Incluído na promoção DEV para HML"
+      },
+      "observacoes": ""
+    }
+  ]
+}

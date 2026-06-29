@@ -1,12 +1,12 @@
 # Bootstrap da solução - 2026-06-09
 
 ## O que foi criado
-- Solution `PortalRH.sln`
-- Projeto API `src/PortalRH.Api` em ASP.NET Core 8
-- Projeto MVC `src/PortalRH.Web` em ASP.NET Core 8
+- Solution `PortalLioConnecta.sln`
+- Projeto API `src/PortalLioConnecta.Api` em ASP.NET Core 8
+- Projeto MVC `src/PortalLioConnecta.Web` em ASP.NET Core 8
 - Projetos de teste:
-  - `tests/PortalRH.Api.Tests`
-  - `tests/PortalRH.Web.Tests`
+  - `tests/PortalLioConnecta.Api.Tests`
+  - `tests/PortalLioConnecta.Web.Tests`
 
 ## Base técnica adicionada
 - PostgreSQL como banco alvo
