@@ -225,6 +225,11 @@ jobs:
                sudo ln -sfn /lib/x86_64-linux-gnu/liblber.so.2 /usr/lib/x86_64-linux-gnu/liblber-2.5.so.0; \
              fi; \
              sudo ldconfig; \
+             SERVICE_FILE=\"/etc/systemd/system/${API_SERVICE}.service\"; \
+             if [ -f \"\$SERVICE_FILE\" ]; then \
+               sudo sed -i 's/PortalRH\\.Api\\.dll/PortalLioConnecta.Api.dll/g' \"\$SERVICE_FILE\"; \
+               sudo systemctl daemon-reload; \
+             fi; \
              sudo systemctl restart '${API_SERVICE}'; \
              if [ -n \"${DEPLOY_POST_COMMAND}\" ]; then eval \"${DEPLOY_POST_COMMAND}\"; fi; \
              rm -f '${ARCHIVE_NAME}'"

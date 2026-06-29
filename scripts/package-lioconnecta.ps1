@@ -43,6 +43,7 @@ $frontendItems = @(
     "local-api",
     "login",
     "index.html",
+    "favicon.ico",
     "manifest.webmanifest",
     "package.json",
     "service-worker.js",
