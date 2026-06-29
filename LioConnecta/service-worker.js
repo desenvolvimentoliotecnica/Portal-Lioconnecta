@@ -1,4 +1,4 @@
-const CACHE_NAME = "lioconnecta-static-v46";
+const CACHE_NAME = "lioconnecta-static-v47";
 const ASSETS = [
   "./",
   "./index.html",

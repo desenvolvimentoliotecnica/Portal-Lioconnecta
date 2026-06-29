@@ -245,11 +245,9 @@ async function handleDownloadPayslipPdf(payslipId, root = document) {
 }
 
 function handlePrintPayslip(root = document) {
-  try {
-    printPayslipDocument(root);
-  } catch {
+  printPayslipDocument(root).catch(() => {
     showToast("Nao foi possivel imprimir o holerite.", "danger");
-  }
+  });
 }
 
 export function closePayslipModal(root = document) {
