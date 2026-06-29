@@ -320,9 +320,9 @@
       "entregavel": "Refactor PortalLioConnecta publicado em DEV e HML.",
       "ambiente": "HML",
       "referencias": {
-        "commits": ["0ee1aaa", "bcd2d92"],
+        "commits": ["0ee1aaa", "bcd2d92", "c8d3b21"],
         "branch": "Lioconnecta_HML",
-        "prHml": "Promoção rename + API DEV para HML"
+        "prHml": "Promoção rename + API DEV para HML (c8d3b21)"
       },
       "observacoes": ""
     },
@@ -340,9 +340,9 @@
       "entregavel": "Título LioConnecta - Portal do Colaborador, favicon e API estável em HML (v0.23.11).",
       "ambiente": "HML",
       "referencias": {
-        "commits": ["8597436", "bcd2d92"],
+        "commits": ["8597436", "bcd2d92", "c8d3b21"],
         "branch": "Lioconnecta_HML",
-        "prHml": "Promoção título/favicon/API DEV para HML"
+        "prHml": "Promoção título/favicon/API DEV para HML (c8d3b21)"
       },
       "observacoes": ""
     },
@@ -360,9 +360,9 @@
       "entregavel": "Diretriz, tasks.json e index.html em tools/planner-tasks com histórico desde 23/06.",
       "ambiente": "HML",
       "referencias": {
-        "commits": [],
+        "commits": ["f388d80", "c8d3b21"],
         "branch": "Lioconnecta_HML",
-        "prHml": "Incluído na promoção DEV para HML"
+        "prHml": "Incluído na promoção DEV para HML (c8d3b21)"
       },
       "observacoes": ""
     }
