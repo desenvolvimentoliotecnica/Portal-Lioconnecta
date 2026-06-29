@@ -36,20 +36,105 @@ function loadHtml2PdfLibrary() {
   return html2PdfPromise;
 }
 
-export function printPayslipDocument(root = document) {
+function buildPayslipPrintHtml(payslipHtml, root = document) {
+  const stylesheetLinks = [...root.querySelectorAll("link[rel='stylesheet']")]
+    .map((link) => `<link rel="stylesheet" href="${link.href}">`)
+    .join("\n");
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <title>Holerite</title>
+    ${stylesheetLinks}
+    <style>
+      body {
+        background: #fff;
+        margin: 0;
+        padding: 16px;
+      }
+
+      .payslip-doc {
+        box-shadow: none;
+        margin: 0 auto;
+        max-width: none;
+      }
+    </style>
+  </head>
+  <body>${payslipHtml}</body>
+</html>`;
+}
+
+function waitForPrintFrame(frame, root = document) {
+  return new Promise((resolve) => {
+    const frameWindow = frame.contentWindow;
+    const frameDocument = frame.contentDocument;
+    if (!frameWindow || !frameDocument) {
+      resolve();
+      return;
+    }
+
+    const links = [...frameDocument.querySelectorAll("link[rel='stylesheet']")];
+    if (!links.length) {
+      root.defaultView?.setTimeout(resolve, 50);
+      return;
+    }
+
+    let pending = links.length;
+    const finish = () => {
+      pending -= 1;
+      if (pending <= 0) {
+        root.defaultView?.setTimeout(resolve, 50);
+      }
+    };
+
+    links.forEach((link) => {
+      if (link.sheet) {
+        finish();
+        return;
+      }
+
+      link.addEventListener("load", finish, { once: true });
+      link.addEventListener("error", finish, { once: true });
+    });
+
+    root.defaultView?.setTimeout(resolve, 1500);
+  });
+}
+
+export async function printPayslipDocument(root = document) {
   const payslip = root.querySelector("#payslip-modal-body .payslip-doc");
   if (!payslip) {
     throw new Error("Holerite nao carregado para impressao.");
   }
 
-  root.body.classList.add("payslip-printing");
+  const frame = root.createElement("iframe");
+  frame.setAttribute("aria-hidden", "true");
+  frame.style.cssText = "border:0;height:0;position:fixed;right:0;bottom:0;width:0;";
+  root.body.appendChild(frame);
+
+  const frameDocument = frame.contentDocument;
+  const frameWindow = frame.contentWindow;
+  if (!frameDocument || !frameWindow) {
+    frame.remove();
+    throw new Error("Nao foi possivel preparar a impressao do holerite.");
+  }
+
+  frameDocument.open();
+  frameDocument.write(buildPayslipPrintHtml(payslip.outerHTML, root));
+  frameDocument.close();
+
+  await waitForPrintFrame(frame, root);
+
   const cleanup = () => {
-    root.body.classList.remove("payslip-printing");
-    root.defaultView?.removeEventListener("afterprint", cleanup);
+    frame.remove();
+    frameWindow.removeEventListener("afterprint", cleanup);
   };
 
-  root.defaultView?.addEventListener("afterprint", cleanup);
-  root.defaultView?.print();
+  frameWindow.addEventListener("afterprint", cleanup);
+  frameWindow.focus();
+  frameWindow.print();
+  root.defaultView?.setTimeout(cleanup, 1000);
 }
 
 export async function downloadPayslipPdf(element, filename, root = document) {
