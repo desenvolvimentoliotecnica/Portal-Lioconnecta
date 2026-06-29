@@ -89,7 +89,7 @@ import {
   getHrProfileModuleData,
   renderHrProfileModulePage,
   bindPayslipModal
-} from "./hrProfile/index.js?v=0.23.6";
+} from "./hrProfile/index.js?v=0.23.8";
 import {
   JOURNEY_ROUTE,
   isJourneyModuleSlug,

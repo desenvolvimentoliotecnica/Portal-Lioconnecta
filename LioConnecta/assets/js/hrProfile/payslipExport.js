@@ -1,5 +1,12 @@
+import { PAYSLIP_PRINT_CSS } from "./payslipPrintStyles.js";
+
 const HTML2PDF_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+const PAYSLIP_BUILD = "holerite-v2";
 let html2PdfPromise;
+
+export function getPayslipBuildLabel() {
+  return PAYSLIP_BUILD;
+}
 
 export function buildPayslipFilename(detail = {}) {
   const reference = String(detail.referenceMonth || detail.id || "holerite")
@@ -36,70 +43,68 @@ function loadHtml2PdfLibrary() {
   return html2PdfPromise;
 }
 
-function buildPayslipPrintHtml(payslipHtml, root = document) {
-  const stylesheetLinks = [...root.querySelectorAll("link[rel='stylesheet']")]
-    .map((link) => `<link rel="stylesheet" href="${link.href}">`)
-    .join("\n");
-
+function buildPayslipPrintHtml(payslipHtml) {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8">
     <title>Holerite</title>
-    ${stylesheetLinks}
-    <style>
-      body {
-        background: #fff;
-        margin: 0;
-        padding: 16px;
-      }
-
-      .payslip-doc {
-        box-shadow: none;
-        margin: 0 auto;
-        max-width: none;
-      }
-    </style>
+    <style>${PAYSLIP_PRINT_CSS}</style>
   </head>
   <body>${payslipHtml}</body>
 </html>`;
 }
 
-function waitForPrintFrame(frame, root = document) {
+function waitForPrintDocument(printDocument, root = document) {
   return new Promise((resolve) => {
-    const frameWindow = frame.contentWindow;
-    const frameDocument = frame.contentDocument;
-    if (!frameWindow || !frameDocument) {
+    if (!printDocument) {
       resolve();
       return;
     }
 
-    const links = [...frameDocument.querySelectorAll("link[rel='stylesheet']")];
-    if (!links.length) {
-      root.defaultView?.setTimeout(resolve, 50);
+    if (printDocument.readyState === "complete") {
+      root.defaultView?.setTimeout(resolve, 100);
       return;
     }
 
-    let pending = links.length;
-    const finish = () => {
-      pending -= 1;
-      if (pending <= 0) {
-        root.defaultView?.setTimeout(resolve, 50);
+    printDocument.addEventListener("readystatechange", () => {
+      if (printDocument.readyState === "complete") {
+        root.defaultView?.setTimeout(resolve, 100);
       }
-    };
+    }, { once: true });
 
-    links.forEach((link) => {
-      if (link.sheet) {
-        finish();
-        return;
-      }
-
-      link.addEventListener("load", finish, { once: true });
-      link.addEventListener("error", finish, { once: true });
-    });
-
-    root.defaultView?.setTimeout(resolve, 1500);
+    root.defaultView?.setTimeout(resolve, 500);
   });
+}
+
+function openPrintWindow(payslipHtml, root = document) {
+  const printWindow = root.defaultView?.open("", "_blank", "noopener,noreferrer");
+  if (!printWindow) {
+    return null;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(buildPayslipPrintHtml(payslipHtml));
+  printWindow.document.close();
+  return printWindow;
+}
+
+function openPrintFrame(payslipHtml, root = document) {
+  const frame = root.createElement("iframe");
+  frame.setAttribute("aria-hidden", "true");
+  frame.style.cssText = "border:0;height:1200px;left:-10000px;position:fixed;top:0;width:900px;";
+  root.body.appendChild(frame);
+
+  const frameDocument = frame.contentDocument;
+  if (!frameDocument) {
+    frame.remove();
+    return null;
+  }
+
+  frameDocument.open();
+  frameDocument.write(buildPayslipPrintHtml(payslipHtml));
+  frameDocument.close();
+  return frame;
 }
 
 export async function printPayslipDocument(root = document) {
@@ -108,23 +113,35 @@ export async function printPayslipDocument(root = document) {
     throw new Error("Holerite nao carregado para impressao.");
   }
 
-  const frame = root.createElement("iframe");
-  frame.setAttribute("aria-hidden", "true");
-  frame.style.cssText = "border:0;height:0;position:fixed;right:0;bottom:0;width:0;";
-  root.body.appendChild(frame);
+  const payslipHtml = payslip.outerHTML;
+  const printWindow = openPrintWindow(payslipHtml, root);
 
-  const frameDocument = frame.contentDocument;
-  const frameWindow = frame.contentWindow;
-  if (!frameDocument || !frameWindow) {
-    frame.remove();
+  if (printWindow) {
+    await waitForPrintDocument(printWindow.document, root);
+
+    const cleanup = () => {
+      if (!printWindow.closed) {
+        printWindow.close();
+      }
+      printWindow.removeEventListener("afterprint", cleanup);
+    };
+
+    printWindow.addEventListener("afterprint", cleanup);
+    printWindow.focus();
+    printWindow.print();
+    root.defaultView?.setTimeout(cleanup, 1000);
+    return;
+  }
+
+  const frame = openPrintFrame(payslipHtml, root);
+  const frameWindow = frame?.contentWindow;
+  const frameDocument = frame?.contentDocument;
+
+  if (!frame || !frameWindow || !frameDocument) {
     throw new Error("Nao foi possivel preparar a impressao do holerite.");
   }
 
-  frameDocument.open();
-  frameDocument.write(buildPayslipPrintHtml(payslip.outerHTML, root));
-  frameDocument.close();
-
-  await waitForPrintFrame(frame, root);
+  await waitForPrintDocument(frameDocument, root);
 
   const cleanup = () => {
     frame.remove();
@@ -135,6 +152,14 @@ export async function printPayslipDocument(root = document) {
   frameWindow.focus();
   frameWindow.print();
   root.defaultView?.setTimeout(cleanup, 1000);
+}
+
+export function createPayslipExportHost(detail, renderPayslipDocument, root = document) {
+  const host = root.createElement("div");
+  host.className = "payslip-export-host";
+  host.innerHTML = renderPayslipDocument(detail);
+  root.body.appendChild(host);
+  return host;
 }
 
 export async function downloadPayslipPdf(element, filename, root = document) {
@@ -155,7 +180,9 @@ export async function downloadPayslipPdf(element, filename, root = document) {
       html2canvas: {
         scale: 2,
         useCORS: true,
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        scrollX: 0,
+        scrollY: 0
       },
       jsPDF: {
         unit: "mm",

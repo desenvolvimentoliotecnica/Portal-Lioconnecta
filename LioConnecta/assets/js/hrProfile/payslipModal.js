@@ -3,7 +3,9 @@ import { showToast } from "../core/feedback.js";
 import { getPayslipDetail } from "./service.js";
 import {
   buildPayslipFilename,
+  createPayslipExportHost,
   downloadPayslipPdf,
+  getPayslipBuildLabel,
   printPayslipDocument
 } from "./payslipExport.js";
 
@@ -230,11 +232,7 @@ async function handleDownloadPayslipPdf(payslipId, root = document) {
       ? currentPayslipDetail
       : await getPayslipDetail(payslipId);
 
-    const host = root.createElement("div");
-    host.className = "payslip-export-host";
-    host.innerHTML = renderPayslipDocument(detail);
-    root.body.appendChild(host);
-
+    const host = createPayslipExportHost(detail, renderPayslipDocument, root);
     const documentNode = host.querySelector(".payslip-doc");
     await downloadPayslipPdf(documentNode, buildPayslipFilename(detail), root);
     host.remove();
@@ -283,7 +281,7 @@ export async function openPayslipModal(payslipId, root = document) {
       title.textContent = `Holerite ${detail.periodLabel || ""}`.trim();
     }
     if (subtitle) {
-      subtitle.textContent = `Pagamento em ${formatDate(detail.paymentDate)} • Liquido ${formatCurrency(detail.netAmount)}`;
+      subtitle.textContent = `Pagamento em ${formatDate(detail.paymentDate)} • Liquido ${formatCurrency(detail.netAmount)} • ${getPayslipBuildLabel()}`;
     }
     body.innerHTML = renderPayslipDocument(detail);
     setPayslipActionsEnabled(modal, true);
