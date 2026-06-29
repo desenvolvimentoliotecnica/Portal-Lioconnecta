@@ -8,7 +8,7 @@
     "minutosMinimos": 30,
     "jornadaComercial": "08:00-18:00",
     "backfillPre23Em": "2026-06-29",
-    "totalTarefas": 28
+    "totalTarefas": 31
   },
   "tarefas": [
     {
@@ -760,6 +760,81 @@
         "prHml": "Incluído na promoção DEV para HML (c8d3b21)"
       },
       "observacoes": ""
+    },
+    {
+      "id": "TASK-2026-029",
+      "nome": "[LIOCONNECTA] Backfill historico e filtros de periodo no Planner",
+      "descricaoAmigavel": "Ampliacao do registro de tarefas com historico desde 10/06 a partir de commits git e filtros Esta Semana, Mes Atual e Todos na pagina de exportacao.",
+      "inicio": "2026-06-29",
+      "horarioInicio": "11:30",
+      "conclusao": "2026-06-29",
+      "horarioConclusao": "12:03",
+      "totalHoras": 0.55,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Baixa",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Backfill anterior a 23/06 com horarios realistas; botoes de filtro no HTML do Planner.",
+      "entregavel": "28 tarefas historicas renumeradas, script backfill-pre23.mjs e filtros de periodo no index.html publicados em HML.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": [
+          "a08fa8c"
+        ],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV para HML (pipeline 28381608023)"
+      },
+      "observacoes": "Registrado retroativamente apos promocao HML."
+    },
+    {
+      "id": "TASK-2026-030",
+      "nome": "[LIOCONNECTA] Correcao de erro 500 na home em HML",
+      "descricaoAmigavel": "Correcao da API em homologacao que impedia o carregamento da home (me-ui, panels e agenda) por falha ao ler configuracao do Microsoft Graph.",
+      "inicio": "2026-06-29",
+      "horarioInicio": "12:10",
+      "conclusao": "2026-06-29",
+      "horarioConclusao": "12:17",
+      "totalHoras": 0.5,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Urgente",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Investigar HTTP 500 em /api/me-ui e /api/panels no servidor 10.0.0.80:3030.",
+      "entregavel": "Home e paineis carregando em HML apos correcao do Graph, templates embutidos e fuso America/Sao_Paulo.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": [
+          "83c4507"
+        ],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV para HML (pipeline 28382546464)"
+      },
+      "observacoes": "Registrado retroativamente apos promocao HML."
+    },
+    {
+      "id": "TASK-2026-031",
+      "nome": "[LIOCONNECTA] Exibicao de compartilhamentos no feed",
+      "descricaoAmigavel": "Posts compartilhados passam a exibir quem compartilhou e as interacoes (curtir, comentar, salvar) apontam para a publicacao original.",
+      "inicio": "2026-06-29",
+      "horarioInicio": "12:18",
+      "conclusao": "2026-06-29",
+      "horarioConclusao": "12:21",
+      "totalHoras": 0.5,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Incluir WIP de compartilhamento do feed na promocao para HML.",
+      "entregavel": "Banner de compartilhamento e mapeamento UserPostShare no frontend publicado em HML (v0.23.12).",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": [
+          "63e20c5"
+        ],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV para HML (pipeline 28382812160)"
+      },
+      "observacoes": "Registrado retroativamente apos promocao HML."
     }
   ]
 }
