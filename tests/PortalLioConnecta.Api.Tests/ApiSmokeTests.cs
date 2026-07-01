@@ -1305,7 +1305,7 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
             ResultsVisibility = "AfterVote",
             IsFeatured = true,
             PublishedAtUtc = new DateTime(2026, 06, 21, 12, 0, 0, DateTimeKind.Utc),
-            ClosesAtUtc = new DateTime(2026, 06, 30, 18, 0, 0, DateTimeKind.Utc),
+            ClosesAtUtc = DateTime.UtcNow.AddDays(30),
             Options =
             [
                 new UpsertPollOptionRequest { Label = "Nova trilha de onboarding" },
@@ -1358,7 +1358,7 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
             ResultsVisibility = "AfterVote",
             IsFeatured = false,
             PublishedAtUtc = new DateTime(2026, 06, 21, 12, 0, 0, DateTimeKind.Utc),
-            ClosesAtUtc = new DateTime(2026, 06, 29, 18, 0, 0, DateTimeKind.Utc),
+            ClosesAtUtc = DateTime.UtcNow.AddDays(30),
             Options =
             [
                 new UpsertPollOptionRequest { Label = "Portal" },
