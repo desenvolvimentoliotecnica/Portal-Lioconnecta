@@ -2,13 +2,13 @@
   "meta": {
     "projeto": "LioConnecta / Portal do Colaborador",
     "responsavelPadrao": "Leonardo Sabino Mendes",
-    "atualizadoEm": "2026-06-29",
+    "atualizadoEm": "2026-07-01",
     "instrucao": "totalHoras = tempo real entre horarios no mesmo dia; multi-dia = parcial + 8h/dia.",
     "horasUteisPorDia": 8,
     "minutosMinimos": 30,
     "jornadaComercial": "08:00-18:00",
     "backfillPre23Em": "2026-06-29",
-    "totalTarefas": 32
+    "totalTarefas": 33
   },
   "tarefas": [
     {
@@ -861,6 +861,29 @@
         "prHml": "Promocao DEV para HML (pipeline 28384371535)"
       },
       "observacoes": "Registrado retroativamente; commit ja estava em HML sem entrada no JSON."
+    },
+    {
+      "id": "TASK-2026-033",
+      "nome": "[LIOCONNECTA] Script BAT para iniciar Export Planner",
+      "descricaoAmigavel": "Atalho em batch para subir o servidor local na porta 8765 e abrir automaticamente a pagina de exportacao do Planner no navegador.",
+      "inicio": "2026-07-01",
+      "horarioInicio": "10:05",
+      "conclusao": "2026-07-01",
+      "horarioConclusao": null,
+      "totalHoras": null,
+      "bucket": "Em andamento",
+      "percentualConcluido": 90,
+      "prioridade": "Baixa",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Criar um .bat em tools/planner-tasks para subir o planner localmente.",
+      "entregavel": "start-planner.bat publicado em DEV, HML e PRD com servidor HTTP e abertura automatica do index.html.",
+      "ambiente": "DEV",
+      "referencias": {
+        "commits": [],
+        "branch": "Lioconnecta_DEV",
+        "prHml": null
+      },
+      "observacoes": "Promocao DEV/HML/PRD em andamento."
     }
   ]
 }
