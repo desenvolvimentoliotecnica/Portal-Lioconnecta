@@ -9,7 +9,9 @@ const CATEGORY_LABELS = {
   Politicas: "Politicas",
   "Políticas": "Politicas",
   Eventos: "Eventos",
-  Enquetes: "Enquetes"
+  Enquetes: "Enquetes",
+  "Interações no Feed": "Interações no Feed",
+  "Interacoes no Feed": "Interações no Feed"
 };
 
 function normalizeNotificationsPayload(payload = {}) {

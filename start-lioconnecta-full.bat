@@ -3,7 +3,7 @@ setlocal
 
 set "ROOT_DIR=%~dp0"
 set "FRONT_DIR=%ROOT_DIR%LioConnecta"
-set "API_PROJECT=%ROOT_DIR%src\PortalRH.Api\PortalRH.Api.csproj"
+set "API_PROJECT=%ROOT_DIR%src\PortalLioConnecta.Api\PortalLioConnecta.Api.csproj"
 set "FRONT_PORT=3020"
 set "FRONT_URL=http://127.0.0.1:%FRONT_PORT%/"
 set "NODE_STATIC_SERVER=%FRONT_DIR%\dev-static-server.js"

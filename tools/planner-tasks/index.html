@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LioConnecta — Export Planner</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --line: #d7e2ef;
+      --text: #17324a;
+      --muted: #5b7086;
+      --accent: #173f70;
+      --ok: #1f7a4d;
+      --warn: #9a6700;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 16px 20px 24px;
+    }
+
+    header {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(23, 63, 112, 0.05);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.5rem;
+      color: var(--accent);
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+      align-items: center;
+    }
+
+    button, .filter-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    button.filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .filter-group .label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-right: 4px;
+    }
+
+    button:hover {
+      filter: brightness(0.98);
+    }
+
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 0 0 16px;
+    }
+
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 14px;
+      min-width: 120px;
+      flex: 1 1 140px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.25rem;
+      color: var(--accent);
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(23, 63, 112, 0.05);
+    }
+
+    .table-wrap {
+      overflow: auto;
+      width: 100%;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1280px;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef4fa;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      white-space: nowrap;
+    }
+
+    th.col-time,
+    td.col-time {
+      white-space: nowrap;
+      width: 1%;
+    }
+
+    th.col-date,
+    td.col-date {
+      white-space: nowrap;
+      width: 1%;
+    }
+
+    th.col-hours,
+    td.col-hours,
+    th.col-prio,
+    td.col-prio,
+    th.col-bucket,
+    td.col-bucket {
+      text-align: center;
+      vertical-align: top;
+      white-space: nowrap;
+      width: 1%;
+    }
+
+    tr:hover td { background: #f9fbfe; }
+
+    tr.day-header td {
+      background: #dde8f3;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.95rem;
+      border-top: 2px solid var(--accent);
+      border-bottom: 1px solid #b8cbe0;
+      padding: 12px 10px;
+    }
+
+    tr.day-header:hover td { background: #dde8f3; }
+
+    tr.day-subtotal td {
+      background: #f0f5fa;
+      font-weight: 600;
+      color: var(--text);
+      border-bottom: 3px solid var(--accent);
+      padding: 10px;
+    }
+
+    tr.day-subtotal:hover td { background: #f0f5fa; }
+
+    tr.day-gap td {
+      height: 14px;
+      padding: 0;
+      border: none;
+      background: var(--bg);
+    }
+
+    tr.day-gap:hover td { background: var(--bg); }
+
+    .day-part {
+      display: inline-block;
+      margin-left: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+
+    .copy {
+      cursor: copy;
+      border-bottom: 1px dashed transparent;
+    }
+
+    .copy:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .badge.done { background: #e7f6ee; color: var(--ok); }
+    .badge.progress { background: #fff6df; color: var(--warn); }
+    .badge.todo { background: #eef2f7; color: var(--muted); }
+    .badge.blocked { background: #fdecec; color: #b42318; }
+
+    .badge.prio-urgente { background: #fdecec; color: #b42318; }
+    .badge.prio-alta { background: #ffe8e0; color: #c4320a; }
+    .badge.prio-media { background: #fff6df; color: #9a6700; }
+    .badge.prio-baixa { background: #eef2f7; color: var(--muted); }
+
+    .empty {
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .toast.show { opacity: 1; }
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Exportação para Microsoft Planner</h1>
+      <p class="sub">Leia <code>tasks.json</code>, copie os campos e cole no Planner do gestor.</p>
+      <div class="toolbar">
+        <div class="filter-group" role="group" aria-label="Período">
+          <span class="label">Período:</span>
+          <button class="filter-btn" type="button" data-period="semana">Esta Semana</button>
+          <button class="filter-btn" type="button" data-period="mes">Mês Atual</button>
+          <button class="filter-btn active" type="button" data-period="todos">Todos</button>
+        </div>
+        <button id="copy-all-btn" type="button">Copiar tabela (TSV)</button>
+      </div>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome da tarefa</th>
+              <th class="col-date">Início</th>
+              <th class="col-date">Concluir</th>
+              <th class="col-hours">Duração</th>
+              <th class="col-bucket">Bucket</th>
+              <th class="col-prio">Prioridade</th>
+              <th>Descrição (notas)</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td class="empty" colspan="7">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copiado!</div>
+
+  <script>
+    const COLSPAN = 7;
+    const tbody = document.getElementById("tbody");
+    const stats = document.getElementById("stats");
+    const toast = document.getElementById("toast");
+    let currentData = { tarefas: [] };
+    let currentPeriod = "todos";
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1600);
+    }
+
+    async function copyText(text) {
+      await navigator.clipboard.writeText(text);
+      showToast("Copiado!");
+    }
+
+    const HORAS_POR_DIA_UTIL = 8;
+    const JORNADA_INICIO = 8;
+    const JORNADA_FIM = 18;
+    const MINUTOS_MINIMOS = 30;
+    const HORAS_MINIMAS = MINUTOS_MINIMOS / 60;
+
+    function parseTime(value) {
+      if (!value) return null;
+      const [h, m] = String(value).split(":").map(Number);
+      if (Number.isNaN(h) || Number.isNaN(m)) return null;
+      return h + m / 60;
+    }
+
+    function eachCalendarDay(start, end, fn) {
+      const cursor = new Date(start);
+      while (cursor <= end) {
+        fn(new Date(cursor));
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    function countCalendarDays(start, end) {
+      let total = 0;
+      eachCalendarDay(start, end, () => { total += 1; });
+      return total;
+    }
+
+    function calcHoursBetweenTimes(timeStart, timeEnd) {
+      if (timeStart == null || timeEnd == null) return null;
+      const diff = Math.max(0, timeEnd - timeStart);
+      return Math.round(Math.min(HORAS_POR_DIA_UTIL, diff) * 100) / 100;
+    }
+
+    function normalizeSameDayHours(hours, task, dayCount) {
+      const timeStart = parseTime(task.horarioInicio);
+      const timeEnd = parseTime(task.horarioConclusao);
+      if (dayCount !== 1 || timeStart == null || timeEnd == null) return hours;
+      if (hours < HORAS_MINIMAS) return HORAS_MINIMAS;
+      return hours;
+    }
+
+    function hoursForTaskOnDay(task, dayIndex, dayCount) {
+      const timeStart = parseTime(task.horarioInicio);
+      const timeEnd = parseTime(task.horarioConclusao);
+
+      if (dayCount === 1) {
+        const between = calcHoursBetweenTimes(timeStart, timeEnd);
+        const hours = between != null ? between : HORAS_POR_DIA_UTIL;
+        return normalizeSameDayHours(hours, task, dayCount);
+      }
+
+      if (dayIndex === 0) {
+        if (timeStart == null) return HORAS_POR_DIA_UTIL;
+        const from = Math.max(timeStart, JORNADA_INICIO);
+        if (from >= JORNADA_FIM) return 0;
+        const partial = Math.round(Math.min(HORAS_POR_DIA_UTIL, JORNADA_FIM - from) * 100) / 100;
+        return partial > 0 ? partial : 0;
+      }
+
+      if (dayIndex === dayCount - 1) {
+        if (timeEnd == null) return HORAS_POR_DIA_UTIL;
+        const to = Math.min(timeEnd, JORNADA_FIM);
+        if (to <= JORNADA_INICIO) return 0;
+        const partial = Math.round(Math.min(HORAS_POR_DIA_UTIL, to - JORNADA_INICIO) * 100) / 100;
+        return partial > 0 ? partial : 0;
+      }
+
+      return HORAS_POR_DIA_UTIL;
+    }
+
+    function calcTotalHoras(task) {
+      const startDate = parseDate(task.inicio);
+      const endDate = parseDate(task.conclusao || task.inicio);
+      if (!startDate || !endDate) return null;
+
+      const dayCount = countCalendarDays(startDate, endDate);
+      let total = 0;
+      for (let i = 0; i < dayCount; i += 1) {
+        total += hoursForTaskOnDay(task, i, dayCount);
+      }
+      return Math.round(total * 100) / 100;
+    }
+
+    function resolveTotalHoras(task) {
+      return calcTotalHoras(task);
+    }
+
+    function formatHoursAsDuration(hours) {
+      if (hours == null || Number.isNaN(hours)) return "—";
+      const totalMinutes = Math.round(Number(hours) * 60);
+      if (totalMinutes <= 0) return "0min";
+      if (totalMinutes < 60) return `${totalMinutes}min`;
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      return m ? `${h}h ${m}min` : `${h}h`;
+    }
+
+    function formatTime(value) {
+      if (!value) return "—";
+      return String(value);
+    }
+
+    function parseDate(value) {
+      if (!value) return null;
+      const [y, m, d] = value.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function formatBrDate(value) {
+      const date = parseDate(value);
+      if (!date) return "—";
+      return date.toLocaleDateString("pt-BR");
+    }
+
+    function bucketClass(bucket) {
+      const key = String(bucket || "").toLowerCase();
+      if (key.includes("conclu")) return "done";
+      if (key.includes("andamento")) return "progress";
+      if (key.includes("bloq")) return "blocked";
+      return "todo";
+    }
+
+    function prioClass(priority) {
+      const key = String(priority || "média").toLowerCase();
+      if (key.includes("urgent")) return "prio-urgente";
+      if (key.includes("alta")) return "prio-alta";
+      if (key.includes("baixa")) return "prio-baixa";
+      return "prio-media";
+    }
+
+    function toDayKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDayHeader(dayKey) {
+      const date = parseDate(dayKey);
+      if (!date) return dayKey;
+      const weekday = date.toLocaleDateString("pt-BR", { weekday: "long" });
+      const label = date.toLocaleDateString("pt-BR");
+      return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)}, ${label}`;
+    }
+
+    function allocateHoursPerDay(task) {
+      const start = parseDate(task.inicio);
+      const end = parseDate(task.conclusao || task.inicio);
+      if (!start || !end) return [];
+
+      const days = [];
+      eachCalendarDay(start, end, (day) => days.push(day));
+      const dayCount = days.length;
+
+      return days.map((day, index) => ({
+        dayKey: toDayKey(day),
+        hours: hoursForTaskOnDay(task, index, dayCount),
+        dayIndex: index + 1,
+        dayCount,
+        task
+      }));
+    }
+
+    function getPeriodRange(period) {
+      if (period === "todos") return null;
+
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      if (period === "mes") {
+        return {
+          start: new Date(today.getFullYear(), today.getMonth(), 1),
+          end: new Date(today.getFullYear(), today.getMonth() + 1, 0)
+        };
+      }
+
+      if (period === "semana") {
+        const weekday = today.getDay();
+        const daysFromMonday = weekday === 0 ? 6 : weekday - 1;
+        const start = new Date(today);
+        start.setDate(start.getDate() - daysFromMonday);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 6);
+        return { start, end };
+      }
+
+      return null;
+    }
+
+    function dayInPeriod(dayKey, range) {
+      if (!range) return true;
+      const day = parseDate(dayKey);
+      if (!day) return false;
+      return day >= range.start && day <= range.end;
+    }
+
+    function setActivePeriodButton(period) {
+      document.querySelectorAll(".filter-btn[data-period]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.period === period);
+      });
+    }
+
+    function periodLabel(period) {
+      if (period === "semana") return "Esta Semana";
+      if (period === "mes") return "Mês Atual";
+      return "Todos";
+    }
+
+    function entrySortKey(entry) {
+      const { task, dayKey, dayIndex, dayCount } = entry;
+      let time = "12:00";
+
+      if (dayCount === 1) {
+        time = task.horarioConclusao || task.horarioInicio || "00:00";
+      } else if (dayIndex === dayCount) {
+        time = task.horarioConclusao || "23:59";
+      } else if (dayIndex === 1) {
+        time = task.horarioInicio || "00:00";
+      }
+
+      return `${dayKey}T${time}`;
+    }
+
+    function groupByDay(tasks, period = "todos") {
+      const range = getPeriodRange(period);
+      const groups = new Map();
+
+      for (const task of tasks) {
+        for (const entry of allocateHoursPerDay(task)) {
+          if (!dayInPeriod(entry.dayKey, range)) continue;
+          if (!groups.has(entry.dayKey)) {
+            groups.set(entry.dayKey, { dayKey: entry.dayKey, entries: [] });
+          }
+          groups.get(entry.dayKey).entries.push(entry);
+        }
+      }
+
+      return [...groups.values()]
+        .sort((a, b) => b.dayKey.localeCompare(a.dayKey))
+        .map((group) => {
+          group.entries.sort((a, b) => {
+            const byTime = entrySortKey(b).localeCompare(entrySortKey(a));
+            if (byTime !== 0) return byTime;
+            return String(b.task.id || "").localeCompare(String(a.task.id || ""));
+          });
+          group.subtotal = group.entries.reduce((sum, entry) => sum + (Number(entry.hours) || 0), 0);
+          return group;
+        });
+    }
+
+    function appendDayHeader(dayKey) {
+      const tr = document.createElement("tr");
+      tr.className = "day-header";
+      const td = document.createElement("td");
+      td.colSpan = COLSPAN;
+      td.textContent = formatDayHeader(dayKey);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    }
+
+    function appendDaySubtotal(subtotal) {
+      const tr = document.createElement("tr");
+      tr.className = "day-subtotal";
+      const td = document.createElement("td");
+      td.colSpan = COLSPAN;
+      td.textContent = `Subtotal do dia: ${formatHoursAsDuration(subtotal)}`;
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    }
+
+    function appendDayGap() {
+      const tr = document.createElement("tr");
+      tr.className = "day-gap";
+      tr.innerHTML = `<td colspan="${COLSPAN}"></td>`;
+      tbody.appendChild(tr);
+    }
+
+    function appendTaskRow(entry) {
+      const { task, hours, dayIndex, dayCount } = entry;
+      const tr = document.createElement("tr");
+      const dayPartLabel = dayCount > 1 ? ` (dia ${dayIndex}/${dayCount})` : "";
+
+      const nameTd = document.createElement("td");
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "copy";
+      nameSpan.textContent = task.nome || "—";
+      nameSpan.title = "Clique para copiar";
+      nameSpan.addEventListener("click", () => copyText(String(task.nome || "")));
+      nameTd.appendChild(nameSpan);
+      if (dayCount > 1) {
+        const part = document.createElement("span");
+        part.className = "day-part";
+        part.textContent = dayPartLabel;
+        nameTd.appendChild(part);
+      }
+      tr.appendChild(nameTd);
+
+      const inicioLabel = formatBrDate(task.inicio);
+      const conclusaoLabel = formatBrDate(task.conclusao);
+      const durationLabel = formatHoursAsDuration(hours);
+
+      tr.appendChild(cell(inicioLabel, inicioLabel, "col-date"));
+      tr.appendChild(cell(conclusaoLabel, conclusaoLabel, "col-date"));
+      tr.appendChild(cell(durationLabel, durationLabel, "col-hours"));
+
+      const bucketTd = document.createElement("td");
+      bucketTd.className = "col-bucket";
+      const bucket = document.createElement("span");
+      bucket.className = `badge ${bucketClass(task.bucket)} copy`;
+      bucket.textContent = task.bucket || "—";
+      bucket.title = "Clique para copiar";
+      bucket.addEventListener("click", () => copyText(task.bucket || ""));
+      bucketTd.appendChild(bucket);
+      tr.appendChild(bucketTd);
+
+      const prioTd = document.createElement("td");
+      prioTd.className = "col-prio";
+      const prio = document.createElement("span");
+      prio.className = `badge copy ${prioClass(task.prioridade)}`;
+      prio.textContent = task.prioridade || "Média";
+      prio.title = "Clique para copiar";
+      prio.addEventListener("click", () => copyText(task.prioridade || "Média"));
+      prioTd.appendChild(prio);
+      tr.appendChild(prioTd);
+
+      const notes = [
+        task.descricaoAmigavel,
+        task.entregavel ? `Entregável: ${task.entregavel}` : "",
+        task.pedidoOriginal ? `Pedido: ${task.pedidoOriginal}` : ""
+      ].filter(Boolean).join("\n\n");
+
+      tr.appendChild(cell(notes || "—", notes));
+      tbody.appendChild(tr);
+    }
+
+    function cell(text, copyValue = text, className = "") {
+      const td = document.createElement("td");
+      if (className) td.className = className;
+      const span = document.createElement("span");
+      span.className = "copy";
+      span.textContent = text ?? "—";
+      span.title = "Clique para copiar";
+      span.addEventListener("click", () => copyText(String(copyValue ?? "")));
+      td.appendChild(span);
+      return td;
+    }
+
+    function render(data, period = currentPeriod) {
+      currentData = data;
+      currentPeriod = period;
+      setActivePeriodButton(period);
+
+      const allTasks = Array.isArray(data.tarefas) ? data.tarefas : [];
+      const dayGroups = groupByDay(allTasks, period);
+      const visibleTaskIds = new Set();
+
+      for (const group of dayGroups) {
+        for (const entry of group.entries) {
+          visibleTaskIds.add(entry.task.id);
+        }
+      }
+
+      const tasks = period === "todos"
+        ? allTasks
+        : allTasks.filter((task) => visibleTaskIds.has(task.id));
+
+      const total = tasks.length;
+      const done = tasks.filter((t) => Number(t.percentualConcluido) >= 100).length;
+      const open = total - done;
+
+      const totalHours = dayGroups.reduce((sum, group) => sum + (Number(group.subtotal) || 0), 0);
+
+      stats.innerHTML = `
+        <div class="stat"><strong>${total}</strong><span>Tarefas (${periodLabel(period)})</span></div>
+        <div class="stat"><strong>${done}</strong><span>Concluídas</span></div>
+        <div class="stat"><strong>${open}</strong><span>Em aberto</span></div>
+        <div class="stat"><strong>${formatHoursAsDuration(totalHours)}</strong><span>Tempo no período</span></div>
+        <div class="stat"><strong>${formatBrDate(data.meta?.atualizadoEm)}</strong><span>JSON atualizado</span></div>
+      `;
+
+      tbody.innerHTML = "";
+
+      if (!allTasks.length) {
+        tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">Nenhuma tarefa em tasks.json. Peça ao assistente para registrar o histórico.</td></tr>`;
+        return;
+      }
+
+      if (!dayGroups.length) {
+        tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">Nenhuma tarefa no período &quot;${periodLabel(period)}&quot;. Selecione outro filtro.</td></tr>`;
+        return;
+      }
+
+      dayGroups.forEach((group, index) => {
+        appendDayHeader(group.dayKey);
+        for (const entry of group.entries) {
+          appendTaskRow(entry);
+        }
+        appendDaySubtotal(group.subtotal);
+        if (index < dayGroups.length - 1) {
+          appendDayGap();
+        }
+      });
+    }
+
+    async function loadFromUrl() {
+      const response = await fetch("./tasks.json", { cache: "no-store" });
+      if (!response.ok) throw new Error("Não foi possível carregar tasks.json");
+      return response.json();
+    }
+
+    document.querySelectorAll(".filter-btn[data-period]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        render(currentData, btn.dataset.period);
+      });
+    });
+
+    document.getElementById("copy-all-btn").addEventListener("click", async () => {
+      const rows = [[
+        "Nome da tarefa",
+        "Início",
+        "Concluir",
+        "Duração",
+        "Bucket",
+        "Prioridade",
+        "Descrição"
+      ]];
+
+      const dayGroups = groupByDay(currentData.tarefas || [], currentPeriod);
+      for (const group of dayGroups) {
+        rows.push([formatDayHeader(group.dayKey), "", "", "", "", "", ""]);
+        for (const entry of group.entries) {
+          const { task, hours, dayIndex, dayCount } = entry;
+          const name = dayCount > 1 ? `${task.nome || ""} (dia ${dayIndex}/${dayCount})` : (task.nome || "");
+          rows.push([
+            name,
+            formatBrDate(task.inicio),
+            formatBrDate(task.conclusao),
+            formatHoursAsDuration(hours),
+            task.bucket || "",
+            task.prioridade || "Média",
+            task.descricaoAmigavel || ""
+          ]);
+        }
+        rows.push([`Subtotal do dia: ${formatHoursAsDuration(group.subtotal)}`, "", "", formatHoursAsDuration(group.subtotal), "", "", ""]);
+        rows.push(["", "", "", "", "", "", ""]);
+      }
+
+      const tsv = rows.map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join("\t")).join("\n");
+      await copyText(tsv);
+    });
+
+    loadFromUrl().then((data) => render(data, "todos")).catch(() => {
+      tbody.innerHTML = `<tr><td class="empty" colspan="${COLSPAN}">Não foi possível carregar tasks.json. Abra via servidor local: python -m http.server 8765</td></tr>`;
+    });
+  </script>
+</body>
+</html>

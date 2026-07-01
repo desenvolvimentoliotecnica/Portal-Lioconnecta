@@ -5632,7 +5632,13 @@ body.agenda-event-modal-open {
 .hr-profile-fields {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 640px) {
+  .hr-profile-fields {
+    grid-template-columns: 1fr;
+  }
 }
 
 .hr-profile-field {
@@ -5645,8 +5651,7 @@ body.agenda-event-modal-open {
   box-shadow: var(--shadow-soft);
 }
 
-.hr-profile-field span,
-.hr-profile-field small {
+.hr-profile-field span {
   color: var(--color-text-muted);
   font-size: 0.8rem;
 }
@@ -5952,6 +5957,16 @@ body.agenda-event-modal-open {
     border-left: 0;
     border-top: 1px solid #dbe6f0;
   }
+}
+
+.payslip-print-frame {
+  border: 0;
+  height: 0;
+  left: -10000px;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  width: 900px;
 }
 
 .payslip-export-host {

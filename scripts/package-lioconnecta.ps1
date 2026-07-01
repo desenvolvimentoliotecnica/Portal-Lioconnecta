@@ -15,7 +15,7 @@ if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($ApiProjectPath)) {
-    $ApiProjectPath = Join-Path $repoRoot "src\PortalRH.Api\PortalRH.Api.csproj"
+    $ApiProjectPath = Join-Path $repoRoot "src\PortalLioConnecta.Api\PortalLioConnecta.Api.csproj"
 }
 
 if ([string]::IsNullOrWhiteSpace($FrontendRootPath)) {
@@ -33,7 +33,7 @@ New-Item -ItemType Directory -Path $apiPublishDirectory -Force | Out-Null
 New-Item -ItemType Directory -Path $frontendPackageDirectory -Force | Out-Null
 
 Write-Host ""
-Write-Host "==> Publicando API PortalRH.Api ($Configuration)"
+Write-Host "==> Publicando API PortalLioConnecta.Api ($Configuration)"
 dotnet publish $ApiProjectPath -c $Configuration -o $apiPublishDirectory --nologo
 
 $frontendItems = @(
@@ -43,6 +43,7 @@ $frontendItems = @(
     "local-api",
     "login",
     "index.html",
+    "favicon.ico",
     "manifest.webmanifest",
     "package.json",
     "service-worker.js",

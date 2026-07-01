@@ -6,7 +6,7 @@
 #   ./scripts/install-github-actions-runner.sh <REGISTRATION_TOKEN>
 set -euo pipefail
 
-REPO_URL="https://github.com/desenvolvimentoliotecnica/PortalRH"
+REPO_URL="https://github.com/desenvolvimentoliotecnica/Portal-Lioconnecta"
 RUNNER_NAME="${RUNNER_NAME:-lioconnecta-dev-runner}"
 RUNNER_LABELS="${RUNNER_LABELS:-lioconnecta,linux}"
 RUNNER_DIR="${RUNNER_DIR:-/home/administrator/actions-runner}"
@@ -16,7 +16,7 @@ TOKEN="${1:-}"
 if [ -z "$TOKEN" ]; then
   echo "Uso: $0 <registration-token>" >&2
   echo "Gere o token com:" >&2
-  echo "  gh api --method POST repos/desenvolvimentoliotecnica/PortalRH/actions/runners/registration-token --jq .token" >&2
+  echo "  gh api --method POST repos/desenvolvimentoliotecnica/Portal-Lioconnecta/actions/runners/registration-token --jq .token" >&2
   exit 1
 fi
 

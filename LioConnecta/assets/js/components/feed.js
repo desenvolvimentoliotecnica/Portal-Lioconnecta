@@ -168,18 +168,41 @@ function formatSharesLabel(count) {
 }
 
 function canSharePost(post, currentUserId) {
+  const target = getInteractionTarget(post);
   return getRuntimeConfig().dataMode === DATA_MODES.API
     && canInteractWithFeed()
-    && post.source === "UserPost"
-    && post.authorUserId
+    && target.source === "UserPost"
+    && target.authorUserId
     && currentUserId
-    && post.authorUserId !== currentUserId;
+    && target.authorUserId !== currentUserId;
+}
+
+function getInteractionTarget(post) {
+  return {
+    source: post.source === "UserPostShare" ? "UserPost" : post.source,
+    postId: post.originalPostId || post.postId,
+    authorUserId: post.authorUserId
+  };
+}
+
+function renderShareBanner(post) {
+  if (!post.sharedByName) {
+    return "";
+  }
+
+  return `
+    <div class="post-share-banner">
+      <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+      <span><strong>${escapeHtml(post.sharedByName)}</strong> compartilhou a publicacao de <strong>${escapeHtml(post.author)}</strong></span>
+    </div>
+  `;
 }
 
 function canSavePost(post) {
+  const target = getInteractionTarget(post);
   return getRuntimeConfig().dataMode === DATA_MODES.API
     && Boolean(getStoredPortalSession()?.token)
-    && Boolean(post.postId && post.source);
+    && Boolean(target.postId && target.source);
 }
 
 function renderSavedPostMenu(post) {
@@ -212,7 +235,8 @@ function renderSavedPostMenu(post) {
 }
 
 function renderPost(post, { currentUserId = "", savedList = false } = {}) {
-  const canLike = Boolean(post.postId && post.source);
+  const interaction = getInteractionTarget(post);
+  const canLike = Boolean(interaction.postId && interaction.source);
   const canShare = canSharePost(post, currentUserId);
   const canSave = canSavePost(post);
   const postActions = [
@@ -225,7 +249,8 @@ function renderPost(post, { currentUserId = "", savedList = false } = {}) {
   const commentsLabel = commentsCount === 1 ? "1 comentário" : `${commentsCount} comentários`;
 
   return `
-    <article class="post" data-post-id="${escapeHtml(post.postId)}" data-communication-id="${escapeHtml(post.communicationId)}">
+    <article class="post ${post.sharedByName ? "post--shared" : ""}" data-post-id="${escapeHtml(post.postId)}" data-original-post-id="${escapeHtml(interaction.postId)}" data-communication-id="${escapeHtml(post.communicationId)}">
+      ${renderShareBanner(post)}
       <div class="post-head">
         <div class="post-author">
           <div class="avatar" aria-hidden="true"><i class="fa-solid fa-user"></i></div>
@@ -260,9 +285,9 @@ function renderPost(post, { currentUserId = "", savedList = false } = {}) {
             class="${item.active ? "is-active" : ""}"
             data-post-author="${escapeHtml(post.author)}"
             ${item.action ? `data-action="${escapeHtml(item.action)}"` : ""}
-            ${canLike && item.label === "Curtir" ? `data-feed-item-id="${escapeHtml(post.postId)}" data-feed-source="${escapeHtml(post.source)}"` : ""}
-            ${canShare && item.label === "Compartilhar" ? `data-feed-item-id="${escapeHtml(post.postId)}" data-feed-source="${escapeHtml(post.source)}"` : ""}
-            ${canSave && item.label === "Salvar" ? `data-feed-item-id="${escapeHtml(post.postId)}" data-feed-source="${escapeHtml(post.source)}"` : ""}
+            ${canLike && item.label === "Curtir" ? `data-feed-item-id="${escapeHtml(interaction.postId)}" data-feed-source="${escapeHtml(interaction.source)}"` : ""}
+            ${canShare && item.label === "Compartilhar" ? `data-feed-item-id="${escapeHtml(interaction.postId)}" data-feed-source="${escapeHtml(interaction.source)}"` : ""}
+            ${canSave && item.label === "Salvar" ? `data-feed-item-id="${escapeHtml(interaction.postId)}" data-feed-source="${escapeHtml(interaction.source)}"` : ""}
             ${item.label === "Curtir" || item.label === "Compartilhar" || item.label === "Salvar" ? `aria-pressed="${item.active ? "true" : "false"}"` : ""}
             data-analytics="post.action"
             data-analytics-label="${escapeHtml(post.author)}:${escapeHtml(item.label)}"
@@ -284,7 +309,7 @@ function renderPost(post, { currentUserId = "", savedList = false } = {}) {
         </div>
       ` : ""}
 
-      ${renderPostCommentComposer(post)}
+      ${renderPostCommentComposer({ ...post, postId: interaction.postId, source: interaction.source })}
     </article>
   `;
 }

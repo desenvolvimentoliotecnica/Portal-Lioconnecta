@@ -64,10 +64,10 @@ A migration `20260619180759_AddAdminAccess` cria:
 
 ## Validacoes executadas
 
-- `dotnet build src/PortalRH.Api/PortalRH.Api.csproj`
-- `dotnet build tests/PortalRH.Api.Tests/PortalRH.Api.Tests.csproj`
-- `dotnet vstest tests/PortalRH.Api.Tests/bin/Debug/net8.0/PortalRH.Api.Tests.dll`
-- `dotnet ef database update --project src/PortalRH.Api/PortalRH.Api.csproj --startup-project src/PortalRH.Api/PortalRH.Api.csproj`
+- `dotnet build src/PortalLioConnecta.Api/PortalLioConnecta.Api.csproj`
+- `dotnet build tests/PortalLioConnecta.Api.Tests/PortalLioConnecta.Api.Tests.csproj`
+- `dotnet vstest tests/PortalLioConnecta.Api.Tests/bin/Debug/net8.0/PortalLioConnecta.Api.Tests.dll`
+- `dotnet ef database update --project src/PortalLioConnecta.Api/PortalLioConnecta.Api.csproj --startup-project src/PortalLioConnecta.Api/PortalLioConnecta.Api.csproj`
 
 ## Observacoes
 

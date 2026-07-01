@@ -1,0 +1,355 @@
+@model PortalLioConnecta.Web.Models.CareerTimeline.CareerTimelineShowcaseViewModel
+
+<section class="career-timeline">
+    <div class="career-timeline__header">
+        <div class="career-timeline__title-block">
+            <div class="career-timeline__badge">6</div>
+            <div>
+                <h2>@Model.Title</h2>
+                <p>@Model.Subtitle</p>
+            </div>
+        </div>
+
+        <div class="career-timeline__summary">
+            @foreach (var card in Model.SummaryCards)
+            {
+                <article class="timeline-summary-card @card.AccentClass">
+                    <div class="timeline-summary-card__icon">
+                        @await Html.PartialAsync("~/Views/Shared/Components/CareerTimeline/_TimelineIcon.cshtml", card.Icon)
+                    </div>
+                    <div>
+                        <span>@card.Title</span>
+                        <strong>@card.Value</strong>
+                    </div>
+                </article>
+            }
+        </div>
+    </div>
+
+    <div class="career-timeline__tracks">
+        <div class="career-timeline__row-connector" aria-hidden="true">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false" aria-hidden="true">
+                <path d="M 94 0 L 100 0 Q 100 0 100 6 L 100 76 Q 100 82 94 82 L 6 82 Q 0 82 0 88 L 0 94 Q 0 100 6 100" />
+            </svg>
+        </div>
+
+        @foreach (var row in Model.TrackRows)
+        {
+            <div class="career-timeline__track-row">
+                <div class="career-timeline__pipe" aria-hidden="true"></div>
+
+                @for (var i = 0; i < row.Gaps.Count; i++)
+                {
+                    <span class="timeline-gap-chip" style="left: calc((100% / 6) * @(i + 1));">@row.Gaps[i].Label</span>
+                }
+
+                @foreach (var item in row.Milestones)
+                {
+                    <article class="milestone-card @item.AccentClass">
+                        <div class="milestone-card__step">@item.Step</div>
+                        <div class="milestone-card__body">
+                            <div class="milestone-card__top-icon">
+                                <span class="milestone-card__icon">
+                                    @await Html.PartialAsync("~/Views/Shared/Components/CareerTimeline/_TimelineIcon.cshtml", item.Icon)
+                                </span>
+                            </div>
+                            <div class="milestone-card__date">@item.DateText</div>
+                            <div class="milestone-card__event">
+                                @item.EventText
+                            </div>
+                            <div class="milestone-card__salary">
+                                @item.SalaryText
+                            </div>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="career-timeline__legend">
+        @foreach (var legend in Model.LegendItems)
+        {
+            <span class="legend-item @legend.AccentClass">
+                <span class="legend-item__icon">
+                    @await Html.PartialAsync("~/Views/Shared/Components/CareerTimeline/_TimelineIcon.cshtml", legend.Icon)
+                </span>
+                <span>@legend.Text</span>
+            </span>
+        }
+    </div>
+
+    <section class="career-timeline__tests" aria-label="Testes">
+        <h3>Testes</h3>
+        <div class="career-timeline__test-grid career-timeline__test-grid--top" aria-hidden="true">
+            @{
+                var mergedStarts = new HashSet<int> { 5, 10, 15, 20, 25 };
+                var badgeCells = new HashSet<int> { 3, 8, 13, 18, 23, 28 };
+                var testCardDates = new[]
+                {
+                    "15/01/2021",
+                    "10/03/2021",
+                    "25/05/2021",
+                    "12/08/2021",
+                    "30/10/2021",
+                    "18/12/2021",
+                    "09/02/2022",
+                    "27/04/2022",
+                    "14/07/2022",
+                    "22/09/2022",
+                    "11/11/2022",
+                    "05/01/2023"
+                };
+                var testCardMovements = new[]
+                {
+                    "Admissão",
+                    "Acordo Coletivo",
+                    "Promoção",
+                    "Enquadramento Salarial",
+                    "Acordo Coletivo",
+                    "Promoção",
+                    "Enquadramento Salarial",
+                    "Promoção",
+                    "Acordo Coletivo",
+                    "Promoção",
+                    "Enquadramento Salarial",
+                    "Promoção"
+                };
+                var testCardIcons = new[]
+                {
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.Admission,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.CollectiveAgreement,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.Promotion,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.SalaryBracket,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.CollectiveAgreement,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.Promotion,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.SalaryBracket,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.Promotion,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.CollectiveAgreement,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.Promotion,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.SalaryBracket,
+                    PortalLioConnecta.Web.Models.CareerTimeline.TimelineIconKind.Promotion
+                };
+                var testCardValues = new[]
+                {
+                    "R$ 4.250,00",
+                    "R$ 4.680,00",
+                    "R$ 5.120,00",
+                    "R$ 5.540,00",
+                    "R$ 5.980,00",
+                    "R$ 6.410,00",
+                    "R$ 6.890,00",
+                    "R$ 7.250,00",
+                    "R$ 7.730,00",
+                    "R$ 8.110,00",
+                    "R$ 8.590,00",
+                    "R$ 9.020,00"
+                };
+            }
+            @for (var i = 1; i <= 30; i++)
+            {
+                if (mergedStarts.Contains(i))
+                {
+                    <div class="career-timeline__test-cell career-timeline__test-cell--merged">
+                        <span class="career-timeline__test-chip">xxx dias</span>
+                    </div>
+                    i++;
+                    continue;
+                }
+
+                <div class="career-timeline__test-cell">
+                    @if (!badgeCells.Contains(i))
+                    {
+                        @if (i == 30)
+                        {
+                            <svg class="career-timeline__test-quarter-curve career-timeline__test-quarter-curve--color-1 career-timeline__test-quarter-curve--red-leg" viewBox="0 0 20 70" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                                <path d="M 0 0 L 10 0 Q 20 0 20 10 L 20 70" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg class="career-timeline__test-line" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                                <line x1="0" y1="5" x2="100" y2="5" />
+                            </svg>
+                        }
+                    }
+
+                    @switch (i)
+                    {
+                        case 3:
+                            <span class="career-timeline__test-badge">1</span>
+                            break;
+                        case 8:
+                            <span class="career-timeline__test-badge">2</span>
+                            break;
+                        case 13:
+                            <span class="career-timeline__test-badge">3</span>
+                            break;
+                        case 18:
+                            <span class="career-timeline__test-badge">4</span>
+                            break;
+                        case 23:
+                            <span class="career-timeline__test-badge">5</span>
+                            break;
+                        case 28:
+                            <span class="career-timeline__test-badge">6</span>
+                            break;
+                    }
+                </div>
+            }
+        </div>
+        <div class="career-timeline__test-grid career-timeline__test-grid--six" aria-hidden="true">
+            @for (var i = 0; i < 6; i++)
+            {
+                <div class="career-timeline__test-cell">
+                    <div class="career-timeline__test-card">
+                        <div class="career-timeline__test-card-icon">
+                            @await Html.PartialAsync("~/Views/Shared/Components/CareerTimeline/_TimelineIcon.cshtml", testCardIcons[i])
+                        </div>
+                        <div class="career-timeline__test-card-date">@testCardDates[i]</div>
+                        <div class="career-timeline__test-card-movement">@testCardMovements[i]</div>
+                        <div class="career-timeline__test-card-value">@testCardValues[i]</div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="career-timeline__test-grid career-timeline__test-grid--plain" aria-hidden="true">
+            @for (var i = 0; i < 30; i++)
+            {
+                <div class="career-timeline__test-cell">
+                    @if (i == 0)
+                    {
+                        <svg class="career-timeline__test-quarter-curve career-timeline__test-quarter-curve--color-2" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                            <path d="M 100 0 Q 0 0 0 100" />
+                        </svg>
+                    }
+                    @if (i > 0 && i < 29)
+                    {
+                        <svg class="career-timeline__test-line" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                            <line x1="0" y1="5" x2="100" y2="5" />
+                        </svg>
+                    }
+                    @if (i == 29)
+                    {
+                        <svg class="career-timeline__test-quarter-curve career-timeline__test-quarter-curve--right career-timeline__test-quarter-curve--color-3" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                            <path d="M 100 0 Q 0 0 0 100" />
+                        </svg>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="career-timeline__test-grid career-timeline__test-grid--plain" aria-hidden="true">
+            @for (var i = 0; i < 30; i++)
+            {
+                <div class="career-timeline__test-cell"></div>
+            }
+        </div>
+
+        <div class="career-timeline__test-grid career-timeline__test-grid--top career-timeline__test-grid--fifth" aria-hidden="true">
+            @for (var i = 1; i <= 30; i++)
+            {
+                if (mergedStarts.Contains(i))
+                {
+                    <div class="career-timeline__test-cell career-timeline__test-cell--merged">
+                        <span class="career-timeline__test-chip">xxx dias</span>
+                    </div>
+                    i++;
+                    continue;
+                }
+
+                <div class="career-timeline__test-cell">
+                    @if (!badgeCells.Contains(i))
+                    {
+                        @if (i == 1)
+                        {
+                            <svg class="career-timeline__test-quarter-curve career-timeline__test-quarter-curve--down career-timeline__test-quarter-curve--raised career-timeline__test-quarter-curve--color-4" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                                <path d="M 100 0 Q 0 0 0 100" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg class="career-timeline__test-line" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                                <line x1="0" y1="5" x2="100" y2="5" />
+                            </svg>
+                        }
+                    }
+
+                    @switch (i)
+                    {
+                        case 3:
+                            <span class="career-timeline__test-badge">1</span>
+                            break;
+                        case 8:
+                            <span class="career-timeline__test-badge">2</span>
+                            break;
+                        case 13:
+                            <span class="career-timeline__test-badge">3</span>
+                            break;
+                        case 18:
+                            <span class="career-timeline__test-badge">4</span>
+                            break;
+                        case 23:
+                            <span class="career-timeline__test-badge">5</span>
+                            break;
+                        case 28:
+                            <span class="career-timeline__test-badge">6</span>
+                            break;
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="career-timeline__test-grid career-timeline__test-grid--six career-timeline__test-grid--sixth" aria-hidden="true">
+            @for (var i = 0; i < 6; i++)
+            {
+                <div class="career-timeline__test-cell">
+                    <div class="career-timeline__test-card">
+                        <div class="career-timeline__test-card-icon">
+                            @await Html.PartialAsync("~/Views/Shared/Components/CareerTimeline/_TimelineIcon.cshtml", testCardIcons[i + 6])
+                        </div>
+                        <div class="career-timeline__test-card-date">@testCardDates[i + 6]</div>
+                        <div class="career-timeline__test-card-movement">@testCardMovements[i + 6]</div>
+                        <div class="career-timeline__test-card-value">@testCardValues[i + 6]</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="career-timeline__tests career-timeline__tests--secondary" aria-label="Testes 2">
+        <h3>Testes 2</h3>
+
+        <div class="career-timeline__test-grid career-timeline__test-grid--six" aria-hidden="true">
+            @for (var i = 0; i < 6; i++)
+            {
+                <div class="career-timeline__test-cell">
+                    <div class="career-timeline__test-card">
+                        <div class="career-timeline__test-card-icon">
+                            @await Html.PartialAsync("~/Views/Shared/Components/CareerTimeline/_TimelineIcon.cshtml", testCardIcons[i])
+                        </div>
+                        <div class="career-timeline__test-card-date">@testCardDates[i]</div>
+                        <div class="career-timeline__test-card-movement">@testCardMovements[i]</div>
+                        <div class="career-timeline__test-card-value">@testCardValues[i]</div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="career-timeline__test-grid career-timeline__test-grid--two" aria-hidden="true">
+            @for (var i = 0; i < 2; i++)
+            {
+                <div class="career-timeline__test-cell">
+                    <div class="career-timeline__test-card">
+                        <div class="career-timeline__test-card-icon">
+                            @await Html.PartialAsync("~/Views/Shared/Components/CareerTimeline/_TimelineIcon.cshtml", testCardIcons[i + 6])
+                        </div>
+                        <div class="career-timeline__test-card-date">@testCardDates[i + 6]</div>
+                        <div class="career-timeline__test-card-movement">@testCardMovements[i + 6]</div>
+                        <div class="career-timeline__test-card-value">@testCardValues[i + 6]</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+</section>

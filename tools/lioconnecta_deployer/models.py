@@ -22,10 +22,10 @@ def _normalize_api_health_url(value: str) -> str:
 
 @dataclass
 class GeneralConfig:
-    repository_url: str = "https://github.com/leonardomendes201704/PortalRH2.0.git"
+    repository_url: str = "https://github.com/desenvolvimentoliotecnica/Portal-Lioconnecta.git"
     local_repo_path: str = str(_repo_root() / "artifacts" / "deploy" / "source-cache")
-    api_project_path: str = str(_repo_root() / "src" / "PortalRH.Api" / "PortalRH.Api.csproj")
-    api_test_project_path: str = str(_repo_root() / "tests" / "PortalRH.Api.Tests" / "PortalRH.Api.Tests.csproj")
+    api_project_path: str = str(_repo_root() / "src" / "PortalLioConnecta.Api" / "PortalLioConnecta.Api.csproj")
+    api_test_project_path: str = str(_repo_root() / "tests" / "PortalLioConnecta.Api.Tests" / "PortalLioConnecta.Api.Tests.csproj")
     frontend_root_path: str = str(_repo_root() / "LioConnecta")
     package_script_path: str = str(_repo_root() / "scripts" / "package-lioconnecta.ps1")
     artifact_root: str = str(_repo_root() / "artifacts" / "deploy" / "gui")
