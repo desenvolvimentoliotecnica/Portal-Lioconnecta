@@ -869,21 +869,24 @@
       "inicio": "2026-07-01",
       "horarioInicio": "10:05",
       "conclusao": "2026-07-01",
-      "horarioConclusao": null,
-      "totalHoras": null,
-      "bucket": "Em andamento",
-      "percentualConcluido": 90,
+      "horarioConclusao": "10:25",
+      "totalHoras": 0.5,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
       "prioridade": "Baixa",
       "atribuidaA": "Leonardo Sabino Mendes",
       "pedidoOriginal": "Criar um .bat em tools/planner-tasks para subir o planner localmente.",
       "entregavel": "start-planner.bat publicado em DEV, HML e PRD com servidor HTTP e abertura automatica do index.html.",
-      "ambiente": "DEV",
+      "ambiente": "PRD",
       "referencias": {
-        "commits": [],
-        "branch": "Lioconnecta_DEV",
-        "prHml": null
+        "commits": [
+          "09eb1f3",
+          "ff88744"
+        ],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV/HML/PRD (pipelines 28520788906, 28520790845, 28520793167)"
       },
-      "observacoes": "Promocao DEV/HML/PRD em andamento."
+      "observacoes": "Inclui correcao de teste de enquete com data de encerramento expirada."
     }
   ]
 }
