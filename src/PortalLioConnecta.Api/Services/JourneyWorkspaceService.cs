@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using PortalLioConnecta.Api.Contracts.Journey;
 using PortalLioConnecta.Api.Interfaces;
 using PortalLioConnecta.Api.Models;
@@ -7,6 +8,9 @@ namespace PortalLioConnecta.Api.Services;
 public class JourneyWorkspaceService : IJourneyWorkspaceService
 {
     private const bool IsSimulated = true;
+    private const string Provider = "ServiceNow";
+
+    private static readonly ConcurrentDictionary<Guid, List<JourneyRequestItemDto>> CreatedRequestsByUser = new();
 
     public Task<JourneyTasksResponse> GetTasksAsync(PortalUser user, CancellationToken cancellationToken)
     {
@@ -54,7 +58,7 @@ public class JourneyWorkspaceService : IJourneyWorkspaceService
                     "Em andamento",
                     user.DisplayName)
             ],
-            "ServiceNow",
+            Provider,
             IsSimulated);
 
         return Task.FromResult(response);
@@ -62,37 +66,79 @@ public class JourneyWorkspaceService : IJourneyWorkspaceService
 
     public Task<JourneyRequestsResponse> GetRequestsAsync(PortalUser user, CancellationToken cancellationToken)
     {
-        _ = user;
         _ = cancellationToken;
 
-        var now = DateTime.UtcNow;
+        var items = BuildRequestItems(user);
         var response = new JourneyRequestsResponse(
             "Solicitacoes em Andamento",
-            new JourneyRequestsSummaryDto(3, 1, 2),
-            [
-                new JourneyRequestItemDto(
-                    Guid.Parse("b2000001-0000-4000-8000-000000000001"),
-                    "Ferias",
-                    "Solicitacao de 10 dias em julho/2026",
-                    now.AddDays(-5),
-                    "Em analise",
-                    "Aprovacao do gestor"),
-                new JourneyRequestItemDto(
-                    Guid.Parse("b2000001-0000-4000-8000-000000000002"),
-                    "Reembolso",
-                    "Despesas de viagem corporativa - maio/2026",
-                    now.AddDays(-2),
-                    "Em andamento",
-                    "Validacao financeira"),
-                new JourneyRequestItemDto(
-                    Guid.Parse("b2000001-0000-4000-8000-000000000003"),
-                    "Equipamento",
-                    "Troca de notebook por desgaste",
-                    now.AddDays(-8),
-                    "Aguardando",
-                    "Triagem de TI")
-            ],
-            "ServiceNow",
+            BuildRequestsSummary(items),
+            items,
+            Provider,
+            IsSimulated);
+
+        return Task.FromResult(response);
+    }
+
+    public Task<JourneyCreateRequestResponse> CreateRequestAsync(
+        PortalUser user,
+        JourneyCreateRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+
+        if (user is null)
+        {
+            throw new ArgumentNullException(nameof(user));
+        }
+
+        if (request is null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        var typeKey = request.TypeKey?.Trim() ?? string.Empty;
+        if (!JourneyRequestTypeCatalog.TryGet(typeKey, out var typeDefinition))
+        {
+            throw new InvalidOperationException("Tipo de solicitacao invalido.");
+        }
+
+        var subject = request.Subject?.Trim() ?? string.Empty;
+        var description = request.Description?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(subject))
+        {
+            throw new InvalidOperationException("Assunto e obrigatorio.");
+        }
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new InvalidOperationException("Descricao e obrigatoria.");
+        }
+
+        var priority = request.Priority?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(priority))
+        {
+            throw new InvalidOperationException("Prioridade e obrigatoria.");
+        }
+
+        var item = new JourneyRequestItemDto(
+            Guid.NewGuid(),
+            typeDefinition.ListTypeLabel,
+            BuildRequestDescription(subject, description, request.Fields),
+            DateTime.UtcNow,
+            typeDefinition.DefaultStatus,
+            typeDefinition.DefaultStage);
+
+        var userRequests = CreatedRequestsByUser.GetOrAdd(user.Id, _ => []);
+        lock (userRequests)
+        {
+            userRequests.Insert(0, item);
+        }
+
+        var allItems = BuildRequestItems(user);
+        var response = new JourneyCreateRequestResponse(
+            item,
+            BuildRequestsSummary(allItems),
+            Provider,
             IsSimulated);
 
         return Task.FromResult(response);
@@ -171,5 +217,80 @@ public class JourneyWorkspaceService : IJourneyWorkspaceService
             IsSimulated);
 
         return Task.FromResult(response);
+    }
+
+    private static IReadOnlyList<JourneyRequestItemDto> BuildRequestItems(PortalUser user)
+    {
+        var now = DateTime.UtcNow;
+        var seedItems = new List<JourneyRequestItemDto>
+        {
+            new(
+                Guid.Parse("b2000001-0000-4000-8000-000000000001"),
+                "Ferias",
+                "Solicitacao de 10 dias em julho/2026",
+                now.AddDays(-5),
+                "Em analise",
+                "Aprovacao do gestor"),
+            new(
+                Guid.Parse("b2000001-0000-4000-8000-000000000002"),
+                "Reembolso",
+                "Despesas de viagem corporativa - maio/2026",
+                now.AddDays(-2),
+                "Em andamento",
+                "Validacao financeira"),
+            new(
+                Guid.Parse("b2000001-0000-4000-8000-000000000003"),
+                "Equipamento",
+                "Troca de notebook por desgaste",
+                now.AddDays(-8),
+                "Aguardando",
+                "Triagem de TI")
+        };
+
+        if (!CreatedRequestsByUser.TryGetValue(user.Id, out var createdItems) || createdItems.Count == 0)
+        {
+            return seedItems;
+        }
+
+        lock (createdItems)
+        {
+            return [.. createdItems, .. seedItems];
+        }
+    }
+
+    private static JourneyRequestsSummaryDto BuildRequestsSummary(IReadOnlyList<JourneyRequestItemDto> items)
+    {
+        var pendingApprovalCount = items.Count(item =>
+        {
+            var status = item.Status.ToLowerInvariant();
+            return status.Contains("analise", StringComparison.Ordinal) || status.Contains("aguard", StringComparison.Ordinal);
+        });
+
+        var inProgressCount = items.Count(item =>
+        {
+            var status = item.Status.ToLowerInvariant();
+            return status.Contains("andamento", StringComparison.Ordinal) || status.Contains("process", StringComparison.Ordinal);
+        });
+
+        return new JourneyRequestsSummaryDto(items.Count, pendingApprovalCount, inProgressCount);
+    }
+
+    private static string BuildRequestDescription(
+        string subject,
+        string description,
+        IReadOnlyDictionary<string, string>? fields)
+    {
+        if (fields is null || fields.Count == 0)
+        {
+            return subject;
+        }
+
+        var details = string.Join(
+            " | ",
+            fields
+                .Where(entry => !string.IsNullOrWhiteSpace(entry.Value))
+                .Select(entry => $"{entry.Key}: {entry.Value.Trim()}"));
+
+        return string.IsNullOrWhiteSpace(details) ? subject : $"{subject} — {details}";
     }
 }

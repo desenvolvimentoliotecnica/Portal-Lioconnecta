@@ -2,6 +2,7 @@ import { renderEmptyState } from "../components/cards.js";
 import { escapeHtml } from "../components/html.js";
 import { renderRhAdminHero } from "../people/adminNav.js";
 import { getJourneyModule } from "./moduleCatalog.js";
+import { renderRequestModalShell } from "./requestModal.js";
 
 function formatDate(value) {
   if (!value) {
@@ -138,6 +139,22 @@ function renderTasksPage(data = {}) {
   });
 }
 
+function renderRequestListItem(item) {
+  return `
+    <article class="hr-profile-list-item">
+      <div>
+        <strong>${escapeHtml(item.type)}</strong>
+        <span>${escapeHtml(item.description)}</span>
+      </div>
+      <div class="hr-profile-list-item__meta">
+        <span>Aberta em ${escapeHtml(formatDate(item.openedAtUtc))}</span>
+        <span>${escapeHtml(item.stage)}</span>
+        ${renderStatusPill(item.status)}
+      </div>
+    </article>
+  `;
+}
+
 function renderRequestsPage(data = {}) {
   const summary = data.summary || {};
   const items = Array.isArray(data.items) ? data.items : [];
@@ -157,26 +174,21 @@ function renderRequestsPage(data = {}) {
       })}
       ${renderContentCard({
         title: "Solicitacoes recentes",
+        headerActionHtml: `
+          <button type="button" class="feed-composer-submit" data-action="open-request-modal">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            Nova solicitacao
+          </button>
+        `,
         bodyHtml: items.length
           ? `
-            <div class="hr-profile-list">
-              ${items.map((item) => `
-                <article class="hr-profile-list-item">
-                  <div>
-                    <strong>${escapeHtml(item.type)}</strong>
-                    <span>${escapeHtml(item.description)}</span>
-                  </div>
-                  <div class="hr-profile-list-item__meta">
-                    <span>Aberta em ${escapeHtml(formatDate(item.openedAtUtc))}</span>
-                    <span>${escapeHtml(item.stage)}</span>
-                    ${renderStatusPill(item.status)}
-                  </div>
-                </article>
-              `).join("")}
+            <div class="hr-profile-list" id="journey-requests-list">
+              ${items.map((item) => renderRequestListItem(item)).join("")}
             </div>
           `
           : renderEmptyState("Nenhuma solicitacao", "Suas solicitacoes em andamento aparecerao aqui.")
       })}
+      ${renderRequestModalShell()}
     `
   });
 }

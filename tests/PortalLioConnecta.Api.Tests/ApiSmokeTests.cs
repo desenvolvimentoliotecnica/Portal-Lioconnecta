@@ -859,6 +859,39 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    public async Task JourneyRequestsEndpoint_CreatesAndReadsRequest()
+    {
+        await EnsureLdapEnabledAsync();
+        var portalSession = await LoginPortalUserAsync();
+        UsePortalAuth(portalSession);
+
+        var createResponse = await _client.PostAsJsonAsync("/api/journey/solicitacoes", new JourneyCreateRequestDto(
+            "ti-chamado",
+            "Notebook nao liga apos atualizacao",
+            "O equipamento nao inicializa apos patch de seguranca aplicado ontem.",
+            "Alta",
+            new Dictionary<string, string>
+            {
+                ["category"] = "Hardware",
+                ["urgency"] = "Alta"
+            }));
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<JourneyCreateRequestResponse>();
+        Assert.NotNull(created);
+        Assert.True(created.IsSimulated);
+        Assert.NotNull(created.Item);
+        Assert.Equal("Chamado TI", created.Item.Type);
+        Assert.True(created.Summary.TotalCount >= 4);
+
+        var solicitacoes = await _client.GetFromJsonAsync<JourneyRequestsResponse>("/api/journey/solicitacoes");
+        Assert.NotNull(solicitacoes);
+        Assert.Contains(solicitacoes.Items, item => item.Id == created.Item.Id);
+        Assert.True(solicitacoes.Summary.TotalCount >= 4);
+    }
+
+    [Fact]
     public async Task MeUiEndpoint_RequiresPortalSession()
     {
         _client.DefaultRequestHeaders.Authorization = null;

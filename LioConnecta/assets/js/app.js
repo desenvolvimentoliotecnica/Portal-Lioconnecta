@@ -94,7 +94,9 @@ import {
   JOURNEY_ROUTE,
   isJourneyModuleSlug,
   getJourneyModuleData,
-  renderJourneyModulePage
+  createJourneyRequest,
+  renderJourneyModulePage,
+  bindRequestModal
 } from "./journey/index.js?v=0.23.7";
 import {
   canManageMoodSurveyFeedback,
@@ -551,6 +553,22 @@ function renderJourneyPage(data, route, slug) {
   const centerContent = document.getElementById("center-content");
   renderShell(data, route);
   centerContent.innerHTML = renderJourneyModulePage(slug, data.journeyModule);
+
+  if (slug === "solicitacoes") {
+    bindRequestModal(document, {
+      onValidation: (message) => showToast(message, "info"),
+      onSubmit: async (values) => {
+        await createJourneyRequest({
+          typeKey: values.typeKey,
+          subject: values.subject,
+          description: values.description,
+          priority: values.priority,
+          fields: values.fields
+        });
+        await refreshJourneyRoute("Solicitacao registrada com sucesso.", "success");
+      }
+    });
+  }
 }
 
 function renderCommunicationsPage(data, route) {
@@ -935,6 +953,20 @@ async function refreshAdminPollsRoute(feedbackMessage = "", feedbackTone = "succ
   const data = await loadPageData(ROUTES.ADMIN_POLLS);
   currentAdminPollEditingId = selectedPollId || "";
   renderAdminPollsRoute(data, ROUTES.ADMIN_POLLS);
+
+  if (feedbackMessage) {
+    showToast(feedbackMessage, feedbackTone);
+  }
+}
+
+async function refreshJourneyRoute(feedbackMessage = "", feedbackTone = "success") {
+  const { route, slug } = parseRoute();
+  if (route !== ROUTES.JOURNEY || slug !== "solicitacoes") {
+    return;
+  }
+
+  const data = await loadPageData(ROUTES.JOURNEY, slug);
+  renderJourneyPage(data, route, slug);
 
   if (feedbackMessage) {
     showToast(feedbackMessage, feedbackTone);

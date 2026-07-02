@@ -37,6 +37,30 @@ public class JourneyController : ControllerBase
     public Task<IActionResult> GetRequests(CancellationToken cancellationToken)
         => ExecuteAsync(user => _journeyWorkspaceService.GetRequestsAsync(user, cancellationToken));
 
+    [HttpPost("solicitacoes")]
+    [ProducesResponseType(typeof(JourneyCreateRequestResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateRequest(
+        [FromBody] JourneyCreateRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var session = PortalSessionHttpContext.Get(HttpContext);
+        if (session?.PortalUser is null)
+        {
+            return Unauthorized(new { message = "Sessao do portal nao encontrada." });
+        }
+
+        try
+        {
+            var payload = await _journeyWorkspaceService.CreateRequestAsync(session.PortalUser, request, cancellationToken);
+            return StatusCode(StatusCodes.Status201Created, payload);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpGet("trilhas")]
     [ProducesResponseType(typeof(JourneyLearningPathsResponse), StatusCodes.Status200OK)]
     public Task<IActionResult> GetLearningPaths(CancellationToken cancellationToken)

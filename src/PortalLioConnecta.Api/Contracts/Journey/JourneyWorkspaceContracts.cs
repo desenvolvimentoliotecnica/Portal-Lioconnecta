@@ -73,3 +73,16 @@ public sealed record JourneyDocumentsResponse(
     IReadOnlyList<JourneyDocumentItemDto> Items,
     string Provider,
     bool IsSimulated);
+
+public sealed record JourneyCreateRequestDto(
+    string TypeKey,
+    string Subject,
+    string Description,
+    string Priority,
+    IReadOnlyDictionary<string, string>? Fields);
+
+public sealed record JourneyCreateRequestResponse(
+    JourneyRequestItemDto Item,
+    JourneyRequestsSummaryDto Summary,
+    string Provider,
+    bool IsSimulated);
