@@ -864,6 +864,25 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    public async Task JourneyDocumentContentEndpoint_ReturnsInlinePdfForKnownDocument()
+    {
+        await EnsureLdapEnabledAsync();
+        var portalSession = await LoginPortalUserAsync();
+        UsePortalAuth(portalSession);
+
+        var documentId = Guid.Parse("b4000001-0000-4000-8000-000000000001");
+        using var contentResponse = await _client.GetAsync($"/api/journey/documentos/{documentId}/conteudo");
+
+        Assert.Equal(HttpStatusCode.OK, contentResponse.StatusCode);
+        Assert.Equal("application/pdf", contentResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Contains("inline", contentResponse.Content.Headers.ContentDisposition?.ToString(), StringComparison.OrdinalIgnoreCase);
+        Assert.True(contentResponse.Content.Headers.ContentLength > 0);
+
+        using var missingResponse = await _client.GetAsync($"/api/journey/documentos/{Guid.NewGuid()}/conteudo");
+        Assert.Equal(HttpStatusCode.NotFound, missingResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task JourneyRequestsEndpoint_CreatesAndReadsRequest()
     {
         await EnsureLdapEnabledAsync();

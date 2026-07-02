@@ -5747,6 +5747,103 @@ body.agenda-event-modal-open {
   text-align: center;
 }
 
+.document-viewer-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(10, 24, 40, 0.72);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.document-viewer-modal[hidden] {
+  display: none;
+}
+
+.document-viewer-modal__dialog {
+  width: min(1100px, 90vw);
+  max-height: 85vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.document-viewer-modal__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.document-viewer-modal__title-block {
+  display: grid;
+  gap: 4px;
+}
+
+.document-viewer-modal__title-block strong {
+  color: #173154;
+  font-size: 18px;
+}
+
+.document-viewer-modal__title-block span {
+  color: #5f7489;
+  font-size: 13px;
+}
+
+.document-viewer-modal__actions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.document-viewer-modal__close {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0;
+}
+
+.document-viewer-modal__body {
+  background: #1a2b3c;
+  overflow: auto;
+  padding: 0;
+  min-height: 60vh;
+}
+
+.document-viewer-modal__frame {
+  border: 0;
+  display: block;
+  height: min(72vh, 900px);
+  width: 100%;
+}
+
+.document-viewer-modal__image {
+  display: block;
+  margin: 0 auto;
+  max-height: min(72vh, 900px);
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.document-viewer-modal__loading,
+.document-viewer-modal__error,
+.document-viewer-modal__unsupported {
+  align-items: center;
+  background: #eef3f8;
+  color: #5f7489;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  min-height: 240px;
+  padding: 24px;
+  text-align: center;
+}
+
+.document-viewer-modal__unsupported strong,
+.document-viewer-modal__error strong {
+  color: #173154;
+}
+
 .payslip-doc {
   background: #fff;
   border: 1px solid #c8d6e5;
@@ -5944,18 +6041,30 @@ body.agenda-event-modal-open {
 }
 
 @media (max-width: 820px) {
-  .payslip-modal {
+  .payslip-modal,
+  .document-viewer-modal {
     padding: 12px;
   }
 
-  .payslip-modal__header {
+  .payslip-modal__header,
+  .document-viewer-modal__header {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .payslip-modal__actions {
+  .payslip-modal__actions,
+  .document-viewer-modal__actions {
     justify-content: space-between;
     width: 100%;
+  }
+
+  .document-viewer-modal__dialog {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+  }
+
+  .document-viewer-modal__frame {
+    height: calc(100vh - 180px);
   }
 
   .payslip-doc__header,

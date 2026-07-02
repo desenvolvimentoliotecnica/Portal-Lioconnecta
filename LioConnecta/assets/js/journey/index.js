@@ -1,5 +1,5 @@
 export { JOURNEY_ROUTE, JOURNEY_MODULES, isJourneyModuleSlug, getJourneyModule } from "./moduleCatalog.js";
-export { getJourneyModuleData, createJourneyRequest, createJourneyTask, updateJourneyTask, updateJourneyTaskStatus, getLearningCatalog } from "./service.js";
+export { getJourneyModuleData, createJourneyRequest, createJourneyTask, updateJourneyTask, updateJourneyTaskStatus, getLearningCatalog, getJourneyDocumentContent } from "./service.js";
 export { renderJourneyModulePage } from "./renderer.js";
 export {
   REQUEST_CATEGORIES,
@@ -36,3 +36,9 @@ export {
   closeLearningCatalogModal,
   bindLearningCatalogModal
 } from "./learningCatalogModal.js";
+export {
+  renderDocumentViewerModalShell,
+  openDocumentViewer,
+  closeDocumentViewer,
+  bindDocumentViewerModal
+} from "./documentViewerModal.js";

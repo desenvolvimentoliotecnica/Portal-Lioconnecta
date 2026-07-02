@@ -9,9 +9,17 @@ public class JourneyWorkspaceService : IJourneyWorkspaceService
 {
     private const bool IsSimulated = true;
     private const string Provider = "ServiceNow";
+    private const string DocumentsProvider = "GED";
 
     private static readonly ConcurrentDictionary<Guid, List<JourneyRequestItemDto>> CreatedRequestsByUser = new();
     private static readonly ConcurrentDictionary<Guid, List<JourneyTaskItemDto>> CreatedTasksByUser = new();
+
+    private readonly IWebHostEnvironment _environment;
+
+    public JourneyWorkspaceService(IWebHostEnvironment environment)
+    {
+        _environment = environment;
+    }
 
     public Task<JourneyTasksResponse> GetTasksAsync(PortalUser user, CancellationToken cancellationToken)
     {
@@ -424,43 +432,87 @@ public class JourneyWorkspaceService : IJourneyWorkspaceService
         _ = user;
         _ = cancellationToken;
 
-        var now = DateTime.UtcNow;
         var response = new JourneyDocumentsResponse(
             "Documentos Recentes",
-            [
-                new JourneyDocumentItemDto(
-                    Guid.Parse("b4000001-0000-4000-8000-000000000001"),
-                    "Politica de viagens corporativas v3.2",
-                    "Politicas",
-                    now.AddDays(-1),
-                    "1,8 MB",
-                    "Disponivel"),
-                new JourneyDocumentItemDto(
-                    Guid.Parse("b4000001-0000-4000-8000-000000000002"),
-                    "Manual do colaborador 2026",
-                    "Institucional",
-                    now.AddDays(-3),
-                    "4,2 MB",
-                    "Disponivel"),
-                new JourneyDocumentItemDto(
-                    Guid.Parse("b4000001-0000-4000-8000-000000000003"),
-                    "Termo de confidencialidade assinado",
-                    "Contratos",
-                    now.AddDays(-7),
-                    "320 KB",
-                    "Assinado"),
-                new JourneyDocumentItemDto(
-                    Guid.Parse("b4000001-0000-4000-8000-000000000004"),
-                    "Comprovante de treinamento NR-01",
-                    "Treinamentos",
-                    now.AddDays(-10),
-                    "980 KB",
-                    "Disponivel")
-            ],
-            "GED",
+            BuildDocumentItems(),
+            DocumentsProvider,
             IsSimulated);
 
         return Task.FromResult(response);
+    }
+
+    public Task<JourneyDocumentContentDto?> GetDocumentContentAsync(
+        PortalUser user,
+        Guid documentId,
+        CancellationToken cancellationToken)
+    {
+        _ = user;
+        _ = cancellationToken;
+
+        var document = BuildDocumentItems().FirstOrDefault(item => item.Id == documentId);
+        if (document is null)
+        {
+            return Task.FromResult<JourneyDocumentContentDto?>(null);
+        }
+
+        var filePath = Path.Combine(
+            _environment.WebRootPath,
+            "samples",
+            "journey-documents",
+            document.FileName);
+
+        if (!File.Exists(filePath))
+        {
+            return Task.FromResult<JourneyDocumentContentDto?>(null);
+        }
+
+        return Task.FromResult<JourneyDocumentContentDto?>(
+            new JourneyDocumentContentDto(filePath, document.MimeType, document.FileName));
+    }
+
+    private static IReadOnlyList<JourneyDocumentItemDto> BuildDocumentItems()
+    {
+        var now = DateTime.UtcNow;
+
+        return
+        [
+            new JourneyDocumentItemDto(
+                Guid.Parse("b4000001-0000-4000-8000-000000000001"),
+                "Politica de viagens corporativas v3.2",
+                "Politicas",
+                now.AddDays(-1),
+                "1,8 MB",
+                "Disponivel",
+                "application/pdf",
+                "politica-viagens.pdf"),
+            new JourneyDocumentItemDto(
+                Guid.Parse("b4000001-0000-4000-8000-000000000002"),
+                "Manual do colaborador 2026",
+                "Institucional",
+                now.AddDays(-3),
+                "4,2 MB",
+                "Disponivel",
+                "application/pdf",
+                "manual-colaborador.pdf"),
+            new JourneyDocumentItemDto(
+                Guid.Parse("b4000001-0000-4000-8000-000000000003"),
+                "Termo de confidencialidade assinado",
+                "Contratos",
+                now.AddDays(-7),
+                "320 KB",
+                "Assinado",
+                "application/pdf",
+                "termo-confidencialidade.pdf"),
+            new JourneyDocumentItemDto(
+                Guid.Parse("b4000001-0000-4000-8000-000000000004"),
+                "Comprovante de treinamento NR-01",
+                "Treinamentos",
+                now.AddDays(-10),
+                "980 KB",
+                "Disponivel",
+                "application/pdf",
+                "comprovante-nr01.pdf")
+        ];
     }
 
     private static IReadOnlyList<JourneyTaskItemDto> BuildPendingTaskItems(PortalUser user)

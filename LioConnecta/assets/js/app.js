@@ -102,7 +102,8 @@ import {
   bindRequestModal,
   bindTaskModal,
   bindTaskRowActions,
-  bindLearningCatalogModal
+  bindLearningCatalogModal,
+  bindDocumentViewerModal
 } from "./journey/index.js?v=0.23.8";
 import {
   canManageMoodSurveyFeedback,
@@ -620,6 +621,10 @@ function renderJourneyPage(data, route, slug) {
 
   if (slug === "trilhas") {
     bindLearningCatalogModal(document);
+  }
+
+  if (slug === "documentos") {
+    bindDocumentViewerModal(document);
   }
 }
 

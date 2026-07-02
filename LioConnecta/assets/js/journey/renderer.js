@@ -5,6 +5,7 @@ import { getJourneyModule } from "./moduleCatalog.js";
 import { renderRequestModalShell } from "./requestModal.js";
 import { renderTaskModalShell } from "./taskModal.js";
 import { renderLearningCatalogModalShell } from "./learningCatalogModal.js";
+import { renderDocumentViewerModalShell } from "./documentViewerModal.js";
 
 function formatDate(value) {
   if (!value) {
@@ -292,7 +293,20 @@ function renderDocumentsPage(data = {}) {
                 <div class="hr-profile-list-item__meta">
                   <span>${escapeHtml(item.sizeLabel)}</span>
                   ${renderStatusPill(item.status)}
-                  <button type="button" class="comm-secondary-button" disabled>Baixar</button>
+                  <button
+                    type="button"
+                    class="feed-composer-submit"
+                    data-action="open-document-viewer"
+                    data-document-id="${escapeHtml(item.id)}"
+                    data-document-title="${escapeHtml(item.title)}"
+                    data-document-category="${escapeHtml(item.category)}"
+                    data-document-size="${escapeHtml(item.sizeLabel)}"
+                    data-document-status="${escapeHtml(item.status)}"
+                    data-document-mime="${escapeHtml(item.mimeType || "application/pdf")}"
+                    data-document-filename="${escapeHtml(item.fileName || "documento.pdf")}"
+                  >
+                    Visualizar
+                  </button>
                 </div>
               </article>
             `).join("")}
@@ -300,7 +314,7 @@ function renderDocumentsPage(data = {}) {
         `
         : renderEmptyState("Nenhum documento", "Seus documentos recentes aparecerao aqui.")
     })
-  });
+  }) + renderDocumentViewerModalShell();
 }
 
 const PAGE_RENDERERS = Object.freeze({

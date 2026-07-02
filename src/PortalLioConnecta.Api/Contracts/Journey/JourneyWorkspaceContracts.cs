@@ -130,7 +130,14 @@ public sealed record JourneyDocumentItemDto(
     string Category,
     DateTime UpdatedAtUtc,
     string SizeLabel,
-    string Status);
+    string Status,
+    string MimeType,
+    string FileName);
+
+public sealed record JourneyDocumentContentDto(
+    string FilePath,
+    string MimeType,
+    string FileName);
 
 public sealed record JourneyDocumentsResponse(
     string Title,

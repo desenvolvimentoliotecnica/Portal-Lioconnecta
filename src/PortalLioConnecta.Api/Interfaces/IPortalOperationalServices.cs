@@ -29,6 +29,7 @@ public interface IJourneyWorkspaceService
     Task<JourneyLearningPathsResponse> GetLearningPathsAsync(PortalUser user, CancellationToken cancellationToken);
     Task<JourneyLearningCatalogResponse> GetLearningCatalogAsync(PortalUser user, CancellationToken cancellationToken);
     Task<JourneyDocumentsResponse> GetDocumentsAsync(PortalUser user, CancellationToken cancellationToken);
+    Task<JourneyDocumentContentDto?> GetDocumentContentAsync(PortalUser user, Guid documentId, CancellationToken cancellationToken);
 }
 
 public interface IKpiService

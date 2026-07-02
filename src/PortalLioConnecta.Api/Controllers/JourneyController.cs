@@ -160,6 +160,27 @@ public class JourneyController : ControllerBase
     public Task<IActionResult> GetDocuments(CancellationToken cancellationToken)
         => ExecuteAsync(user => _journeyWorkspaceService.GetDocumentsAsync(user, cancellationToken));
 
+    [HttpGet("documentos/{id:guid}/conteudo")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetDocumentContent(Guid id, CancellationToken cancellationToken)
+    {
+        var session = PortalSessionHttpContext.Get(HttpContext);
+        if (session?.PortalUser is null)
+        {
+            return Unauthorized(new { message = "Sessao do portal nao encontrada." });
+        }
+
+        var content = await _journeyWorkspaceService.GetDocumentContentAsync(session.PortalUser, id, cancellationToken);
+        if (content is null)
+        {
+            return NotFound(new { message = "Documento nao encontrado." });
+        }
+
+        Response.Headers.ContentDisposition = $"inline; filename=\"{content.FileName}\"";
+        return PhysicalFile(content.FilePath, content.MimeType);
+    }
+
     private async Task<IActionResult> ExecuteAsync<TResponse>(
         Func<PortalUser, Task<TResponse>> action)
     {

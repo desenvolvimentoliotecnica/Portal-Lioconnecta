@@ -563,6 +563,105 @@ function updateMockJourneyTaskStatus(id, status) {
   };
 }
 
+function buildMockDocumentsPayload() {
+  const now = Date.now();
+
+  return {
+    title: "Documentos Recentes",
+    items: [
+      {
+        id: "b4000001-0000-4000-8000-000000000001",
+        title: "Politica de viagens corporativas v3.2",
+        category: "Politicas",
+        updatedAtUtc: new Date(now - 86400000).toISOString(),
+        sizeLabel: "1,8 MB",
+        status: "Disponivel",
+        mimeType: "application/pdf",
+        fileName: "politica-viagens.pdf"
+      },
+      {
+        id: "b4000001-0000-4000-8000-000000000002",
+        title: "Manual do colaborador 2026",
+        category: "Institucional",
+        updatedAtUtc: new Date(now - 3 * 86400000).toISOString(),
+        sizeLabel: "4,2 MB",
+        status: "Disponivel",
+        mimeType: "application/pdf",
+        fileName: "manual-colaborador.pdf"
+      },
+      {
+        id: "b4000001-0000-4000-8000-000000000003",
+        title: "Termo de confidencialidade assinado",
+        category: "Contratos",
+        updatedAtUtc: new Date(now - 7 * 86400000).toISOString(),
+        sizeLabel: "320 KB",
+        status: "Assinado",
+        mimeType: "application/pdf",
+        fileName: "termo-confidencialidade.pdf"
+      },
+      {
+        id: "b4000001-0000-4000-8000-000000000004",
+        title: "Comprovante de treinamento NR-01",
+        category: "Treinamentos",
+        updatedAtUtc: new Date(now - 10 * 86400000).toISOString(),
+        sizeLabel: "980 KB",
+        status: "Disponivel",
+        mimeType: "application/pdf",
+        fileName: "comprovante-nr01.pdf"
+      }
+    ],
+    provider: "GED",
+    isSimulated: true
+  };
+}
+
+export async function getJourneyDocumentContent(documentId, options = {}) {
+  const config = getRuntimeConfig();
+
+  if (config.dataMode !== DATA_MODES.API) {
+    const response = await fetch("./assets/samples/sample-document.pdf", {
+      cache: "no-store",
+      ...options
+    });
+
+    if (!response.ok) {
+      throw new Error(`Falha ao carregar documento mock: HTTP ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return {
+      blob,
+      mimeType: "application/pdf",
+      fileName: "sample-document.pdf"
+    };
+  }
+
+  const endpoint = resolveApiEndpoint("journeyDocumentoConteudo").replace(
+    "{id}",
+    encodeURIComponent(documentId)
+  );
+  const response = await fetch(endpoint, {
+    cache: "no-store",
+    headers: getPortalAuthHeaders(),
+    ...options
+  });
+
+  if (!response.ok) {
+    throw new Error(`Falha ao carregar documento: HTTP ${response.status}`);
+  }
+
+  const mimeType = response.headers.get("Content-Type")?.split(";")[0]?.trim() || "application/octet-stream";
+  const disposition = response.headers.get("Content-Disposition") || "";
+  const fileNameMatch = disposition.match(/filename="?([^";]+)"?/i);
+  const blob = await response.blob();
+
+  return {
+    blob,
+    mimeType,
+    fileName: fileNameMatch?.[1] || "documento"
+  };
+}
+
 function buildMockPayload(slug) {
   const module = getJourneyModule(slug);
   if (slug === "solicitacoes") {
@@ -571,6 +670,10 @@ function buildMockPayload(slug) {
 
   if (slug === "tarefas") {
     return buildMockTasksPayload();
+  }
+
+  if (slug === "documentos") {
+    return buildMockDocumentsPayload();
   }
 
   return {
