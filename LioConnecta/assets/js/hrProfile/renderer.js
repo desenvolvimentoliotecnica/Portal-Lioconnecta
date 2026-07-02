@@ -228,6 +228,8 @@ function renderEvaluationPage(data = {}) {
     title: data.title,
     provider: data.provider,
     isSimulated: data.isSimulated,
+    heroImage: "./assets/img/hero-avaliacao-perfil-rh.png",
+    heroImageLabel: "Ambiente de feedback simbolizando avaliacao de desempenho",
     bodyHtml: `
       ${renderContentCard({
         title: "Resumo da avaliacao",
@@ -271,6 +273,8 @@ function renderPersonalDataPage(data = {}) {
     title: data.title,
     provider: data.provider,
     isSimulated: data.isSimulated,
+    heroImage: "./assets/img/hero-cadastro-perfil-rh.png",
+    heroImageLabel: "Documentos organizados simbolizando dados cadastrais do colaborador",
     bodyHtml: renderContentCard({
       title: "Informacoes cadastrais",
       bodyHtml: `
@@ -302,6 +306,8 @@ function renderTimesheetPage(data = {}) {
     title: data.title,
     provider: data.provider,
     isSimulated: data.isSimulated,
+    heroImage: "./assets/img/hero-ponto-perfil-rh.png",
+    heroImageLabel: "Relogio e ambiente corporativo simbolizando controle de ponto",
     bodyHtml: `
       ${renderContentCard({
         title: "Resumo do periodo",
