@@ -2,7 +2,7 @@
   "meta": {
     "projeto": "LioConnecta / Portal do Colaborador",
     "responsavelPadrao": "Leonardo Sabino Mendes",
-    "atualizadoEm": "2026-07-01",
+    "atualizadoEm": "2026-07-02",
     "instrucao": "totalHoras = tempo real entre horarios no mesmo dia; multi-dia = parcial + 8h/dia.",
     "horasUteisPorDia": 8,
     "minutosMinimos": 30,
@@ -895,7 +895,7 @@
       "inicio": "2026-07-01",
       "horarioInicio": "10:30",
       "conclusao": "2026-07-01",
-      "horarioConclusao": "11:00",
+      "horarioConclusao": "11:39",
       "totalHoras": 0.5,
       "bucket": "Concluído",
       "percentualConcluido": 100,
@@ -905,9 +905,11 @@
       "entregavel": "API tolera eventos Graph com onlineMeeting nulo; CSS dos icones de Acessos Rapidos alinhado; publicado em DEV, HML e PRD.",
       "ambiente": "PRD",
       "referencias": {
-        "commits": [],
+        "commits": [
+          "e44a60d"
+        ],
         "branch": "Lioconnecta_HML",
-        "prHml": "Promocao DEV/HML/PRD"
+        "prHml": "Promocao DEV/HML/PRD (pipelines 28586960377, 28586966830, 28586975792)"
       },
       "observacoes": "Causa raiz: ReadJoinUrl chamava TryGetProperty em JsonElement Null quando Graph retornava onlineMeeting: null."
     }
