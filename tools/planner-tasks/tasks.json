@@ -1019,23 +1019,24 @@
       "nome": "[LIOCONNECTA] CRUD simulado de tarefas na Minha Jornada",
       "descricaoAmigavel": "Na view Tarefas Pendentes, o colaborador registra tarefas e atividades por tipo em modal de dois passos, com criacao, edicao, conclusao e cancelamento simulados via API e mock local.",
       "inicio": "2026-07-02",
-      "horarioInicio": "15:10",
-      "conclusao": null,
-      "horarioConclusao": null,
-      "totalHoras": null,
-      "bucket": "Em andamento",
-      "percentualConcluido": 90,
+      "horarioInicio": "14:30",
+      "conclusao": "2026-07-02",
+      "horarioConclusao": "14:36",
+      "totalHoras": 0.5,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
       "prioridade": "Alta",
       "atribuidaA": "Leonardo Sabino Mendes",
       "pedidoOriginal": "Planejar e implementar registro de tarefas e atividades na view minha-jornada/tarefas, seguindo padrao de solicitacoes, com CRUD simulado e promocao DEV-HML-PRD.",
       "entregavel": "Modal 2 passos com 12 tipos de tarefa, POST/PUT/PATCH /api/journey/tarefas, tabela com acoes Editar/Concluir/Cancelar e mock localStorage no frontend.",
-      "ambiente": "DEV",
+      "ambiente": "PRD",
       "referencias": {
         "commits": [
-          "804dea8"
+          "804dea8",
+          "94a1c1a"
         ],
-        "branch": "Lioconnecta_DEV",
-        "prHml": null
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV/HML/PRD (pipelines 28609356803, 28609364773, 28609373173)"
       },
       "observacoes": "Tarefas seed do ServiceNow permanecem read-only; summary recalculado dinamicamente."
     }
