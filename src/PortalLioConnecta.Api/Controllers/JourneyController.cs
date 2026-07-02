@@ -66,6 +66,11 @@ public class JourneyController : ControllerBase
     public Task<IActionResult> GetLearningPaths(CancellationToken cancellationToken)
         => ExecuteAsync(user => _journeyWorkspaceService.GetLearningPathsAsync(user, cancellationToken));
 
+    [HttpGet("trilhas/cursos-materiais")]
+    [ProducesResponseType(typeof(JourneyLearningCatalogResponse), StatusCodes.Status200OK)]
+    public Task<IActionResult> GetLearningCatalog(CancellationToken cancellationToken)
+        => ExecuteAsync(user => _journeyWorkspaceService.GetLearningCatalogAsync(user, cancellationToken));
+
     [HttpGet("documentos")]
     [ProducesResponseType(typeof(JourneyDocumentsResponse), StatusCodes.Status200OK)]
     public Task<IActionResult> GetDocuments(CancellationToken cancellationToken)

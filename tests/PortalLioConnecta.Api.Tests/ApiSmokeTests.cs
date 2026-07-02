@@ -842,6 +842,7 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
         var tarefas = await _client.GetFromJsonAsync<JourneyTasksResponse>("/api/journey/tarefas");
         var solicitacoes = await _client.GetFromJsonAsync<JourneyRequestsResponse>("/api/journey/solicitacoes");
         var trilhas = await _client.GetFromJsonAsync<JourneyLearningPathsResponse>("/api/journey/trilhas");
+        var catalogo = await _client.GetFromJsonAsync<JourneyLearningCatalogResponse>("/api/journey/trilhas/cursos-materiais");
         var documentos = await _client.GetFromJsonAsync<JourneyDocumentsResponse>("/api/journey/documentos");
 
         Assert.NotNull(tarefas);
@@ -853,6 +854,10 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
         Assert.NotNull(trilhas);
         Assert.True(trilhas.IsSimulated);
         Assert.NotEmpty(trilhas.Items);
+        Assert.NotNull(catalogo);
+        Assert.True(catalogo.IsSimulated);
+        Assert.NotEmpty(catalogo.Courses);
+        Assert.NotEmpty(catalogo.Materials);
         Assert.NotNull(documentos);
         Assert.True(documentos.IsSimulated);
         Assert.NotEmpty(documentos.Items);

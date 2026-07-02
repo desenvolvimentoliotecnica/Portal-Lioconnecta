@@ -3,6 +3,7 @@ import { escapeHtml } from "../components/html.js";
 import { renderRhAdminHero } from "../people/adminNav.js";
 import { getJourneyModule } from "./moduleCatalog.js";
 import { renderRequestModalShell } from "./requestModal.js";
+import { renderLearningCatalogModalShell } from "./learningCatalogModal.js";
 
 function formatDate(value) {
   if (!value) {
@@ -212,6 +213,12 @@ function renderLearningPathsPage(data = {}) {
       })}
       ${renderContentCard({
         title: "Trilhas em andamento",
+        headerActionHtml: `
+          <button type="button" class="comm-secondary-button" data-action="open-learning-catalog-modal">
+            <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+            Cursos e materiais disponiveis
+          </button>
+        `,
         bodyHtml: `
           <div class="hr-profile-competencies">
             ${items.length ? items.map((item) => `
@@ -233,6 +240,7 @@ function renderLearningPathsPage(data = {}) {
           </div>
         `
       })}
+      ${renderLearningCatalogModalShell()}
     `
   });
 }

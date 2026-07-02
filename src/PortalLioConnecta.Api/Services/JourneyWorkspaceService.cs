@@ -175,6 +175,100 @@ public class JourneyWorkspaceService : IJourneyWorkspaceService
         return Task.FromResult(response);
     }
 
+    public Task<JourneyLearningCatalogResponse> GetLearningCatalogAsync(PortalUser user, CancellationToken cancellationToken)
+    {
+        _ = user;
+        _ = cancellationToken;
+
+        var courses = new[]
+        {
+            new JourneyLearningCourseDto(
+                Guid.Parse("b3100001-0000-4000-8000-000000000001"),
+                "Fundamentos de lideranca situacional",
+                "Conceitos essenciais para conduzir equipes com feedback continuo e metas claras.",
+                "1h30",
+                "Videoaula",
+                "Em andamento",
+                "Lideranca e feedback continuo"),
+            new JourneyLearningCourseDto(
+                Guid.Parse("b3100001-0000-4000-8000-000000000002"),
+                "Feedback continuo na pratica",
+                "Tecnicas para conversas de desenvolvimento e acompanhamento de desempenho.",
+                "1h00",
+                "Curso online",
+                "Disponivel",
+                "Lideranca e feedback continuo"),
+            new JourneyLearningCourseDto(
+                Guid.Parse("b3100001-0000-4000-8000-000000000003"),
+                "Boas praticas de seguranca da informacao",
+                "Protecao de dados, senhas fortes e prevencao de phishing no dia a dia.",
+                "1h15",
+                "Videoaula",
+                "Em andamento",
+                "Seguranca da informacao para colaboradores"),
+            new JourneyLearningCourseDto(
+                Guid.Parse("b3100001-0000-4000-8000-000000000004"),
+                "LGPD para colaboradores",
+                "Obrigacoes legais e cuidados no tratamento de dados pessoais.",
+                "45min",
+                "Curso online",
+                "Disponivel",
+                "Seguranca da informacao para colaboradores"),
+            new JourneyLearningCourseDto(
+                Guid.Parse("b3100001-0000-4000-8000-000000000005"),
+                "Comunicacao assertiva para lideres",
+                "Como alinhar expectativas e conduzir reunioes produtivas.",
+                "1h15",
+                "Videoaula",
+                "Disponivel",
+                "Lideranca e feedback continuo")
+        };
+
+        var materials = new[]
+        {
+            new JourneyLearningMaterialDto(
+                Guid.Parse("b3200001-0000-4000-8000-000000000001"),
+                "Guia de feedback continuo",
+                "PDF",
+                "2,4 MB",
+                "Disponivel"),
+            new JourneyLearningMaterialDto(
+                Guid.Parse("b3200001-0000-4000-8000-000000000002"),
+                "Checklist de reuniao 1:1",
+                "Planilha",
+                "180 KB",
+                "Disponivel"),
+            new JourneyLearningMaterialDto(
+                Guid.Parse("b3200001-0000-4000-8000-000000000003"),
+                "Politica de seguranca da informacao",
+                "PDF",
+                "1,1 MB",
+                "Disponivel"),
+            new JourneyLearningMaterialDto(
+                Guid.Parse("b3200001-0000-4000-8000-000000000004"),
+                "Slides - Prevencao de phishing",
+                "Apresentacao",
+                "3,6 MB",
+                "Disponivel"),
+            new JourneyLearningMaterialDto(
+                Guid.Parse("b3200001-0000-4000-8000-000000000005"),
+                "Modelo de plano de desenvolvimento individual",
+                "Planilha",
+                "240 KB",
+                "Disponivel")
+        };
+
+        var response = new JourneyLearningCatalogResponse(
+            "Cursos e Materiais disponiveis",
+            new JourneyLearningCatalogSummaryDto(courses.Length, materials.Length, "6h45"),
+            courses,
+            materials,
+            "LMS",
+            IsSimulated);
+
+        return Task.FromResult(response);
+    }
+
     public Task<JourneyDocumentsResponse> GetDocumentsAsync(PortalUser user, CancellationToken cancellationToken)
     {
         _ = user;

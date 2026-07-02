@@ -6248,3 +6248,126 @@ body.agenda-event-modal-open {
     justify-content: center;
   }
 }
+
+.journey-learning-catalog-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(10, 24, 40, 0.46);
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.journey-learning-catalog-modal[hidden] {
+  display: none;
+}
+
+.journey-learning-catalog-modal__dialog {
+  width: min(720px, 94vw);
+  max-height: calc(100vh - 56px);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.journey-learning-catalog-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.journey-learning-catalog-modal__title-block {
+  display: grid;
+  gap: 4px;
+}
+
+.journey-learning-catalog-modal__title-block strong {
+  color: #173154;
+  font-size: 18px;
+}
+
+.journey-learning-catalog-modal__title-block span {
+  color: #5f7489;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.journey-learning-catalog-modal__close {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+}
+
+.journey-learning-catalog-modal__body {
+  padding: 18px 20px 20px;
+  overflow: auto;
+  display: grid;
+  gap: 20px;
+  background: #f7fafc;
+}
+
+.journey-learning-catalog-modal__metrics {
+  margin: 0;
+}
+
+.journey-learning-catalog-modal__section {
+  display: grid;
+  gap: 12px;
+}
+
+.journey-learning-catalog-modal__section-title {
+  margin: 0;
+  color: #173154;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.journey-learning-catalog-modal__item p {
+  margin: 6px 0 0;
+}
+
+.journey-learning-catalog-modal__description {
+  color: #5f7489;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.journey-learning-catalog-modal__empty {
+  margin: 0;
+  color: #5f7489;
+  font-size: 13px;
+}
+
+.journey-learning-catalog-modal__loading,
+.journey-learning-catalog-modal__error {
+  align-items: center;
+  color: #5f7489;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  min-height: 220px;
+  text-align: center;
+}
+
+.hr-profile-card-header__actions .comm-secondary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .journey-learning-catalog-modal {
+    padding: 16px;
+  }
+
+  .journey-learning-catalog-modal__dialog {
+    width: 100%;
+  }
+
+  .hr-profile-card-header__actions .comm-secondary-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

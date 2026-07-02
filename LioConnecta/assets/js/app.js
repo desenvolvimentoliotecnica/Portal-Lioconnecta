@@ -96,7 +96,8 @@ import {
   getJourneyModuleData,
   createJourneyRequest,
   renderJourneyModulePage,
-  bindRequestModal
+  bindRequestModal,
+  bindLearningCatalogModal
 } from "./journey/index.js?v=0.23.7";
 import {
   canManageMoodSurveyFeedback,
@@ -568,6 +569,10 @@ function renderJourneyPage(data, route, slug) {
         await refreshJourneyRoute("Solicitacao registrada com sucesso.", "success");
       }
     });
+  }
+
+  if (slug === "trilhas") {
+    bindLearningCatalogModal(document);
   }
 }
 

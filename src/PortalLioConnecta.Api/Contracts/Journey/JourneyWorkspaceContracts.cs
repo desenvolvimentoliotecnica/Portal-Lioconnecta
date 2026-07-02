@@ -60,6 +60,35 @@ public sealed record JourneyLearningPathsResponse(
     string Provider,
     bool IsSimulated);
 
+public sealed record JourneyLearningCourseDto(
+    Guid Id,
+    string Title,
+    string Description,
+    string DurationLabel,
+    string Format,
+    string Status,
+    string? TrilhaTitle);
+
+public sealed record JourneyLearningMaterialDto(
+    Guid Id,
+    string Title,
+    string Type,
+    string SizeLabel,
+    string Status);
+
+public sealed record JourneyLearningCatalogSummaryDto(
+    int CoursesCount,
+    int MaterialsCount,
+    string HoursLabel);
+
+public sealed record JourneyLearningCatalogResponse(
+    string Title,
+    JourneyLearningCatalogSummaryDto Summary,
+    IReadOnlyList<JourneyLearningCourseDto> Courses,
+    IReadOnlyList<JourneyLearningMaterialDto> Materials,
+    string Provider,
+    bool IsSimulated);
+
 public sealed record JourneyDocumentItemDto(
     Guid Id,
     string Title,

@@ -1,5 +1,5 @@
 export { JOURNEY_ROUTE, JOURNEY_MODULES, isJourneyModuleSlug, getJourneyModule } from "./moduleCatalog.js";
-export { getJourneyModuleData, createJourneyRequest } from "./service.js";
+export { getJourneyModuleData, createJourneyRequest, getLearningCatalog } from "./service.js";
 export { renderJourneyModulePage } from "./renderer.js";
 export {
   REQUEST_CATEGORIES,
@@ -15,3 +15,9 @@ export {
   bindRequestModal,
   handleOpenRequestModalClick
 } from "./requestModal.js";
+export {
+  renderLearningCatalogModalShell,
+  openLearningCatalogModal,
+  closeLearningCatalogModal,
+  bindLearningCatalogModal
+} from "./learningCatalogModal.js";

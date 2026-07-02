@@ -73,6 +73,7 @@ const DEFAULT_RUNTIME_CONFIG = Object.freeze({
     journeyTarefas: "/journey/tarefas",
     journeySolicitacoes: "/journey/solicitacoes",
     journeyTrilhas: "/journey/trilhas",
+    journeyTrilhasCatalogo: "/journey/trilhas/cursos-materiais",
     journeyDocumentos: "/journey/documentos",
     kpis: "/kpis/summary",
     hrProfile: "/hr/profile",
