@@ -195,6 +195,8 @@ function renderRequestsPage(data = {}) {
     title: data.title,
     provider: data.provider,
     isSimulated: data.isSimulated,
+    heroImage: "./assets/img/hero-solicitacoes-jornada.png",
+    heroImageLabel: "Corredor corporativo simbolizando fluxo de solicitacoes e aprovacoes",
     bodyHtml: `
       ${renderContentCard({
         title: "Resumo de solicitacoes",
@@ -285,6 +287,8 @@ function renderDocumentsPage(data = {}) {
     title: data.title,
     provider: data.provider,
     isSimulated: data.isSimulated,
+    heroImage: "./assets/img/hero-documentos-jornada.png",
+    heroImageLabel: "Arquivo organizado simbolizando gestao de documentos corporativos",
     bodyHtml: renderContentCard({
       title: "Documentos recentes",
       bodyHtml: items.length
