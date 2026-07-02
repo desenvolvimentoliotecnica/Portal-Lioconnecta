@@ -44,6 +44,9 @@ public class PortalUserConfiguration : IEntityTypeConfiguration<PortalUser>
         builder.Property(item => item.ManagerDistinguishedName)
             .HasColumnType("text");
 
+        builder.Property(item => item.EmployeeId)
+            .HasMaxLength(32);
+
         builder.Property(item => item.Role)
             .HasMaxLength(80)
             .IsRequired();

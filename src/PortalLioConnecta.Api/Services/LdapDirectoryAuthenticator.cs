@@ -78,7 +78,8 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
                 ReadAttribute(entry, "title"),
                 distinguishedName,
                 managerDisplayName,
-                managerDistinguishedName);
+                managerDistinguishedName,
+                ReadAttribute(entry, "employeeId"));
         }, cancellationToken);
     }
 
@@ -143,7 +144,8 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
                 "department",
                 "title",
                 "distinguishedName",
-                "manager"
+                "manager",
+                "employeeId"
             });
 
         var response = (SearchResponse)connection.SendRequest(request);
@@ -175,7 +177,8 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
             ReadAttribute(entry, "title"),
             distinguishedName,
             managerDisplayName,
-            managerDistinguishedName);
+            managerDistinguishedName,
+            ReadAttribute(entry, "employeeId"));
     }
 
     private static LdapAuthenticatedUser CreateDirectBindUser(
@@ -202,6 +205,7 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
             null,
             null,
             bindIdentity,
+            null,
             null,
             null);
     }

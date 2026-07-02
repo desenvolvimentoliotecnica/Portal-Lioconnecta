@@ -3,8 +3,10 @@ import { getAdminAuthHeaders, logoutAdmin, redirectToAdminLogin } from "../servi
 import { getPortalAuthHeaders } from "../services/portalAuthService.js";
 import { saveLdapSettings } from "../services/ldapSettingsService.js";
 import { saveMicrosoftGraphSettings, testMicrosoftGraphSettings } from "../services/microsoftGraphSettingsService.js";
+import { saveTotvsRmSettings, testTotvsRmSettings } from "../services/totvsRmSettingsService.js";
 import { collectLdapWizardPayload } from "../settings/ldapWizard.js";
 import { collectMicrosoftGraphSettingsPayload } from "../settings/microsoftGraphSettings.js";
+import { collectTotvsRmSettingsPayload } from "../settings/totvsRmSettings.js";
 import { updatePortalUserPermission, updatePortalUserRole, updatePortalUserStatus } from "../services/portalUsersAdminService.js";
 import { replaceMoodCardElement, submitMoodSurveyVote } from "../services/moodSurveyService.js";
 import { redirectToPortalLogin } from "../services/portalAuthService.js";
@@ -112,6 +114,33 @@ export async function confirmAction({
   });
 
   return result.isConfirmed;
+}
+
+export async function showResultDialog({
+  title = "Resultado",
+  text = "",
+  icon = "info"
+} = {}) {
+  if (!window.Swal) {
+    window.alert(text ? `${title}\n\n${text}` : title);
+    return;
+  }
+
+  await window.Swal.fire({
+    title,
+    text,
+    icon,
+    confirmButtonText: "Fechar",
+    buttonsStyling: false,
+    customClass: {
+      popup: "lio-swal-popup",
+      title: "lio-swal-title",
+      htmlContainer: "lio-swal-text",
+      actions: "lio-swal-actions",
+      confirmButton: "lio-swal-button lio-swal-button--primary",
+      icon: "lio-swal-icon"
+    }
+  });
 }
 
 export function bindInteractionFeedback(root = document) {
@@ -442,6 +471,81 @@ export function bindInteractionFeedback(root = document) {
         if (error instanceof Error && error.message.includes("HTTP 401")) {
           window.setTimeout(() => {
             redirectToAdminLogin(getCurrentHashOrDefault("#configuracoes/microsoft-graph"));
+          }, 700);
+        }
+      } finally {
+        if (submitter) {
+          submitter.disabled = false;
+          submitter.textContent = originalLabel || (isTest ? "Testar conexao" : "Salvar configuracao");
+        }
+      }
+      return;
+    }
+
+    const totvsRmForm = event.target.closest("#totvs-rm-settings-form");
+    if (totvsRmForm) {
+      event.preventDefault();
+
+      const submitter = event.submitter;
+      const submitMode = submitter?.value || "save";
+      const originalLabel = submitter?.textContent;
+      const isTest = submitMode === "test";
+
+      if (submitter) {
+        submitter.disabled = true;
+        submitter.textContent = isTest ? "Testando..." : "Salvando...";
+      }
+
+      try {
+        const payload = collectTotvsRmSettingsPayload(totvsRmForm);
+
+        if (isTest) {
+          const result = await testTotvsRmSettings(payload, {
+            headers: getAdminAuthHeaders()
+          });
+
+          await showResultDialog({
+            title: result.success ? "Conexao TOTVS RM validada" : "Falha no teste TOTVS RM",
+            text: result.detail ? `${result.message}\n\n${result.detail}` : result.message,
+            icon: result.success ? "success" : "error"
+          });
+        } else {
+          await saveTotvsRmSettings(payload, {
+            headers: getAdminAuthHeaders()
+          });
+
+          showToast("Configuracao TOTVS RM salva com sucesso no banco.", "success");
+
+          const passwordInput = totvsRmForm.querySelector("[name='password']");
+          if (passwordInput) {
+            passwordInput.value = "";
+            passwordInput.placeholder = "Senha ja cadastrada";
+          }
+        }
+      } catch (error) {
+        console.error(`Falha ao ${isTest ? "testar" : "salvar"} configuracao TOTVS RM.`, error);
+
+        const message = error instanceof Error && error.message.includes("HTTP 401")
+          ? "Sua sessao administrativa expirou. Faca login novamente para continuar."
+          : error instanceof Error && error.message.includes("HTTP 403")
+            ? "Acesso restrito ao super-admin."
+            : isTest
+              ? "Nao foi possivel testar a conexao TOTVS RM agora."
+              : "Nao foi possivel salvar a configuracao TOTVS RM agora.";
+
+        if (isTest) {
+          await showResultDialog({
+            title: "Falha no teste TOTVS RM",
+            text: message,
+            icon: "error"
+          });
+        } else {
+          showToast(message, "danger");
+        }
+
+        if (error instanceof Error && error.message.includes("HTTP 401")) {
+          window.setTimeout(() => {
+            redirectToAdminLogin(getCurrentHashOrDefault("#configuracoes/totvs-rm"));
           }, 700);
         }
       } finally {

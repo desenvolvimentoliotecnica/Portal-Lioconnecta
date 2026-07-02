@@ -5524,6 +5524,34 @@ body.agenda-event-modal-open {
   font-size: 0.78rem;
 }
 
+.hr-profile-alert {
+  margin-bottom: 16px;
+}
+
+.hr-profile-period-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.hr-profile-period-field {
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.hr-profile-period-field span {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.hr-profile-period-field input {
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
 .hr-profile-table-wrap {
   overflow-x: auto;
 }

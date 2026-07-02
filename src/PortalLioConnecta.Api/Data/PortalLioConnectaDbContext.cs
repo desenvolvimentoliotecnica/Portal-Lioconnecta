@@ -15,6 +15,7 @@ public class PortalLioConnectaDbContext : DbContext
     public DbSet<AdminSession> AdminSessions => Set<AdminSession>();
     public DbSet<LdapConfiguration> LdapConfigurations => Set<LdapConfiguration>();
     public DbSet<MicrosoftGraphConfiguration> MicrosoftGraphConfigurations => Set<MicrosoftGraphConfiguration>();
+    public DbSet<TotvsRmConfiguration> TotvsRmConfigurations => Set<TotvsRmConfiguration>();
     public DbSet<PortalUser> PortalUsers => Set<PortalUser>();
     public DbSet<PortalSession> PortalSessions => Set<PortalSession>();
     public DbSet<PortalUserLoginEvent> PortalUserLoginEvents => Set<PortalUserLoginEvent>();

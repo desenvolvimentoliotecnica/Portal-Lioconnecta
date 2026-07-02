@@ -1,4 +1,5 @@
 using PortalLioConnecta.Api.Contracts.HrProfile;
+using PortalLioConnecta.Api.Infrastructure.TotvsRm;
 using PortalLioConnecta.Api.Interfaces;
 using PortalLioConnecta.Api.Models;
 
@@ -7,10 +8,24 @@ namespace PortalLioConnecta.Api.Services;
 public class HrWorkspaceService : IHrWorkspaceService
 {
     private const string Provider = "TOTVS RM";
-    private const bool IsSimulated = true;
+
+    private readonly ITotvsRmConfigurationService _totvsRmConfigurationService;
+    private readonly ITotvsRmTimesheetRepository _totvsRmTimesheetRepository;
+    private readonly TimesheetMergeService _timesheetMergeService;
+
+    public HrWorkspaceService(
+        ITotvsRmConfigurationService totvsRmConfigurationService,
+        ITotvsRmTimesheetRepository totvsRmTimesheetRepository,
+        TimesheetMergeService timesheetMergeService)
+    {
+        _totvsRmConfigurationService = totvsRmConfigurationService;
+        _totvsRmTimesheetRepository = totvsRmTimesheetRepository;
+        _timesheetMergeService = timesheetMergeService;
+    }
 
     public Task<HrVacationResponse> GetVacationAsync(PortalUser user, CancellationToken cancellationToken)
     {
+        _ = user;
         _ = cancellationToken;
 
         var now = DateTime.UtcNow;
@@ -35,13 +50,14 @@ public class HrWorkspaceService : IHrWorkspaceService
             ],
             true,
             Provider,
-            IsSimulated);
+            true);
 
         return Task.FromResult(response);
     }
 
     public Task<HrPayslipResponse> GetPayslipsAsync(PortalUser user, CancellationToken cancellationToken)
     {
+        _ = user;
         _ = cancellationToken;
 
         var response = new HrPayslipResponse(
@@ -53,13 +69,14 @@ public class HrWorkspaceService : IHrWorkspaceService
                 new HrPayslipDto("2026-02", "Fevereiro/2026", "2026-02", 8420.55m, 6195.33m, new DateTime(2026, 2, 28), "Disponivel")
             ],
             Provider,
-            IsSimulated);
+            true);
 
         return Task.FromResult(response);
     }
 
     public Task<HrPayslipDetailDto?> GetPayslipDetailAsync(PortalUser user, string payslipId, CancellationToken cancellationToken)
     {
+        _ = user;
         _ = cancellationToken;
 
         var summaries = new Dictionary<string, (string PeriodLabel, string ReferenceMonth, decimal Gross, decimal Net, DateTime PaymentDate)>(StringComparer.OrdinalIgnoreCase)
@@ -91,14 +108,7 @@ public class HrWorkspaceService : IHrWorkspaceService
             new("130", "Plano de saude", "—", 218.00m)
         };
 
-        var totalEarnings = earnings.Sum(item => item.Amount);
-        var totalDeductions = deductions.Sum(item => item.Amount);
-        var baseSalary = 7200.00m;
-        var baseInss = 8420.55m;
-        var baseFgts = 8420.55m;
-        var fgtsAmount = Math.Round(baseFgts * 0.08m, 2, MidpointRounding.AwayFromZero);
-
-        var detail = new HrPayslipDetailDto(
+        var response = new HrPayslipDetailDto(
             payslipId,
             summary.PeriodLabel,
             summary.ReferenceMonth,
@@ -112,65 +122,64 @@ public class HrWorkspaceService : IHrWorkspaceService
             user.DisplayName,
             "00012345",
             "123.456.789-00",
-            user.Title ?? "Analista de Sistemas",
-            user.Department ?? "Tecnologia da Informacao",
+            user.Title ?? "Colaborador",
+            user.Department ?? "—",
             "15/03/2019",
             "Banco Itau Unibanco S.A.",
             "1234",
             "56789-0",
-            baseSalary,
-            baseInss,
-            baseFgts,
-            fgtsAmount,
+            7200.00m,
+            summary.Gross,
+            summary.Gross,
+            summary.Gross * 0.08m,
             earnings,
             deductions,
-            totalEarnings,
-            totalDeductions,
+            earnings.Sum(item => item.Amount),
+            deductions.Sum(item => item.Amount),
             Provider,
-            IsSimulated);
+            true);
 
-        return Task.FromResult<HrPayslipDetailDto?>(detail);
+        return Task.FromResult<HrPayslipDetailDto?>(response);
     }
 
     public Task<HrBenefitsResponse> GetBenefitsAsync(PortalUser user, CancellationToken cancellationToken)
     {
+        _ = user;
         _ = cancellationToken;
 
         var response = new HrBenefitsResponse(
             "Beneficios (VR/VT)",
             [
-                new HrBenefitItemDto("VR", "Vale Refeicao", "Alimentacao", "R$ 32,00 / dia util", "Ativo", "Credito mensal liberado todo dia 1."),
-                new HrBenefitItemDto("VT", "Vale Transporte", "Mobilidade", "6% do salario base", "Ativo", "Rota cadastrada: residencia - unidade Matriz."),
-                new HrBenefitItemDto("SAUDE", "Plano de Saude", "Saude", "Enfermaria nacional", "Ativo", "Titular + 2 dependentes vinculados."),
-                new HrBenefitItemDto("ODONTO", "Plano Odontologico", "Saude", "Essencial", "Ativo", "Cobertura preventiva e urgencia."),
-                new HrBenefitItemDto("VIDA", "Seguro de Vida", "Protecao", "2x salario anual", "Ativo", "Beneficiarios atualizados em jan/2026.")
+                new HrBenefitItemDto("VR", "Vale Refeicao", "Alimentacao", "R$ 32,00/dia", "Ativo", "Credito diario em cartao"),
+                new HrBenefitItemDto("VT", "Vale Transporte", "Mobilidade", "6% do salario", "Ativo", "Integracao com cartao corporativo"),
+                new HrBenefitItemDto("PS", "Plano de Saude", "Saude", "Coparticipacao", "Ativo", "Titular + dependentes")
             ],
             Provider,
-            IsSimulated);
+            true);
 
         return Task.FromResult(response);
     }
 
     public Task<HrEvaluationResponse> GetEvaluationAsync(PortalUser user, CancellationToken cancellationToken)
     {
+        _ = user;
         _ = cancellationToken;
 
         var response = new HrEvaluationResponse(
             "Minha Avaliacao",
-            "Ciclo 2026 - Semestre 1",
-            "Em andamento",
+            "Ciclo 2026.1",
+            "Concluida",
             4.2m,
-            "Acima do esperado",
+            "Acima da media",
             [
-                new HrEvaluationCompetencyDto("Entrega e qualidade", 4, 5, "Forte"),
-                new HrEvaluationCompetencyDto("Colaboracao", 5, 5, "Destaque"),
-                new HrEvaluationCompetencyDto("Comunicacao", 4, 5, "Forte"),
-                new HrEvaluationCompetencyDto("Inovacao", 3, 5, "Em desenvolvimento"),
-                new HrEvaluationCompetencyDto("Lideranca", 4, 5, "Forte")
+                new HrEvaluationCompetencyDto("Colaboracao", 4, 5, "Consistente"),
+                new HrEvaluationCompetencyDto("Entrega", 5, 5, "Excelente"),
+                new HrEvaluationCompetencyDto("Comunicacao", 4, 5, "Consistente"),
+                new HrEvaluationCompetencyDto("Inovacao", 4, 5, "Consistente")
             ],
-            "Colaborador com boa consistencia nas entregas e participacao ativa nos ritos do time.",
+            "Demonstra ownership e apoia o time em iniciativas transversais.",
             Provider,
-            IsSimulated);
+            true);
 
         return Task.FromResult(response);
     }
@@ -183,46 +192,112 @@ public class HrWorkspaceService : IHrWorkspaceService
             "Dados Cadastrais",
             [
                 new HrPersonalDataSectionDto("Identificacao", [
-                    new HrPersonalDataFieldDto("Nome completo", user.DisplayName, false),
-                    new HrPersonalDataFieldDto("E-mail corporativo", user.Email ?? user.Login, false),
-                    new HrPersonalDataFieldDto("Cargo", user.Title ?? "Colaborador", false),
-                    new HrPersonalDataFieldDto("Departamento", user.Department ?? "Companhia", false)
+                    new HrPersonalDataFieldDto("Nome", user.DisplayName, false),
+                    new HrPersonalDataFieldDto("E-mail", user.Email ?? "—", false),
+                    new HrPersonalDataFieldDto("Matricula", user.EmployeeId ?? "—", false)
+                ]),
+                new HrPersonalDataSectionDto("Organizacao", [
+                    new HrPersonalDataFieldDto("Cargo", user.Title ?? "—", false),
+                    new HrPersonalDataFieldDto("Area", user.Department ?? "—", false),
+                    new HrPersonalDataFieldDto("Gestor", user.ManagerDisplayName ?? "—", false)
                 ]),
                 new HrPersonalDataSectionDto("Contato", [
-                    new HrPersonalDataFieldDto("Telefone celular", "(11) 98888-7766", true),
-                    new HrPersonalDataFieldDto("Telefone emergencia", "(11) 97777-6655", true),
-                    new HrPersonalDataFieldDto("E-mail pessoal", "colaborador.pessoal@email.com", true)
-                ]),
-                new HrPersonalDataSectionDto("Endereco", [
-                    new HrPersonalDataFieldDto("CEP", "01310-100", true),
-                    new HrPersonalDataFieldDto("Logradouro", "Av. Paulista, 1000", true),
-                    new HrPersonalDataFieldDto("Bairro", "Bela Vista", true),
+                    new HrPersonalDataFieldDto("Telefone", "(11) 99999-0000", true),
                     new HrPersonalDataFieldDto("Cidade/UF", "Sao Paulo / SP", true)
                 ])
             ],
             Provider,
-            IsSimulated);
+            true);
 
         return Task.FromResult(response);
     }
 
-    public Task<HrTimesheetResponse> GetTimesheetAsync(PortalUser user, CancellationToken cancellationToken)
+    public async Task<HrTimesheetResponse> GetTimesheetAsync(
+        PortalUser user,
+        int? month,
+        int? year,
+        CancellationToken cancellationToken)
     {
-        _ = cancellationToken;
+        var (dataDe, dataAte) = ResolvePeriod(month, year);
 
-        var response = new HrTimesheetResponse(
+        if (string.IsNullOrWhiteSpace(user.EmployeeId))
+        {
+            return BuildUnavailableResponse(
+                "missing_employee_id",
+                "Sua matricula nao esta vinculada ao perfil. Solicite ao RH a regularizacao do cadastro.");
+        }
+
+        var runtime = await _totvsRmConfigurationService.GetRuntimeConfigurationAsync(cancellationToken);
+        if (!runtime.IsEnabled)
+        {
+            return BuildUnavailableResponse(
+                "rm_disabled",
+                "Consulta de ponto temporariamente indisponivel. Entre em contato com o RH.");
+        }
+
+        var chapa = TotvsRmChapaNormalizer.Normalize(user.EmployeeId);
+        if (string.IsNullOrWhiteSpace(chapa))
+        {
+            return BuildUnavailableResponse(
+                "missing_employee_id",
+                "Sua matricula nao esta vinculada ao perfil. Solicite ao RH a regularizacao do cadastro.");
+        }
+
+        try
+        {
+            var punches = await _totvsRmTimesheetRepository.GetPunchesAsync(chapa, dataDe, dataAte, cancellationToken);
+            var processedDays = await _totvsRmTimesheetRepository.GetProcessedDaysAsync(chapa, dataDe, dataAte, cancellationToken);
+            var (summary, entries) = _timesheetMergeService.Merge(dataDe, dataAte, punches, processedDays);
+
+            return new HrTimesheetResponse(
+                "Ponto",
+                summary,
+                entries,
+                Provider,
+                false,
+                "ok",
+                null);
+        }
+        catch (TotvsRmIntegrationDisabledException)
+        {
+            return BuildUnavailableResponse(
+                "rm_disabled",
+                "Consulta de ponto temporariamente indisponivel. Entre em contato com o RH.");
+        }
+        catch (TotvsRmIntegrationMisconfiguredException)
+        {
+            return BuildUnavailableResponse(
+                "rm_disabled",
+                "Consulta de ponto temporariamente indisponivel. Entre em contato com o RH.");
+        }
+        catch (TotvsRmIntegrationUnavailableException)
+        {
+            return BuildUnavailableResponse(
+                "rm_unavailable",
+                "Nao foi possivel consultar o ponto agora. Tente novamente em alguns minutos.");
+        }
+    }
+
+    private static (DateTime DataDe, DateTime DataAte) ResolvePeriod(int? month, int? year)
+    {
+        var now = DateTime.UtcNow;
+        var resolvedYear = year is >= 2000 and <= 2100 ? year.Value : now.Year;
+        var resolvedMonth = month is >= 1 and <= 12 ? month.Value : now.Month;
+
+        var dataDe = new DateTime(resolvedYear, resolvedMonth, 1);
+        var dataAte = dataDe.AddMonths(1).AddDays(-1);
+        return (dataDe, dataAte);
+    }
+
+    private static HrTimesheetResponse BuildUnavailableResponse(string availabilityStatus, string userMessage)
+    {
+        return new HrTimesheetResponse(
             "Ponto",
-            new HrTimesheetSummaryDto("Junho/2026", "152h32", "160h00", "+8h15", 0, 1),
-            [
-                new HrTimesheetEntryDto(new DateTime(2026, 6, 23), "Segunda", "08:02", "17:31", "60", "8h29", "+0h29", "Regular"),
-                new HrTimesheetEntryDto(new DateTime(2026, 6, 24), "Terca", "08:11", "17:45", "60", "8h34", "+0h34", "Regular"),
-                new HrTimesheetEntryDto(new DateTime(2026, 6, 25), "Quarta", "08:00", "17:28", "60", "8h28", "+0h28", "Regular"),
-                new HrTimesheetEntryDto(new DateTime(2026, 6, 26), "Quinta", "08:18", "17:36", "60", "8h18", "+0h18", "Regular"),
-                new HrTimesheetEntryDto(new DateTime(2026, 6, 27), "Sexta", "08:05", "16:58", "60", "7h53", "-0h07", "Saida antecipada")
-            ],
+            null,
+            [],
             Provider,
-            IsSimulated);
-
-        return Task.FromResult(response);
+            false,
+            availabilityStatus,
+            userMessage);
     }
 }

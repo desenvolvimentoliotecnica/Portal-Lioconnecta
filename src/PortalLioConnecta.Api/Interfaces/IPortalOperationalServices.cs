@@ -50,7 +50,7 @@ public interface IHrWorkspaceService
     Task<HrBenefitsResponse> GetBenefitsAsync(PortalUser user, CancellationToken cancellationToken);
     Task<HrEvaluationResponse> GetEvaluationAsync(PortalUser user, CancellationToken cancellationToken);
     Task<HrPersonalDataResponse> GetPersonalDataAsync(PortalUser user, CancellationToken cancellationToken);
-    Task<HrTimesheetResponse> GetTimesheetAsync(PortalUser user, CancellationToken cancellationToken);
+    Task<HrTimesheetResponse> GetTimesheetAsync(PortalUser user, int? month, int? year, CancellationToken cancellationToken);
 }
 
 public interface ICorporateSystemsService

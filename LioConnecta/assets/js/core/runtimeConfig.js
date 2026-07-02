@@ -92,6 +92,7 @@ const DEFAULT_RUNTIME_CONFIG = Object.freeze({
     adminLogout: "/admin/auth/logout",
     adminLdap: "/admin/ldap",
     adminMicrosoftGraph: "/admin/microsoft-graph",
+    adminTotvsRm: "/admin/totvs-rm",
     adminPolls: "/admin/polls",
     adminPollAssets: "/admin/polls/assets",
     adminPortalUsers: "/admin/portal-users",

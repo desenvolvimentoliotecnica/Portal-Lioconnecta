@@ -10,4 +10,5 @@ public sealed record LdapAuthenticatedUser(
     string? Title,
     string? DistinguishedName,
     string? ManagerDisplayName,
-    string? ManagerDistinguishedName);
+    string? ManagerDistinguishedName,
+    string? EmployeeId);

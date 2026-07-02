@@ -60,8 +60,11 @@ public class HrWorkspaceController : ControllerBase
 
     [HttpGet("ponto")]
     [ProducesResponseType(typeof(HrTimesheetResponse), StatusCodes.Status200OK)]
-    public Task<IActionResult> GetTimesheet(CancellationToken cancellationToken)
-        => ExecuteAsync(user => _hrWorkspaceService.GetTimesheetAsync(user, cancellationToken));
+    public Task<IActionResult> GetTimesheet(
+        [FromQuery] int? month,
+        [FromQuery] int? year,
+        CancellationToken cancellationToken)
+        => ExecuteAsync(user => _hrWorkspaceService.GetTimesheetAsync(user, month, year, cancellationToken));
 
     private async Task<IActionResult> ExecuteAsync<TResponse>(
         Func<PortalUser, Task<TResponse>> action)

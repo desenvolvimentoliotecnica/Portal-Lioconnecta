@@ -66,8 +66,12 @@ export async function getHrProfileModuleData(slug, options = {}) {
   }
 
   const endpoint = resolveApiEndpoint(module.endpointKey);
-  return getJson(endpoint, {
-    headers: getPortalAuthHeaders(),
+  const query = slug === "ponto" && options.month && options.year
+    ? `?month=${encodeURIComponent(options.month)}&year=${encodeURIComponent(options.year)}`
+    : "";
+
+  return getJson(`${endpoint}${query}`, {
+    headers: options.headers || getPortalAuthHeaders(),
     ...options
   });
 }

@@ -124,6 +124,24 @@ function renderMicrosoftGraphSettingsCard() {
   `;
 }
 
+function renderTotvsRmSettingsCard() {
+  return `
+    <section class="card communication-form-card ldap-settings-card">
+      <div class="card-header">TOTVS RM</div>
+      <div class="communication-section-intro">
+        <strong>Configure a integracao de ponto</strong>
+        <p>Informe servidor SQL, database e credenciais read-only para consultar ABATFUN e AAHTFUN no MEU PERFIL RH &gt; Ponto.</p>
+      </div>
+      <div class="comm-item-actions">
+        <a href="#configuracoes/totvs-rm" class="feed-composer-submit">
+          <i class="fa-solid fa-clock" aria-hidden="true"></i>
+          Configurar TOTVS RM
+        </a>
+      </div>
+    </section>
+  `;
+}
+
 function renderPortalUserStatCard(label, value, detail, tone = "brand") {
   return `
     <article class="comm-kpi comm-kpi--${escapeHtml(tone)}">
@@ -1022,6 +1040,7 @@ export function renderAdminSettingsPage() {
         </section>
         ${renderLdapSettingsCard()}
         ${renderMicrosoftGraphSettingsCard()}
+        ${renderTotvsRmSettingsCard()}
       </div>
     </section>
   `;

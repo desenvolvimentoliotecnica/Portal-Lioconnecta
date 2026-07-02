@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PortalLioConnecta.Api.Contracts.Admin.Auth;
 using PortalLioConnecta.Api.Contracts.Admin.Ldap;
 using PortalLioConnecta.Api.Contracts.Admin.MicrosoftGraph;
+using PortalLioConnecta.Api.Contracts.Admin.TotvsRm;
 using PortalLioConnecta.Api.Contracts.Admin.Polls;
 using PortalLioConnecta.Api.Contracts.Admin.PortalUsers;
 using PortalLioConnecta.Api.Contracts.Agenda;
@@ -828,8 +829,85 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
         Assert.True(cadastro.IsSimulated);
         Assert.NotEmpty(cadastro.Sections);
         Assert.NotNull(ponto);
-        Assert.True(ponto.IsSimulated);
-        Assert.NotEmpty(ponto.Entries);
+        Assert.False(ponto.IsSimulated);
+        Assert.Equal("rm_disabled", ponto.AvailabilityStatus);
+        Assert.NotNull(ponto.UserMessage);
+        Assert.Empty(ponto.Entries);
+    }
+
+    [Fact]
+    public async Task AdminTotvsRmEndpoint_ReturnsSeededDefaultConfiguration()
+    {
+        var loginResponse = await _client.PostAsJsonAsync("/api/admin/auth/login", new AdminLoginRequest("super-admin", "Liotec@2026"));
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+
+        var adminSession = await loginResponse.Content.ReadFromJsonAsync<AdminLoginResponse>();
+        Assert.NotNull(adminSession);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminSession.Token);
+
+        var configuration = await _client.GetFromJsonAsync<TotvsRmConfigurationDto>("/api/admin/totvs-rm");
+
+        Assert.NotNull(configuration);
+        Assert.False(configuration.IsEnabled);
+        Assert.Equal(1433, configuration.Port);
+    }
+
+    [Fact]
+    public async Task AdminTotvsRmEndpoint_SavesAndReadsConfiguration()
+    {
+        var loginResponse = await _client.PostAsJsonAsync("/api/admin/auth/login", new AdminLoginRequest("super-admin", "Liotec@2026"));
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+
+        var adminSession = await loginResponse.Content.ReadFromJsonAsync<AdminLoginResponse>();
+        Assert.NotNull(adminSession);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminSession.Token);
+
+        var request = new UpsertTotvsRmConfigurationRequest(
+            true,
+            "sqlserver.local",
+            1433,
+            "Corpore",
+            "portal_rm_read",
+            "Secret@123",
+            true);
+
+        var saveResponse = await _client.PutAsJsonAsync("/api/admin/totvs-rm", request);
+        Assert.Equal(HttpStatusCode.OK, saveResponse.StatusCode);
+
+        var saved = await saveResponse.Content.ReadFromJsonAsync<TotvsRmConfigurationDto>();
+        Assert.NotNull(saved);
+        Assert.True(saved.IsEnabled);
+        Assert.Equal("sqlserver.local", saved.Server);
+        Assert.True(saved.HasPassword);
+
+        var getResponse = await _client.GetFromJsonAsync<TotvsRmConfigurationDto>("/api/admin/totvs-rm");
+        Assert.NotNull(getResponse);
+        Assert.Equal("Corpore", getResponse.Database);
+    }
+
+    [Fact]
+    public async Task AdminTotvsRmTest_ReturnsValidationErrorWhenServerMissing()
+    {
+        var loginResponse = await _client.PostAsJsonAsync("/api/admin/auth/login", new AdminLoginRequest("super-admin", "Liotec@2026"));
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+
+        var adminSession = await loginResponse.Content.ReadFromJsonAsync<AdminLoginResponse>();
+        Assert.NotNull(adminSession);
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminSession.Token);
+
+        var response = await _client.PostAsJsonAsync("/api/admin/totvs-rm/test", new UpsertTotvsRmConfigurationRequest(
+            true,
+            string.Empty,
+            1433,
+            "Corpore",
+            "portal_rm_read",
+            "Secret@123",
+            true));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var payload = await response.Content.ReadFromJsonAsync<TotvsRmConnectionTestResponse>();
+        Assert.NotNull(payload);
+        Assert.False(payload.Success);
     }
 
     [Fact]

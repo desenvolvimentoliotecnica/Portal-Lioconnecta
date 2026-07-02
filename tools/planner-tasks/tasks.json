@@ -2,13 +2,13 @@
   "meta": {
     "projeto": "LioConnecta / Portal do Colaborador",
     "responsavelPadrao": "Leonardo Sabino Mendes",
-    "atualizadoEm": "2026-07-02",
+    "atualizadoEm": "2026-07-02T20:40",
     "instrucao": "totalHoras = tempo real entre horarios no mesmo dia; multi-dia = parcial + 8h/dia.",
     "horasUteisPorDia": 8,
     "minutosMinimos": 30,
     "jornadaComercial": "08:00-18:00",
     "backfillPre23Em": "2026-06-29",
-    "totalTarefas": 39
+    "totalTarefas": 40
   },
   "tarefas": [
     {
@@ -1039,6 +1039,31 @@
         "prHml": "Promocao DEV/HML/PRD (pipelines 28609356803, 28609364773, 28609373173)"
       },
       "observacoes": "Tarefas seed do ServiceNow permanecem read-only; summary recalculado dinamicamente."
+    },
+    {
+      "id": "TASK-2026-040",
+      "nome": "[LIOCONNECTA] Integracao TOTVS RM — espelho de ponto no Meu Perfil RH",
+      "descricaoAmigavel": "Colaborador consulta o espelho de ponto mensal em Meu Perfil RH, com resumo diario (entrada, saida, intervalo e horas trabalhadas). Super-admin configura conexao SQL Server do RM em Configuracoes, com teste de conexao em modal.",
+      "inicio": "2026-07-02",
+      "horarioInicio": "17:00",
+      "conclusao": "2026-07-02",
+      "horarioConclusao": "20:40",
+      "totalHoras": 3.5,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Integrar batidas ABATFUN e espelho AAHTFUN do TOTVS RM na tela Ponto (CHAPA via employeeId LDAP), config admin com teste Swal, commit e promocao DEV-HML-PRD.",
+      "entregavel": "API GET /api/hr/ponto com agregacao diaria, config TOTVS RM em #configuracoes/totvs-rm, migration PortalUser.EmployeeId + TotvsRmConfiguration, mensagens amigaveis quando RM indisponivel ou matricula ausente.",
+      "ambiente": "PRD",
+      "referencias": {
+        "commits": [
+          "a9f5cdf"
+        ],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV/HML/PRD pendente pipeline"
+      },
+      "observacoes": "CodColigada fixo 1; CHAPA normalizada PadLeft(8). Pos-deploy: rodar migration e cadastrar conexao RM em Configuracoes."
     }
   ]
 }

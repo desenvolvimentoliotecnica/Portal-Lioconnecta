@@ -14,6 +14,7 @@ public static class PortalLioConnectaDbInitializer
         var adminAuthService = scope.ServiceProvider.GetRequiredService<IAdminAuthService>();
         var ldapConfigurationService = scope.ServiceProvider.GetRequiredService<ILdapConfigurationService>();
         var microsoftGraphConfigurationService = scope.ServiceProvider.GetRequiredService<IMicrosoftGraphConfigurationService>();
+        var totvsRmConfigurationService = scope.ServiceProvider.GetRequiredService<ITotvsRmConfigurationService>();
 
         if (dbContext.Database.IsRelational())
         {
@@ -27,6 +28,7 @@ public static class PortalLioConnectaDbInitializer
         await adminAuthService.EnsureDefaultSuperAdminAsync(cancellationToken);
         await ldapConfigurationService.EnsureDefaultConfigurationAsync(cancellationToken);
         await microsoftGraphConfigurationService.EnsureDefaultConfigurationAsync(cancellationToken);
+        await totvsRmConfigurationService.EnsureDefaultConfigurationAsync(cancellationToken);
 
         var moodSurveyFeedbackService = scope.ServiceProvider.GetRequiredService<IMoodSurveyFeedbackService>();
         await moodSurveyFeedbackService.EnsureSeedAsync(cancellationToken);

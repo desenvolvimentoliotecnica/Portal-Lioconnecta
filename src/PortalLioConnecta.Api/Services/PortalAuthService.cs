@@ -156,6 +156,7 @@ public class PortalAuthService : IPortalAuthService
         portalUser.DistinguishedName = authenticatedUser.DistinguishedName;
         portalUser.ManagerDisplayName = authenticatedUser.ManagerDisplayName;
         portalUser.ManagerDistinguishedName = authenticatedUser.ManagerDistinguishedName;
+        portalUser.EmployeeId = NormalizeEmployeeId(authenticatedUser.EmployeeId);
         portalUser.LastLoginAtUtc = now;
         portalUser.LastKnownIpAddress = authContext.IpAddress;
         portalUser.LastOrigin = authContext.Origin;
@@ -417,6 +418,11 @@ public class PortalAuthService : IPortalAuthService
         });
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string? NormalizeEmployeeId(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
     private PortalRequestAuditContext ResolveAuthContext()

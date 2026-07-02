@@ -4,3 +4,8 @@ export {
   initMicrosoftGraphSettings,
   collectMicrosoftGraphSettingsPayload
 } from "./microsoftGraphSettings.js";
+export {
+  renderTotvsRmSettingsPage,
+  initTotvsRmSettings,
+  collectTotvsRmSettingsPayload
+} from "./totvsRmSettings.js";

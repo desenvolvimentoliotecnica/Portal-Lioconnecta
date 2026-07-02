@@ -13,6 +13,7 @@ public class PortalUser
     public string? DistinguishedName { get; set; }
     public string? ManagerDisplayName { get; set; }
     public string? ManagerDistinguishedName { get; set; }
+    public string? EmployeeId { get; set; }
     public string Role { get; set; } = string.Empty;
     public string? ModulePermissionsJson { get; set; }
     public bool IsActive { get; set; }

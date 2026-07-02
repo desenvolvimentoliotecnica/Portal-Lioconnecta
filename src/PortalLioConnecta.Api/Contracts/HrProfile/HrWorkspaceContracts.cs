@@ -140,7 +140,9 @@ public sealed record HrTimesheetSummaryDto(
 
 public sealed record HrTimesheetResponse(
     string Title,
-    HrTimesheetSummaryDto Summary,
+    HrTimesheetSummaryDto? Summary,
     IReadOnlyList<HrTimesheetEntryDto> Entries,
     string Provider,
-    bool IsSimulated);
+    bool IsSimulated,
+    string? AvailabilityStatus,
+    string? UserMessage);

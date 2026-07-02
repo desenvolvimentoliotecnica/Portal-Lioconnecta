@@ -73,9 +73,10 @@ import { applyNotificationsToShellData, getNotificationCenterData } from "./serv
 import { fetchAdminSession, getAdminAuthHeaders, getStoredAdminSession, isSuperAdminSession, redirectToAdminLogin } from "./services/adminAuthService.js?v=0.12.8";
 import { ensureValidPortalSession, getPortalAuthHeaders, getStoredPortalSession, logoutPortal, redirectToPortalLogin } from "./services/portalAuthService.js?v=0.13.0";
 import { canInteractWithFeed, canViewRoute } from "./services/portalPermissionService.js?v=0.17.0";
-import { renderLdapWizardPage, initLdapWizard, renderMicrosoftGraphSettingsPage, initMicrosoftGraphSettings } from "./settings/index.js?v=0.15.0";
+import { renderLdapWizardPage, initLdapWizard, renderMicrosoftGraphSettingsPage, initMicrosoftGraphSettings, renderTotvsRmSettingsPage, initTotvsRmSettings } from "./settings/index.js?v=0.15.0";
 import { getLdapSettingsData } from "./services/ldapSettingsService.js?v=0.12.8";
 import { getMicrosoftGraphSettingsData } from "./services/microsoftGraphSettingsService.js?v=0.23.2";
+import { getTotvsRmSettingsData } from "./services/totvsRmSettingsService.js?v=0.24.0";
 import { listPortalUsers } from "./services/portalUsersAdminService.js?v=0.12.8";
 import { renderRhMoodDashboardPage, initMoodDashboardCharts, destroyMoodDashboardCharts, wrapRhAdminShell } from "./people/index.js?v=0.14.5";
 import {
@@ -124,6 +125,7 @@ const ROUTES = Object.freeze({
   SETTINGS: "configuracoes",
   SETTINGS_LDAP: "configuracoes/ldap",
   SETTINGS_MICROSOFT_GRAPH: "configuracoes/microsoft-graph",
+  SETTINGS_TOTVS_RM: "configuracoes/totvs-rm",
   ADMIN_USERS: "admin/usuarios",
   ADMIN_POLLS: "admin/enquetes",
   PEOPLE: "pessoas-rh",
@@ -181,7 +183,10 @@ let currentPeopleRhData = {
   moodFeedbackPage: null,
   moodFeedbackLoadError: ""
 };
-let adminUsersSearchDebounce = 0;
+let timesheetQueryState = {
+  month: new Date().getMonth() + 1,
+  year: new Date().getFullYear()
+};
 let currentAdminUsersPage = createEmptyPortalUsersPage();
 let currentAdminPollsPage = createEmptyAdminPollsPage();
 let currentAdminPollEditingId = "";
@@ -302,6 +307,7 @@ function isRestrictedAdminRoute(route) {
     route === ROUTES.SETTINGS ||
     route === ROUTES.SETTINGS_LDAP ||
     route === ROUTES.SETTINGS_MICROSOFT_GRAPH ||
+    route === ROUTES.SETTINGS_TOTVS_RM ||
     route === ROUTES.ADMIN_USERS
   );
 }
@@ -426,6 +432,10 @@ function parseRoute() {
     return { route: ROUTES.SETTINGS_MICROSOFT_GRAPH, slug: "" };
   }
 
+  if (hash === ROUTES.SETTINGS_TOTVS_RM) {
+    return { route: ROUTES.SETTINGS_TOTVS_RM, slug: "" };
+  }
+
   if (hash === ROUTES.SAVED) {
     return { route: ROUTES.SAVED, slug: "" };
   }
@@ -460,7 +470,7 @@ function buildNavItems(navItems = [], route = ROUTES.HOME) {
         ? ROUTES.HOME
         : route === ROUTES.ADMIN_POLLS || route === ROUTES.COMMUNICATION_ADMIN
         ? ROUTES.PEOPLE
-        : route === ROUTES.SETTINGS_LDAP || route === ROUTES.SETTINGS_MICROSOFT_GRAPH
+        : route === ROUTES.SETTINGS_LDAP || route === ROUTES.SETTINGS_MICROSOFT_GRAPH || route === ROUTES.SETTINGS_TOTVS_RM
           ? ROUTES.SETTINGS
           : route;
   const routes = navItems.length && navItems[0]?.route
@@ -546,13 +556,42 @@ function renderSavedFeedPage(data, route) {
   bindFeedPostMenuActions(document, { savedList: true });
 }
 
+function bindTimesheetPeriodSelector(root = document) {
+  const form = root.querySelector("#hr-timesheet-period-form");
+  if (!form) {
+    return;
+  }
+
+  form.addEventListener("change", async (event) => {
+    const input = event.target.closest("[name='referenceMonth']");
+    if (!input?.value) {
+      return;
+    }
+
+    const [year, month] = input.value.split("-").map(Number);
+    if (!year || !month) {
+      return;
+    }
+
+    timesheetQueryState = { month, year };
+    const shellData = await loadPageData(ROUTES.HR_PROFILE, "ponto");
+    renderHrProfilePage(shellData, ROUTES.HR_PROFILE, "ponto");
+  });
+}
+
 function renderHrProfilePage(data, route, slug) {
   const centerContent = document.getElementById("center-content");
   renderShell(data, route);
-  centerContent.innerHTML = renderHrProfileModulePage(slug, data.hrModule);
+  centerContent.innerHTML = renderHrProfileModulePage(slug, data.hrModule, {
+    timesheetPeriod: timesheetQueryState
+  });
 
   if (slug === "holerite") {
     bindPayslipModal(document);
+  }
+
+  if (slug === "ponto") {
+    bindTimesheetPeriodSelector(centerContent);
   }
 }
 
@@ -893,6 +932,23 @@ function renderAdminMicrosoftGraphRoute(data, route) {
     </div>
   `;
   initMicrosoftGraphSettings(centerContent);
+}
+
+function renderAdminTotvsRmRoute(data, route) {
+  const centerContent = document.getElementById("center-content");
+  renderShell(data, route);
+  centerContent.innerHTML = `
+    <div class="ldap-wizard-layout">
+      <div class="ldap-wizard-layout__toolbar">
+        <a href="#configuracoes" class="comm-secondary-button">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          Voltar para configuracoes
+        </a>
+      </div>
+      ${renderTotvsRmSettingsPage(data.totvsRmSettings)}
+    </div>
+  `;
+  initTotvsRmSettings(centerContent);
 }
 
 function renderAdminPollsCurrentView() {
@@ -1889,7 +1945,7 @@ async function ensureRestrictedAdminAccess(route = ROUTES.SETTINGS) {
       return false;
     }
 
-    if ((route === ROUTES.SETTINGS || route === ROUTES.SETTINGS_LDAP || route === ROUTES.SETTINGS_MICROSOFT_GRAPH || route === ROUTES.ADMIN_USERS) && !isSuperAdminSession(validatedSession)) {
+    if ((route === ROUTES.SETTINGS || route === ROUTES.SETTINGS_LDAP || route === ROUTES.SETTINGS_MICROSOFT_GRAPH || route === ROUTES.SETTINGS_TOTVS_RM || route === ROUTES.ADMIN_USERS) && !isSuperAdminSession(validatedSession)) {
       window.location.hash = "#comunicacao/restrita";
       showToast("Esta area e restrita ao super-admin.", "danger");
       return false;
@@ -2254,6 +2310,7 @@ async function loadPageData(route, slug = "") {
     route === ROUTES.SETTINGS ||
     route === ROUTES.SETTINGS_LDAP ||
     route === ROUTES.SETTINGS_MICROSOFT_GRAPH ||
+    route === ROUTES.SETTINGS_TOTVS_RM ||
     route === ROUTES.ADMIN_USERS;
   const config = getRuntimeConfig();
   const usesApiShell = config.dataMode === "api";
@@ -2298,9 +2355,16 @@ async function loadPageData(route, slug = "") {
   }
 
   if (route === ROUTES.HR_PROFILE) {
-    const hrModule = await getHrProfileModuleData(slug, {
+    const hrOptions = {
       headers: getPortalAuthHeaders()
-    });
+    };
+
+    if (slug === "ponto") {
+      hrOptions.month = timesheetQueryState.month;
+      hrOptions.year = timesheetQueryState.year;
+    }
+
+    const hrModule = await getHrProfileModuleData(slug, hrOptions);
 
     return {
       ...shellData,
@@ -2330,17 +2394,19 @@ async function loadPageData(route, slug = "") {
     };
   }
 
-  if (route === ROUTES.SETTINGS || route === ROUTES.SETTINGS_LDAP || route === ROUTES.SETTINGS_MICROSOFT_GRAPH) {
+  if (route === ROUTES.SETTINGS || route === ROUTES.SETTINGS_LDAP || route === ROUTES.SETTINGS_MICROSOFT_GRAPH || route === ROUTES.SETTINGS_TOTVS_RM) {
     const adminHeaders = { headers: getAdminAuthHeaders() };
-    const [ldapSettings, microsoftGraphSettings] = await Promise.all([
+    const [ldapSettings, microsoftGraphSettings, totvsRmSettings] = await Promise.all([
       getLdapSettingsData(adminHeaders),
-      getMicrosoftGraphSettingsData(adminHeaders)
+      getMicrosoftGraphSettingsData(adminHeaders),
+      getTotvsRmSettingsData(adminHeaders)
     ]);
 
     return {
       ...shellData,
       ldapSettings,
-      microsoftGraphSettings
+      microsoftGraphSettings,
+      totvsRmSettings
     };
   }
 
@@ -2461,7 +2527,7 @@ async function renderCurrentRoute() {
     if (!hasEditorAccess) {
       return;
     }
-  } else if (route === ROUTES.SETTINGS || route === ROUTES.SETTINGS_LDAP || route === ROUTES.SETTINGS_MICROSOFT_GRAPH || route === ROUTES.ADMIN_USERS) {
+  } else if (route === ROUTES.SETTINGS || route === ROUTES.SETTINGS_LDAP || route === ROUTES.SETTINGS_MICROSOFT_GRAPH || route === ROUTES.SETTINGS_TOTVS_RM || route === ROUTES.ADMIN_USERS) {
     const hasAdminAccess = await ensureRestrictedAdminAccess(route);
     if (!hasAdminAccess) {
       return;
@@ -2509,6 +2575,8 @@ async function renderCurrentRoute() {
     renderAdminLdapRoute(data, route);
   } else if (route === ROUTES.SETTINGS_MICROSOFT_GRAPH) {
     renderAdminMicrosoftGraphRoute(data, route);
+  } else if (route === ROUTES.SETTINGS_TOTVS_RM) {
+    renderAdminTotvsRmRoute(data, route);
   } else if (route === ROUTES.ADMIN_USERS) {
     renderAdminUsersRoute(data, route);
   } else if (route === ROUTES.ADMIN_POLLS) {

@@ -63,6 +63,7 @@ public class FakeLdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
             "Analista de RH",
             "CN=Roberto Almeida,OU=Usuarios,DC=liotecnica,DC=com,DC=br",
             "Elizabete Rodrigues da Silva",
-            "CN=Elizabete Rodrigues da Silva,OU=Gestores,DC=liotecnica,DC=com,DC=br"));
+            "CN=Elizabete Rodrigues da Silva,OU=Gestores,DC=liotecnica,DC=com,DC=br",
+            "887"));
     }
 }

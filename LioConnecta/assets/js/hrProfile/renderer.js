@@ -298,9 +298,37 @@ function renderPersonalDataPage(data = {}) {
   });
 }
 
-function renderTimesheetPage(data = {}) {
+function renderTimesheetPage(data = {}, options = {}) {
   const summary = data.summary || {};
   const entries = Array.isArray(data.entries) ? data.entries : [];
+  const userMessage = data.userMessage || data.UserMessage || "";
+  const availabilityStatus = data.availabilityStatus || data.AvailabilityStatus || "ok";
+  const period = options.timesheetPeriod || {};
+  const monthValue = period.year && period.month
+    ? `${String(period.year).padStart(4, "0")}-${String(period.month).padStart(2, "0")}`
+    : "";
+
+  const alertHtml = userMessage
+    ? `<div class="ldap-wizard__alert ldap-wizard__alert--danger hr-profile-alert">${escapeHtml(userMessage)}</div>`
+    : "";
+
+  const summaryCards = availabilityStatus === "ok"
+    ? renderMetricCards([
+      { label: "Periodo", value: summary.periodLabel || "—" },
+      { label: "Horas trabalhadas", value: summary.workedHours || "—" },
+      { label: "Horas previstas", value: summary.expectedHours || "—" },
+      { label: "Banco de horas", value: summary.balanceHours || "—" },
+      { label: "Faltas", value: String(summary.absences ?? 0) },
+      { label: "Atrasos", value: String(summary.delays ?? 0) }
+    ])
+    : renderMetricCards([
+      { label: "Periodo", value: summary.periodLabel || "—" },
+      { label: "Horas trabalhadas", value: "—" },
+      { label: "Horas previstas", value: "—" },
+      { label: "Banco de horas", value: "—" },
+      { label: "Faltas", value: "—" },
+      { label: "Atrasos", value: "—" }
+    ]);
 
   return renderPageShell({
     title: data.title,
@@ -309,16 +337,21 @@ function renderTimesheetPage(data = {}) {
     heroImage: "./assets/img/hero-ponto-perfil-rh.png",
     heroImageLabel: "Relogio e ambiente corporativo simbolizando controle de ponto",
     bodyHtml: `
+      ${alertHtml}
+      ${renderContentCard({
+        title: "Consultar periodo",
+        bodyHtml: `
+          <form id="hr-timesheet-period-form" class="hr-profile-period-form">
+            <label class="hr-profile-period-field">
+              <span>Mes de referencia</span>
+              <input type="month" name="referenceMonth" value="${escapeHtml(monthValue)}" />
+            </label>
+          </form>
+        `
+      })}
       ${renderContentCard({
         title: "Resumo do periodo",
-        bodyHtml: renderMetricCards([
-          { label: "Periodo", value: summary.periodLabel || "—" },
-          { label: "Horas trabalhadas", value: summary.workedHours || "—" },
-          { label: "Horas previstas", value: summary.expectedHours || "—" },
-          { label: "Banco de horas", value: summary.balanceHours || "—" },
-          { label: "Faltas", value: String(summary.absences ?? 0) },
-          { label: "Atrasos", value: String(summary.delays ?? 0) }
-        ])
+        bodyHtml: summaryCards
       })}
       ${renderContentCard({
         title: "Registros recentes",
@@ -353,7 +386,10 @@ function renderTimesheetPage(data = {}) {
               </table>
             </div>
           `
-          : renderEmptyState("Sem registros", "Os apontamentos de ponto aparecerao aqui.")
+          : renderEmptyState(
+            userMessage ? "Consulta indisponivel" : "Sem registros",
+            userMessage || "Os apontamentos de ponto aparecerao aqui."
+          )
       })}
     `
   });
@@ -368,7 +404,7 @@ const PAGE_RENDERERS = Object.freeze({
   ponto: renderTimesheetPage
 });
 
-export function renderHrProfileModulePage(slug, data = {}) {
+export function renderHrProfileModulePage(slug, data = {}, options = {}) {
   const renderer = PAGE_RENDERERS[slug];
   if (!renderer) {
     const module = getHrProfileModule(slug);
@@ -383,5 +419,5 @@ export function renderHrProfileModulePage(slug, data = {}) {
     });
   }
 
-  return renderer(data);
+  return renderer(data, options);
 }
