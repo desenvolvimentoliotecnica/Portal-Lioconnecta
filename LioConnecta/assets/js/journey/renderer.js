@@ -20,7 +20,7 @@ function formatDate(value) {
   return date.toLocaleDateString("pt-BR");
 }
 
-function renderPageShell({ title, provider, isSimulated, bodyHtml, heroImage = "" }) {
+function renderPageShell({ title, provider, isSimulated, bodyHtml, heroImage = "", heroImageLabel = "" }) {
   const providerLabel = provider || "ServiceNow";
   const description = isSimulated
     ? `Consulta integrada ao ${providerLabel}. Os dados exibidos nesta fase sao simulados para validacao da experiencia.`
@@ -32,7 +32,8 @@ function renderPageShell({ title, provider, isSimulated, bodyHtml, heroImage = "
         eyebrow: "MINHA JORNADA",
         title: title || "Minha Jornada",
         description,
-        heroImage
+        heroImage,
+        heroImageLabel
       })}
       ${bodyHtml}
     </div>
@@ -113,6 +114,8 @@ function renderTasksPage(data = {}) {
     title: data.title,
     provider: data.provider,
     isSimulated: data.isSimulated,
+    heroImage: "./assets/img/hero-tarefas-jornada.png",
+    heroImageLabel: "Ambiente de trabalho organizado simbolizando gestao de tarefas",
     bodyHtml: `
       ${renderContentCard({
         title: "Resumo de tarefas",
@@ -231,6 +234,7 @@ function renderLearningPathsPage(data = {}) {
     provider: data.provider,
     isSimulated: data.isSimulated,
     heroImage: "./assets/img/hero-trilhas-aprendizagem.png",
+    heroImageLabel: "Trilha iluminada simbolizando jornada de aprendizagem",
     bodyHtml: `
       ${renderContentCard({
         title: "Resumo de trilhas",
