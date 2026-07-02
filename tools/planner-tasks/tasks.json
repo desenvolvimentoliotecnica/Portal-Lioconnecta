@@ -995,7 +995,7 @@
       "inicio": "2026-07-02",
       "horarioInicio": "13:20",
       "conclusao": "2026-07-02",
-      "horarioConclusao": "14:11",
+      "horarioConclusao": "14:15",
       "totalHoras": 1,
       "bucket": "Concluído",
       "percentualConcluido": 100,
@@ -1003,13 +1003,14 @@
       "atribuidaA": "Leonardo Sabino Mendes",
       "pedidoOriginal": "Planejar e implementar modal Cursos e Materiais disponiveis na view minha-jornada/trilhas, com botao global e dados simulados na API; commit e promocao DEV-HML-PRD.",
       "entregavel": "Botao no card Trilhas em andamento, modal com metricas, listas de cursos e materiais, endpoint GET /api/journey/trilhas/cursos-materiais e mock no frontend.",
-      "ambiente": "HML",
+      "ambiente": "PRD",
       "referencias": {
         "commits": [
-          "99c6404"
+          "99c6404",
+          "56193fe"
         ],
         "branch": "Lioconnecta_HML",
-        "prHml": "Promocao DEV/HML/PRD pendente"
+        "prHml": "Promocao DEV/HML/PRD (pipelines 28608278836, 28608287170, 28608293121)"
       },
       "observacoes": "Catalogo simulado com 5 cursos e 5 materiais alinhados as trilhas existentes."
     }
