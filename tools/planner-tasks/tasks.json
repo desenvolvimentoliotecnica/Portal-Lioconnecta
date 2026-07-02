@@ -944,21 +944,23 @@
       "inicio": "2026-07-02",
       "horarioInicio": "10:35",
       "conclusao": "2026-07-02",
-      "horarioConclusao": null,
-      "totalHoras": null,
-      "bucket": "Em andamento",
-      "percentualConcluido": 50,
+      "horarioConclusao": "10:52",
+      "totalHoras": 0.5,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
       "prioridade": "Baixa",
       "atribuidaA": "Leonardo Sabino Mendes",
       "pedidoOriginal": "Remover o underline de todos os links do portal.",
       "entregavel": "Regra global em base.css remove text-decoration dos links em todas as paginas do portal.",
-      "ambiente": "DEV",
+      "ambiente": "PRD",
       "referencias": {
-        "commits": [],
-        "branch": "Lioconnecta_DEV",
-        "prHml": null
+        "commits": [
+          "da09eed"
+        ],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV/HML/PRD (pipelines 28595176329, 28595196827, 28595213516)"
       },
-      "observacoes": "Aguardando promocao DEV/HML/PRD e fechamento com pipelines."
+      "observacoes": "Regra global em base.css; deploy concluido nos tres ambientes."
     }
   ]
 }
