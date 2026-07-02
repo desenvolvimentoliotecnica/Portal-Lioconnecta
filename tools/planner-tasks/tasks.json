@@ -8,7 +8,7 @@
     "minutosMinimos": 30,
     "jornadaComercial": "08:00-18:00",
     "backfillPre23Em": "2026-06-29",
-    "totalTarefas": 37
+    "totalTarefas": 38
   },
   "tarefas": [
     {
@@ -987,6 +987,31 @@
         "prHml": "Promocao DEV/HML/PRD (pipelines 28598972622, 28598982960, 28598988834)"
       },
       "observacoes": "Entrega funcional em 6a90546; UX modal (960px, 3 cards, clique avanca) e registro Planner em c543529."
+    },
+    {
+      "id": "TASK-2026-038",
+      "nome": "[LIOCONNECTA] Catalogo de cursos e materiais nas trilhas",
+      "descricaoAmigavel": "Na view Trilhas de Aprendizagem, o colaborador abre um modal com o catalogo geral de cursos e materiais de apoio disponiveis no LMS, com resumo de carga horaria e status de cada item.",
+      "inicio": "2026-07-02",
+      "horarioInicio": "13:20",
+      "conclusao": "2026-07-02",
+      "horarioConclusao": "14:11",
+      "totalHoras": 1,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Média",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Planejar e implementar modal Cursos e Materiais disponiveis na view minha-jornada/trilhas, com botao global e dados simulados na API; commit e promocao DEV-HML-PRD.",
+      "entregavel": "Botao no card Trilhas em andamento, modal com metricas, listas de cursos e materiais, endpoint GET /api/journey/trilhas/cursos-materiais e mock no frontend.",
+      "ambiente": "HML",
+      "referencias": {
+        "commits": [
+          "99c6404"
+        ],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV/HML/PRD pendente"
+      },
+      "observacoes": "Catalogo simulado com 5 cursos e 5 materiais alinhados as trilhas existentes."
     }
   ]
 }
