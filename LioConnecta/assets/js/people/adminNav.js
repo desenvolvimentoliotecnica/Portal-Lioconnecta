@@ -41,7 +41,7 @@ export function renderRhAdminNav(activeItemId = "humor") {
   `;
 }
 
-export function renderRhAdminHero({ eyebrow = "ADMINISTRATIVO", title, description = "" }) {
+export function renderRhAdminHero({ eyebrow = "ADMINISTRATIVO", title, description = "", heroImage = "" }) {
   return `
     <section class="card communication-admin-hero-card">
       <div class="communication-admin-hero">
@@ -50,6 +50,14 @@ export function renderRhAdminHero({ eyebrow = "ADMINISTRATIVO", title, descripti
           <h1>${escapeHtml(title)}</h1>
           ${description ? `<p>${escapeHtml(description)}</p>` : ""}
         </div>
+        ${heroImage ? `
+          <div
+            class="communication-admin-hero__media"
+            style="background-image: url('${escapeHtml(heroImage)}')"
+            role="img"
+            aria-label="Trilha iluminada simbolizando jornada de aprendizagem"
+          ></div>
+        ` : ""}
       </div>
     </section>
   `;

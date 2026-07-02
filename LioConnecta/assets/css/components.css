@@ -3423,6 +3423,22 @@ body.agenda-event-modal-open {
   line-height: 1.6;
 }
 
+.communication-admin-hero__media {
+  min-height: 160px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  position: relative;
+}
+
+.communication-admin-hero__media::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(21, 56, 95, 0.35) 0%, transparent 28%);
+  pointer-events: none;
+}
+
 .communication-admin-meta {
   display: flex;
   align-items: center;
@@ -3445,6 +3461,14 @@ body.agenda-event-modal-open {
 @media (max-width: 768px) {
   .communication-admin-hero {
     grid-template-columns: 1fr;
+  }
+
+  .communication-admin-hero__media {
+    min-height: 140px;
+  }
+
+  .communication-admin-hero__media::before {
+    background: linear-gradient(180deg, rgba(21, 56, 95, 0.35) 0%, transparent 28%);
   }
 
   .communication-admin-meta {
