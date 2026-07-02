@@ -40,6 +40,14 @@ img {
   display: block;
 }
 
+a,
+a:hover,
+a:focus,
+a:active,
+a:visited {
+  text-decoration: none;
+}
+
 .skip-link {
   position: absolute;
   left: 16px;

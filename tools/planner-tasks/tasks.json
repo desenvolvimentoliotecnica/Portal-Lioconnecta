@@ -8,7 +8,7 @@
     "minutosMinimos": 30,
     "jornadaComercial": "08:00-18:00",
     "backfillPre23Em": "2026-06-29",
-    "totalTarefas": 34
+    "totalTarefas": 36
   },
   "tarefas": [
     {
@@ -892,10 +892,10 @@
       "id": "TASK-2026-034",
       "nome": "[LIOCONNECTA] Corrige paineis HML e icones de Acessos Rapidos",
       "descricaoAmigavel": "Trata campos nulos do calendario Microsoft Graph (onlineMeeting, location) que causavam HTTP 500 em /api/panels no HML, e corrige centralizacao dos icones na barra lateral de Acessos Rapidos.",
-      "inicio": "2026-07-01",
-      "horarioInicio": "10:30",
-      "conclusao": "2026-07-01",
-      "horarioConclusao": "11:39",
+      "inicio": "2026-07-02",
+      "horarioInicio": "08:00",
+      "conclusao": "2026-07-02",
+      "horarioConclusao": "08:40",
       "totalHoras": 0.5,
       "bucket": "Concluído",
       "percentualConcluido": 100,
@@ -906,12 +906,59 @@
       "ambiente": "PRD",
       "referencias": {
         "commits": [
-          "e44a60d"
+          "e44a60d",
+          "d0da62b"
         ],
         "branch": "Lioconnecta_HML",
         "prHml": "Promocao DEV/HML/PRD (pipelines 28586960377, 28586966830, 28586975792)"
       },
-      "observacoes": "Causa raiz: ReadJoinUrl chamava TryGetProperty em JsonElement Null quando Graph retornava onlineMeeting: null."
+      "observacoes": "Investigacao iniciada apos relato de icones desalinhados em 01/07; causa raiz do 500: ReadJoinUrl em JsonElement Null quando Graph retorna onlineMeeting: null."
+    },
+    {
+      "id": "TASK-2026-035",
+      "nome": "[LIOCONNECTA] Backfill do Planner pos-01/07",
+      "descricaoAmigavel": "Validacao de por que o Export Planner parava em 01/07 com 33 tarefas e atualizacao retroativa do tasks.json com entregas de 02/07 que estavam com datas incorretas.",
+      "inicio": "2026-07-02",
+      "horarioInicio": "08:42",
+      "conclusao": "2026-07-02",
+      "horarioConclusao": "10:48",
+      "totalHoras": 2.1,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Baixa",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Validar por que o planner so mostrava tarefas ate 01/07 com 33 entradas; fazer backfill do que faltou registrar depois dessa data.",
+      "entregavel": "TASK-034 com datas e commits corrigidos para 02/07; TASK-035 aberta; meta.totalTarefas atualizado para 35.",
+      "ambiente": "DEV",
+      "referencias": {
+        "commits": [],
+        "branch": "Lioconnecta_DEV",
+        "prHml": null
+      },
+      "observacoes": "Backfill promovido junto com TASK-036 em DEV/HML/PRD."
+    },
+    {
+      "id": "TASK-2026-036",
+      "nome": "[LIOCONNECTA] Remove sublinhado dos links do portal",
+      "descricaoAmigavel": "Links do portal (menu lateral, perfil RH, navegacao e demais telas) deixam de exibir sublinhado padrao do navegador, mantendo a aparencia limpa dos paineis.",
+      "inicio": "2026-07-02",
+      "horarioInicio": "10:35",
+      "conclusao": "2026-07-02",
+      "horarioConclusao": null,
+      "totalHoras": null,
+      "bucket": "Em andamento",
+      "percentualConcluido": 50,
+      "prioridade": "Baixa",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Remover o underline de todos os links do portal.",
+      "entregavel": "Regra global em base.css remove text-decoration dos links em todas as paginas do portal.",
+      "ambiente": "DEV",
+      "referencias": {
+        "commits": [],
+        "branch": "Lioconnecta_DEV",
+        "prHml": null
+      },
+      "observacoes": "Aguardando promocao DEV/HML/PRD e fechamento com pipelines."
     }
   ]
 }
