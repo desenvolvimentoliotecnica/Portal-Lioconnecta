@@ -1058,10 +1058,11 @@
       "ambiente": "PRD",
       "referencias": {
         "commits": [
-          "032035d"
+          "032035d",
+          "4f39c97"
         ],
         "branch": "Lioconnecta_HML",
-        "prHml": "Promocao DEV/HML/PRD pendente pipeline"
+        "prHml": "Promocao DEV/HML/PRD (pipelines 28628204775, 28628207199, 28628210923)"
       },
       "observacoes": "CodColigada fixo 1; CHAPA normalizada PadLeft(8). Pos-deploy: rodar migration e cadastrar conexao RM em Configuracoes."
     }
