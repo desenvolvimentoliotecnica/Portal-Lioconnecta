@@ -1,10 +1,12 @@
-import { getJson, postJson } from "../services/apiClient.js";
+import { getJson, patchJson, postJson, putJson } from "../services/apiClient.js";
 import { DATA_MODES, getRuntimeConfig, resolveApiEndpoint } from "../core/runtimeConfig.js";
 import { getPortalAuthHeaders } from "../services/portalAuthService.js";
 import { getJourneyModule } from "./moduleCatalog.js";
 import { getRequestType } from "./requestTypeCatalog.js";
+import { getTaskType } from "./taskTypeCatalog.js";
 
 const MOCK_REQUESTS_STORAGE_KEY = "lio.journey.requests.mock";
+const MOCK_TASKS_STORAGE_KEY = "lio.journey.tasks.mock";
 
 function readMockRequestsStore() {
   try {
@@ -249,10 +251,326 @@ function createMockJourneyRequest(payload = {}) {
   };
 }
 
+function readMockTasksStore() {
+  try {
+    const raw = localStorage.getItem(MOCK_TASKS_STORAGE_KEY);
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeMockTasksStore(items = []) {
+  localStorage.setItem(MOCK_TASKS_STORAGE_KEY, JSON.stringify(items.slice(0, 50)));
+}
+
+function isClosedTaskStatus(status = "") {
+  const normalized = String(status).toLowerCase();
+  return normalized.includes("conclu") || normalized.includes("cancel");
+}
+
+function resolveMockOpenStatus(dueDate, status) {
+  const normalized = String(status || "Pendente");
+  if (isClosedTaskStatus(normalized)) {
+    return normalized;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+
+  if (due < today) {
+    return "Atrasada";
+  }
+
+  return normalized;
+}
+
+function buildMockTasksSummary(items = []) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const openItems = items.filter((item) => !isClosedTaskStatus(item.status));
+  const openCount = openItems.length;
+  const overdueCount = openItems.filter((item) => {
+    const due = new Date(item.dueDate);
+    due.setHours(0, 0, 0, 0);
+    return due < today;
+  }).length;
+  const dueTodayCount = openItems.filter((item) => {
+    const due = new Date(item.dueDate);
+    due.setHours(0, 0, 0, 0);
+    return due.getTime() === today.getTime();
+  }).length;
+
+  return { openCount, overdueCount, dueTodayCount };
+}
+
+function buildSeedMockTasks() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const day = (offset) => {
+    const date = new Date(today);
+    date.setDate(date.getDate() + offset);
+    return date.toISOString();
+  };
+
+  return [
+    {
+      id: "b1000001-0000-4000-8000-000000000001",
+      typeKey: "compliance-politica",
+      typeLabel: "Politica / compliance",
+      title: "Revisar politica de home office",
+      priority: "Alta",
+      dueDate: day(1),
+      status: "Em andamento",
+      assignee: "Voce",
+      description: "Revisar e confirmar ciencia da politica de home office vigente.",
+      createdAtUtc: day(-4),
+      isUserCreated: false
+    },
+    {
+      id: "b1000001-0000-4000-8000-000000000002",
+      typeKey: "rh-documento",
+      typeLabel: "Documento RH",
+      title: "Assinar termo de uso de equipamento",
+      priority: "Media",
+      dueDate: day(0),
+      status: "Pendente",
+      assignee: "Voce",
+      description: "Assinar termo de uso do equipamento corporativo.",
+      createdAtUtc: day(-2),
+      isUserCreated: false
+    },
+    {
+      id: "b1000001-0000-4000-8000-000000000003",
+      typeKey: "rh-cadastro",
+      typeLabel: "Cadastro RH",
+      title: "Atualizar cadastro de dependentes",
+      priority: "Alta",
+      dueDate: day(-1),
+      status: "Atrasada",
+      assignee: "Voce",
+      description: "Atualizar dependentes no cadastro funcional.",
+      createdAtUtc: day(-6),
+      isUserCreated: false
+    },
+    {
+      id: "b1000001-0000-4000-8000-000000000004",
+      typeKey: "engajamento-pesquisa",
+      typeLabel: "Pesquisa / enquete",
+      title: "Responder pesquisa de clima",
+      priority: "Baixa",
+      dueDate: day(3),
+      status: "Pendente",
+      assignee: "Voce",
+      description: "Responder pesquisa de clima organizacional 2026.",
+      createdAtUtc: day(-1),
+      isUserCreated: false
+    },
+    {
+      id: "b1000001-0000-4000-8000-000000000005",
+      typeKey: "compliance-seguranca",
+      typeLabel: "Seguranca da informacao",
+      title: "Concluir onboarding de seguranca da informacao",
+      priority: "Media",
+      dueDate: day(0),
+      status: "Em andamento",
+      assignee: "Voce",
+      description: "Finalizar trilha obrigatoria de seguranca da informacao.",
+      createdAtUtc: day(-3),
+      isUserCreated: false
+    }
+  ];
+}
+
+function normalizeMockTaskItem(item = {}) {
+  return {
+    ...item,
+    status: resolveMockOpenStatus(item.dueDate, item.status)
+  };
+}
+
+function buildMockTasksItems() {
+  const created = readMockTasksStore().map(normalizeMockTaskItem);
+  const seed = buildSeedMockTasks().map(normalizeMockTaskItem);
+  const merged = [
+    ...created,
+    ...seed.filter((seedItem) => !created.some((item) => item.id === seedItem.id))
+  ];
+
+  return merged
+    .filter((item) => !isClosedTaskStatus(item.status))
+    .sort((left, right) => new Date(right.createdAtUtc) - new Date(left.createdAtUtc));
+}
+
+function buildMockTasksPayload() {
+  const items = buildMockTasksItems();
+  return {
+    title: "Tarefas Pendentes",
+    summary: buildMockTasksSummary(items),
+    items,
+    provider: "ServiceNow",
+    isSimulated: true
+  };
+}
+
+function buildMockTaskItemFromPayload(payload = {}) {
+  const type = getTaskType(payload.typeKey);
+  const dueDate = payload.dueDate
+    ? new Date(`${payload.dueDate}T00:00:00`).toISOString()
+    : new Date().toISOString();
+
+  return normalizeMockTaskItem({
+    id: payload.id || crypto.randomUUID(),
+    typeKey: payload.typeKey,
+    typeLabel: type?.listTypeLabel || payload.typeLabel || payload.typeKey || "Tarefa",
+    title: payload.title,
+    priority: payload.priority,
+    dueDate,
+    status: type?.defaultStatus || "Pendente",
+    assignee: "Voce",
+    description: payload.description || "",
+    createdAtUtc: payload.createdAtUtc || new Date().toISOString(),
+    isUserCreated: payload.isUserCreated ?? true,
+    fields: payload.fields || {}
+  });
+}
+
+export async function createJourneyTask(payload, options = {}) {
+  const config = getRuntimeConfig();
+  if (config.dataMode !== DATA_MODES.API) {
+    return createMockJourneyTask(payload);
+  }
+
+  const endpoint = resolveApiEndpoint("journeyTarefas");
+  return postJson(endpoint, {
+    typeKey: payload.typeKey,
+    title: payload.title,
+    description: payload.description,
+    priority: payload.priority,
+    dueDate: payload.dueDate,
+    fields: payload.fields
+  }, {
+    headers: getPortalAuthHeaders(),
+    ...options
+  });
+}
+
+function createMockJourneyTask(payload = {}) {
+  const item = buildMockTaskItemFromPayload(payload);
+  const created = readMockTasksStore();
+  writeMockTasksStore([item, ...created]);
+  const items = buildMockTasksItems();
+
+  return {
+    item,
+    summary: buildMockTasksSummary(items),
+    provider: "ServiceNow",
+    isSimulated: true
+  };
+}
+
+export async function updateJourneyTask(id, payload, options = {}) {
+  const config = getRuntimeConfig();
+  if (config.dataMode !== DATA_MODES.API) {
+    return updateMockJourneyTask(id, payload);
+  }
+
+  const endpoint = `${resolveApiEndpoint("journeyTarefas")}/${encodeURIComponent(id)}`;
+  return putJson(endpoint, {
+    title: payload.title,
+    description: payload.description,
+    priority: payload.priority,
+    dueDate: payload.dueDate,
+    fields: payload.fields
+  }, {
+    headers: getPortalAuthHeaders(),
+    ...options
+  });
+}
+
+function updateMockJourneyTask(id, payload = {}) {
+  const created = readMockTasksStore();
+  const index = created.findIndex((item) => item.id === id);
+  if (index < 0) {
+    throw new Error("Tarefa nao encontrada ou nao editavel.");
+  }
+
+  const existing = created[index];
+  const item = buildMockTaskItemFromPayload({
+    ...existing,
+    ...payload,
+    id: existing.id,
+    typeKey: existing.typeKey,
+    typeLabel: existing.typeLabel,
+    isUserCreated: true,
+    createdAtUtc: existing.createdAtUtc
+  });
+
+  created[index] = item;
+  writeMockTasksStore(created);
+  const items = buildMockTasksItems();
+
+  return {
+    item,
+    summary: buildMockTasksSummary(items),
+    provider: "ServiceNow",
+    isSimulated: true
+  };
+}
+
+export async function updateJourneyTaskStatus(id, status, options = {}) {
+  const config = getRuntimeConfig();
+  if (config.dataMode !== DATA_MODES.API) {
+    return updateMockJourneyTaskStatus(id, status);
+  }
+
+  const endpoint = `${resolveApiEndpoint("journeyTarefas")}/${encodeURIComponent(id)}/status`;
+  return patchJson(endpoint, { status }, {
+    headers: getPortalAuthHeaders(),
+    ...options
+  });
+}
+
+function updateMockJourneyTaskStatus(id, status) {
+  const created = readMockTasksStore();
+  const index = created.findIndex((item) => item.id === id);
+  if (index < 0) {
+    throw new Error("Tarefa nao encontrada ou nao editavel.");
+  }
+
+  const item = {
+    ...created[index],
+    status
+  };
+  created[index] = item;
+  writeMockTasksStore(created);
+  const items = buildMockTasksItems();
+
+  return {
+    item,
+    summary: buildMockTasksSummary(items),
+    provider: "ServiceNow",
+    isSimulated: true
+  };
+}
+
 function buildMockPayload(slug) {
   const module = getJourneyModule(slug);
   if (slug === "solicitacoes") {
     return buildMockRequestsPayload();
+  }
+
+  if (slug === "tarefas") {
+    return buildMockTasksPayload();
   }
 
   return {

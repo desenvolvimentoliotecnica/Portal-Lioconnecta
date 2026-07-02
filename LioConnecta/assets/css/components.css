@@ -5524,6 +5524,17 @@ body.agenda-event-modal-open {
   font-weight: 600;
 }
 
+.hr-profile-table__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hr-profile-table__readonly {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
 .hr-profile-list {
   display: grid;
   gap: 12px;

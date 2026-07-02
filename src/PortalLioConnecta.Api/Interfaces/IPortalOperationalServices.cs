@@ -21,6 +21,9 @@ public interface IJourneyService
 public interface IJourneyWorkspaceService
 {
     Task<JourneyTasksResponse> GetTasksAsync(PortalUser user, CancellationToken cancellationToken);
+    Task<JourneyCreateTaskResponse> CreateTaskAsync(PortalUser user, JourneyCreateTaskDto request, CancellationToken cancellationToken);
+    Task<JourneyUpdateTaskResponse> UpdateTaskAsync(PortalUser user, Guid taskId, JourneyUpdateTaskDto request, CancellationToken cancellationToken);
+    Task<JourneyUpdateTaskResponse> UpdateTaskStatusAsync(PortalUser user, Guid taskId, JourneyUpdateTaskStatusDto request, CancellationToken cancellationToken);
     Task<JourneyRequestsResponse> GetRequestsAsync(PortalUser user, CancellationToken cancellationToken);
     Task<JourneyCreateRequestResponse> CreateRequestAsync(PortalUser user, JourneyCreateRequestDto request, CancellationToken cancellationToken);
     Task<JourneyLearningPathsResponse> GetLearningPathsAsync(PortalUser user, CancellationToken cancellationToken);

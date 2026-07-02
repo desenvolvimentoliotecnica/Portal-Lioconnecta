@@ -7,16 +7,51 @@ public sealed record JourneyTasksSummaryDto(
 
 public sealed record JourneyTaskItemDto(
     Guid Id,
+    string TypeKey,
+    string TypeLabel,
     string Title,
     string Priority,
     DateTime DueDate,
     string Status,
-    string Assignee);
+    string Assignee,
+    string? Description,
+    DateTime CreatedAtUtc,
+    bool IsUserCreated);
 
 public sealed record JourneyTasksResponse(
     string Title,
     JourneyTasksSummaryDto Summary,
     IReadOnlyList<JourneyTaskItemDto> Items,
+    string Provider,
+    bool IsSimulated);
+
+public sealed record JourneyCreateTaskDto(
+    string TypeKey,
+    string Title,
+    string Description,
+    string Priority,
+    DateTime DueDate,
+    IReadOnlyDictionary<string, string>? Fields);
+
+public sealed record JourneyUpdateTaskDto(
+    string Title,
+    string Description,
+    string Priority,
+    DateTime DueDate,
+    IReadOnlyDictionary<string, string>? Fields);
+
+public sealed record JourneyUpdateTaskStatusDto(
+    string Status);
+
+public sealed record JourneyCreateTaskResponse(
+    JourneyTaskItemDto Item,
+    JourneyTasksSummaryDto Summary,
+    string Provider,
+    bool IsSimulated);
+
+public sealed record JourneyUpdateTaskResponse(
+    JourneyTaskItemDto Item,
+    JourneyTasksSummaryDto Summary,
     string Provider,
     bool IsSimulated);
 

@@ -95,10 +95,15 @@ import {
   isJourneyModuleSlug,
   getJourneyModuleData,
   createJourneyRequest,
+  createJourneyTask,
+  updateJourneyTask,
+  updateJourneyTaskStatus,
   renderJourneyModulePage,
   bindRequestModal,
+  bindTaskModal,
+  bindTaskRowActions,
   bindLearningCatalogModal
-} from "./journey/index.js?v=0.23.7";
+} from "./journey/index.js?v=0.23.8";
 import {
   canManageMoodSurveyFeedback,
   listMoodFeedbackMessages,
@@ -571,6 +576,48 @@ function renderJourneyPage(data, route, slug) {
     });
   }
 
+  if (slug === "tarefas") {
+    const tasks = Array.isArray(data.journeyModule?.items) ? data.journeyModule.items : [];
+
+    bindTaskModal(document, {
+      onValidation: (message) => showToast(message, "info"),
+      onSubmitCreate: async (values) => {
+        await createJourneyTask({
+          typeKey: values.typeKey,
+          title: values.title,
+          description: values.description,
+          priority: values.priority,
+          dueDate: values.dueDate,
+          fields: values.fields
+        });
+        await refreshJourneyRoute("Tarefa registrada com sucesso.", "success");
+      },
+      onSubmitEdit: async (values) => {
+        await updateJourneyTask(values.id, {
+          title: values.title,
+          description: values.description,
+          priority: values.priority,
+          dueDate: values.dueDate,
+          fields: values.fields
+        });
+        await refreshJourneyRoute("Tarefa atualizada com sucesso.", "success");
+      }
+    });
+
+    bindTaskRowActions(document, {
+      getTaskById: (taskId) => tasks.find((item) => item.id === taskId),
+      onValidation: (message) => showToast(message, "info"),
+      onComplete: async (taskId) => {
+        await updateJourneyTaskStatus(taskId, "Concluida");
+        await refreshJourneyRoute("Tarefa concluida com sucesso.", "success");
+      },
+      onCancel: async (taskId) => {
+        await updateJourneyTaskStatus(taskId, "Cancelada");
+        await refreshJourneyRoute("Tarefa cancelada com sucesso.", "success");
+      }
+    });
+  }
+
   if (slug === "trilhas") {
     bindLearningCatalogModal(document);
   }
@@ -966,7 +1013,11 @@ async function refreshAdminPollsRoute(feedbackMessage = "", feedbackTone = "succ
 
 async function refreshJourneyRoute(feedbackMessage = "", feedbackTone = "success") {
   const { route, slug } = parseRoute();
-  if (route !== ROUTES.JOURNEY || slug !== "solicitacoes") {
+  if (route !== ROUTES.JOURNEY || !isJourneyModuleSlug(slug)) {
+    return;
+  }
+
+  if (slug !== "solicitacoes" && slug !== "tarefas") {
     return;
   }
 

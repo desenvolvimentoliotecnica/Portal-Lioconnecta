@@ -897,6 +897,99 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    public async Task JourneyTasksEndpoint_CreatesUpdatesAndChangesStatus()
+    {
+        await EnsureLdapEnabledAsync();
+        var portalSession = await LoginPortalUserAsync();
+        UsePortalAuth(portalSession);
+
+        var initial = await _client.GetFromJsonAsync<JourneyTasksResponse>("/api/journey/tarefas");
+        Assert.NotNull(initial);
+        Assert.True(initial.IsSimulated);
+        Assert.NotEmpty(initial.Items);
+        var initialOpenCount = initial.Summary.OpenCount;
+
+        var dueDate = DateTime.UtcNow.Date.AddDays(2);
+        var createResponse = await _client.PostAsJsonAsync("/api/journey/tarefas", new JourneyCreateTaskDto(
+            "operacional-entrega",
+            "Preparar entrega da sprint 24",
+            "Consolidar entregaveis e validar checklist de release.",
+            "Alta",
+            dueDate,
+            new Dictionary<string, string>
+            {
+                ["projectName"] = "Portal LioConnecta"
+            }));
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+
+        var created = await createResponse.Content.ReadFromJsonAsync<JourneyCreateTaskResponse>();
+        Assert.NotNull(created);
+        Assert.True(created.IsSimulated);
+        Assert.NotNull(created.Item);
+        Assert.True(created.Item.IsUserCreated);
+        Assert.Equal("Entrega / projeto", created.Item.TypeLabel);
+        Assert.True(created.Summary.OpenCount >= initialOpenCount + 1);
+
+        var afterCreate = await _client.GetFromJsonAsync<JourneyTasksResponse>("/api/journey/tarefas");
+        Assert.NotNull(afterCreate);
+        Assert.Contains(afterCreate.Items, item => item.Id == created.Item.Id);
+
+        var updatedDueDate = DateTime.UtcNow.Date.AddDays(4);
+        var updateResponse = await _client.PutAsJsonAsync(
+            $"/api/journey/tarefas/{created.Item.Id}",
+            new JourneyUpdateTaskDto(
+                "Preparar entrega da sprint 24 - revisada",
+                "Consolidar entregaveis, checklist de release e comunicacao interna.",
+                "Media",
+                updatedDueDate,
+                new Dictionary<string, string>
+                {
+                    ["projectName"] = "Portal LioConnecta"
+                }));
+
+        Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
+
+        var updated = await updateResponse.Content.ReadFromJsonAsync<JourneyUpdateTaskResponse>();
+        Assert.NotNull(updated);
+        Assert.Equal("Preparar entrega da sprint 24 - revisada", updated.Item.Title);
+        Assert.Equal("Media", updated.Item.Priority);
+
+        var completeResponse = await _client.PatchAsJsonAsync(
+            $"/api/journey/tarefas/{created.Item.Id}/status",
+            new JourneyUpdateTaskStatusDto("Concluida"));
+
+        Assert.Equal(HttpStatusCode.OK, completeResponse.StatusCode);
+
+        var afterComplete = await _client.GetFromJsonAsync<JourneyTasksResponse>("/api/journey/tarefas");
+        Assert.NotNull(afterComplete);
+        Assert.DoesNotContain(afterComplete.Items, item => item.Id == created.Item.Id);
+        Assert.True(afterComplete.Summary.OpenCount <= initialOpenCount + 1);
+
+        var secondCreateResponse = await _client.PostAsJsonAsync("/api/journey/tarefas", new JourneyCreateTaskDto(
+            "geral-outros",
+            "Organizar backlog pessoal",
+            "Revisar pendencias da semana.",
+            "Baixa",
+            DateTime.UtcNow.Date.AddDays(1),
+            null));
+
+        Assert.Equal(HttpStatusCode.Created, secondCreateResponse.StatusCode);
+        var secondCreated = await secondCreateResponse.Content.ReadFromJsonAsync<JourneyCreateTaskResponse>();
+        Assert.NotNull(secondCreated);
+
+        var cancelResponse = await _client.PatchAsJsonAsync(
+            $"/api/journey/tarefas/{secondCreated!.Item.Id}/status",
+            new JourneyUpdateTaskStatusDto("Cancelada"));
+
+        Assert.Equal(HttpStatusCode.OK, cancelResponse.StatusCode);
+
+        var afterCancel = await _client.GetFromJsonAsync<JourneyTasksResponse>("/api/journey/tarefas");
+        Assert.NotNull(afterCancel);
+        Assert.DoesNotContain(afterCancel.Items, item => item.Id == secondCreated.Item.Id);
+    }
+
+    [Fact]
     public async Task MeUiEndpoint_RequiresPortalSession()
     {
         _client.DefaultRequestHeaders.Authorization = null;

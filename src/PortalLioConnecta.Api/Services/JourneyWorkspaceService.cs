@@ -11,57 +11,207 @@ public class JourneyWorkspaceService : IJourneyWorkspaceService
     private const string Provider = "ServiceNow";
 
     private static readonly ConcurrentDictionary<Guid, List<JourneyRequestItemDto>> CreatedRequestsByUser = new();
+    private static readonly ConcurrentDictionary<Guid, List<JourneyTaskItemDto>> CreatedTasksByUser = new();
 
     public Task<JourneyTasksResponse> GetTasksAsync(PortalUser user, CancellationToken cancellationToken)
     {
-        _ = user;
         _ = cancellationToken;
 
-        var now = DateTime.UtcNow;
+        var items = BuildPendingTaskItems(user);
         var response = new JourneyTasksResponse(
             "Tarefas Pendentes",
-            new JourneyTasksSummaryDto(5, 1, 2),
-            [
-                new JourneyTaskItemDto(
-                    Guid.Parse("b1000001-0000-4000-8000-000000000001"),
-                    "Revisar politica de home office",
-                    "Alta",
-                    now.Date.AddDays(1),
-                    "Em andamento",
-                    user.DisplayName),
-                new JourneyTaskItemDto(
-                    Guid.Parse("b1000001-0000-4000-8000-000000000002"),
-                    "Assinar termo de uso de equipamento",
-                    "Media",
-                    now.Date,
-                    "Pendente",
-                    user.DisplayName),
-                new JourneyTaskItemDto(
-                    Guid.Parse("b1000001-0000-4000-8000-000000000003"),
-                    "Atualizar cadastro de dependentes",
-                    "Alta",
-                    now.Date.AddDays(-1),
-                    "Atrasada",
-                    user.DisplayName),
-                new JourneyTaskItemDto(
-                    Guid.Parse("b1000001-0000-4000-8000-000000000004"),
-                    "Responder pesquisa de clima",
-                    "Baixa",
-                    now.Date.AddDays(3),
-                    "Pendente",
-                    user.DisplayName),
-                new JourneyTaskItemDto(
-                    Guid.Parse("b1000001-0000-4000-8000-000000000005"),
-                    "Concluir onboarding de seguranca da informacao",
-                    "Media",
-                    now.Date,
-                    "Em andamento",
-                    user.DisplayName)
-            ],
+            BuildTasksSummary(items),
+            items,
             Provider,
             IsSimulated);
 
         return Task.FromResult(response);
+    }
+
+    public Task<JourneyCreateTaskResponse> CreateTaskAsync(
+        PortalUser user,
+        JourneyCreateTaskDto request,
+        CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+
+        if (user is null)
+        {
+            throw new ArgumentNullException(nameof(user));
+        }
+
+        if (request is null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        var typeKey = request.TypeKey?.Trim() ?? string.Empty;
+        if (!JourneyTaskTypeCatalog.TryGet(typeKey, out var typeDefinition))
+        {
+            throw new InvalidOperationException("Tipo de tarefa invalido.");
+        }
+
+        var title = request.Title?.Trim() ?? string.Empty;
+        var description = request.Description?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new InvalidOperationException("Titulo e obrigatorio.");
+        }
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new InvalidOperationException("Descricao e obrigatoria.");
+        }
+
+        var priority = request.Priority?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(priority))
+        {
+            throw new InvalidOperationException("Prioridade e obrigatoria.");
+        }
+
+        ValidateTaskDueDate(request.DueDate);
+
+        var item = new JourneyTaskItemDto(
+            Guid.NewGuid(),
+            typeDefinition.Key,
+            typeDefinition.ListTypeLabel,
+            title,
+            priority,
+            request.DueDate.Date,
+            ResolveOpenStatus(request.DueDate.Date, typeDefinition.DefaultStatus),
+            user.DisplayName,
+            BuildTaskDescription(description, request.Fields),
+            DateTime.UtcNow,
+            true);
+
+        var userTasks = CreatedTasksByUser.GetOrAdd(user.Id, _ => []);
+        lock (userTasks)
+        {
+            userTasks.Insert(0, item);
+        }
+
+        var pendingItems = BuildPendingTaskItems(user);
+        return Task.FromResult(new JourneyCreateTaskResponse(
+            item,
+            BuildTasksSummary(pendingItems),
+            Provider,
+            IsSimulated));
+    }
+
+    public Task<JourneyUpdateTaskResponse> UpdateTaskAsync(
+        PortalUser user,
+        Guid taskId,
+        JourneyUpdateTaskDto request,
+        CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+
+        if (user is null)
+        {
+            throw new ArgumentNullException(nameof(user));
+        }
+
+        if (request is null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        var title = request.Title?.Trim() ?? string.Empty;
+        var description = request.Description?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            throw new InvalidOperationException("Titulo e obrigatorio.");
+        }
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            throw new InvalidOperationException("Descricao e obrigatoria.");
+        }
+
+        var priority = request.Priority?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(priority))
+        {
+            throw new InvalidOperationException("Prioridade e obrigatoria.");
+        }
+
+        ValidateTaskDueDate(request.DueDate);
+
+        var userTasks = CreatedTasksByUser.GetOrAdd(user.Id, _ => []);
+        JourneyTaskItemDto? updatedItem = null;
+
+        lock (userTasks)
+        {
+            var index = userTasks.FindIndex(item => item.Id == taskId);
+            if (index < 0)
+            {
+                throw new KeyNotFoundException("Tarefa nao encontrada ou nao editavel.");
+            }
+
+            var existing = userTasks[index];
+            updatedItem = existing with
+            {
+                Title = title,
+                Description = BuildTaskDescription(description, request.Fields),
+                Priority = priority,
+                DueDate = request.DueDate.Date,
+                Status = ResolveOpenStatus(request.DueDate.Date, NormalizeOpenStatus(existing.Status))
+            };
+            userTasks[index] = updatedItem;
+        }
+
+        var pendingItems = BuildPendingTaskItems(user);
+        return Task.FromResult(new JourneyUpdateTaskResponse(
+            updatedItem!,
+            BuildTasksSummary(pendingItems),
+            Provider,
+            IsSimulated));
+    }
+
+    public Task<JourneyUpdateTaskResponse> UpdateTaskStatusAsync(
+        PortalUser user,
+        Guid taskId,
+        JourneyUpdateTaskStatusDto request,
+        CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+
+        if (user is null)
+        {
+            throw new ArgumentNullException(nameof(user));
+        }
+
+        if (request is null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        var status = request.Status?.Trim() ?? string.Empty;
+        if (!IsAllowedStatusTransition(status))
+        {
+            throw new InvalidOperationException("Status invalido. Use Concluida ou Cancelada.");
+        }
+
+        var userTasks = CreatedTasksByUser.GetOrAdd(user.Id, _ => []);
+        JourneyTaskItemDto? updatedItem = null;
+
+        lock (userTasks)
+        {
+            var index = userTasks.FindIndex(item => item.Id == taskId);
+            if (index < 0)
+            {
+                throw new KeyNotFoundException("Tarefa nao encontrada ou nao editavel.");
+            }
+
+            updatedItem = userTasks[index] with { Status = status };
+            userTasks[index] = updatedItem;
+        }
+
+        var pendingItems = BuildPendingTaskItems(user);
+        return Task.FromResult(new JourneyUpdateTaskResponse(
+            updatedItem!,
+            BuildTasksSummary(pendingItems),
+            Provider,
+            IsSimulated));
     }
 
     public Task<JourneyRequestsResponse> GetRequestsAsync(PortalUser user, CancellationToken cancellationToken)
@@ -311,6 +461,167 @@ public class JourneyWorkspaceService : IJourneyWorkspaceService
             IsSimulated);
 
         return Task.FromResult(response);
+    }
+
+    private static IReadOnlyList<JourneyTaskItemDto> BuildPendingTaskItems(PortalUser user)
+    {
+        var today = DateTime.UtcNow.Date;
+        var seedItems = BuildSeedTaskItems(user, today);
+        var createdItems = CreatedTasksByUser.TryGetValue(user.Id, out var userTasks)
+            ? userTasks.ToList()
+            : [];
+
+        var allItems = createdItems.Concat(seedItems).ToList();
+        return allItems
+            .Where(item => !IsClosedStatus(item.Status))
+            .Select(item => item with { Status = ResolveOpenStatus(item.DueDate.Date, item.Status) })
+            .OrderByDescending(item => item.CreatedAtUtc)
+            .ToList();
+    }
+
+    private static List<JourneyTaskItemDto> BuildSeedTaskItems(PortalUser user, DateTime today)
+    {
+        return
+        [
+            new JourneyTaskItemDto(
+                Guid.Parse("b1000001-0000-4000-8000-000000000001"),
+                "compliance-politica",
+                "Politica / compliance",
+                "Revisar politica de home office",
+                "Alta",
+                today.AddDays(1),
+                "Em andamento",
+                user.DisplayName,
+                "Revisar e confirmar ciencia da politica de home office vigente.",
+                today.AddDays(-4),
+                false),
+            new JourneyTaskItemDto(
+                Guid.Parse("b1000001-0000-4000-8000-000000000002"),
+                "rh-documento",
+                "Documento RH",
+                "Assinar termo de uso de equipamento",
+                "Media",
+                today,
+                "Pendente",
+                user.DisplayName,
+                "Assinar termo de uso do equipamento corporativo.",
+                today.AddDays(-2),
+                false),
+            new JourneyTaskItemDto(
+                Guid.Parse("b1000001-0000-4000-8000-000000000003"),
+                "rh-cadastro",
+                "Cadastro RH",
+                "Atualizar cadastro de dependentes",
+                "Alta",
+                today.AddDays(-1),
+                "Atrasada",
+                user.DisplayName,
+                "Atualizar dependentes no cadastro funcional.",
+                today.AddDays(-6),
+                false),
+            new JourneyTaskItemDto(
+                Guid.Parse("b1000001-0000-4000-8000-000000000004"),
+                "engajamento-pesquisa",
+                "Pesquisa / enquete",
+                "Responder pesquisa de clima",
+                "Baixa",
+                today.AddDays(3),
+                "Pendente",
+                user.DisplayName,
+                "Responder pesquisa de clima organizacional 2026.",
+                today.AddDays(-1),
+                false),
+            new JourneyTaskItemDto(
+                Guid.Parse("b1000001-0000-4000-8000-000000000005"),
+                "compliance-seguranca",
+                "Seguranca da informacao",
+                "Concluir onboarding de seguranca da informacao",
+                "Media",
+                today,
+                "Em andamento",
+                user.DisplayName,
+                "Finalizar trilha obrigatoria de seguranca da informacao.",
+                today.AddDays(-3),
+                false)
+        ];
+    }
+
+    private static JourneyTasksSummaryDto BuildTasksSummary(IReadOnlyList<JourneyTaskItemDto> items)
+    {
+        var today = DateTime.UtcNow.Date;
+        var openItems = items.Where(item => !IsClosedStatus(item.Status)).ToList();
+
+        var openCount = openItems.Count;
+        var overdueCount = openItems.Count(item => item.DueDate.Date < today);
+        var dueTodayCount = openItems.Count(item => item.DueDate.Date == today);
+
+        return new JourneyTasksSummaryDto(openCount, overdueCount, dueTodayCount);
+    }
+
+    private static void ValidateTaskDueDate(DateTime dueDate)
+    {
+        if (dueDate.Date < DateTime.UtcNow.Date)
+        {
+            throw new InvalidOperationException("O prazo nao pode ser anterior a hoje.");
+        }
+    }
+
+    private static bool IsAllowedStatusTransition(string status)
+    {
+        return status.Equals("Concluida", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("Cancelada", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsClosedStatus(string status)
+    {
+        return status.Equals("Concluida", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("Cancelada", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsOpenStatus(string status)
+    {
+        return status.Equals("Pendente", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("Em andamento", StringComparison.OrdinalIgnoreCase)
+            || status.Equals("Atrasada", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeOpenStatus(string status)
+    {
+        if (IsClosedStatus(status))
+        {
+            return "Pendente";
+        }
+
+        return IsOpenStatus(status) ? status : "Pendente";
+    }
+
+    private static string ResolveOpenStatus(DateTime dueDate, string status)
+    {
+        var normalized = NormalizeOpenStatus(status);
+        if (dueDate.Date < DateTime.UtcNow.Date)
+        {
+            return "Atrasada";
+        }
+
+        return normalized;
+    }
+
+    private static string BuildTaskDescription(
+        string description,
+        IReadOnlyDictionary<string, string>? fields)
+    {
+        if (fields is null || fields.Count == 0)
+        {
+            return description;
+        }
+
+        var details = string.Join(
+            " | ",
+            fields
+                .Where(entry => !string.IsNullOrWhiteSpace(entry.Value))
+                .Select(entry => $"{entry.Key}: {entry.Value.Trim()}"));
+
+        return string.IsNullOrWhiteSpace(details) ? description : $"{description} — {details}";
     }
 
     private static IReadOnlyList<JourneyRequestItemDto> BuildRequestItems(PortalUser user)

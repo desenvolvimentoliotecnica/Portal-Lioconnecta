@@ -32,6 +32,90 @@ public class JourneyController : ControllerBase
     public Task<IActionResult> GetTasks(CancellationToken cancellationToken)
         => ExecuteAsync(user => _journeyWorkspaceService.GetTasksAsync(user, cancellationToken));
 
+    [HttpPost("tarefas")]
+    [ProducesResponseType(typeof(JourneyCreateTaskResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateTask(
+        [FromBody] JourneyCreateTaskDto request,
+        CancellationToken cancellationToken)
+    {
+        var session = PortalSessionHttpContext.Get(HttpContext);
+        if (session?.PortalUser is null)
+        {
+            return Unauthorized(new { message = "Sessao do portal nao encontrada." });
+        }
+
+        try
+        {
+            var payload = await _journeyWorkspaceService.CreateTaskAsync(session.PortalUser, request, cancellationToken);
+            return StatusCode(StatusCodes.Status201Created, payload);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("tarefas/{id:guid}")]
+    [ProducesResponseType(typeof(JourneyUpdateTaskResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateTask(
+        Guid id,
+        [FromBody] JourneyUpdateTaskDto request,
+        CancellationToken cancellationToken)
+    {
+        var session = PortalSessionHttpContext.Get(HttpContext);
+        if (session?.PortalUser is null)
+        {
+            return Unauthorized(new { message = "Sessao do portal nao encontrada." });
+        }
+
+        try
+        {
+            var payload = await _journeyWorkspaceService.UpdateTaskAsync(session.PortalUser, id, request, cancellationToken);
+            return Ok(payload);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPatch("tarefas/{id:guid}/status")]
+    [ProducesResponseType(typeof(JourneyUpdateTaskResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateTaskStatus(
+        Guid id,
+        [FromBody] JourneyUpdateTaskStatusDto request,
+        CancellationToken cancellationToken)
+    {
+        var session = PortalSessionHttpContext.Get(HttpContext);
+        if (session?.PortalUser is null)
+        {
+            return Unauthorized(new { message = "Sessao do portal nao encontrada." });
+        }
+
+        try
+        {
+            var payload = await _journeyWorkspaceService.UpdateTaskStatusAsync(session.PortalUser, id, request, cancellationToken);
+            return Ok(payload);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpGet("solicitacoes")]
     [ProducesResponseType(typeof(JourneyRequestsResponse), StatusCodes.Status200OK)]
     public Task<IActionResult> GetRequests(CancellationToken cancellationToken)

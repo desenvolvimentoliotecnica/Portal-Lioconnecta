@@ -3,6 +3,7 @@ import { escapeHtml } from "../components/html.js";
 import { renderRhAdminHero } from "../people/adminNav.js";
 import { getJourneyModule } from "./moduleCatalog.js";
 import { renderRequestModalShell } from "./requestModal.js";
+import { renderTaskModalShell } from "./taskModal.js";
 import { renderLearningCatalogModalShell } from "./learningCatalogModal.js";
 
 function formatDate(value) {
@@ -88,6 +89,20 @@ function renderPriorityPill(priority = "") {
   return `<span class="panel-pill panel-pill--${tone}">${escapeHtml(priority)}</span>`;
 }
 
+function renderTaskRowActions(item) {
+  if (!item.isUserCreated) {
+    return `<span class="hr-profile-table__readonly">Integrada</span>`;
+  }
+
+  return `
+    <div class="hr-profile-table__actions">
+      <button type="button" class="comm-inline-action" data-action="edit-task" data-task-id="${escapeHtml(item.id)}">Editar</button>
+      <button type="button" class="comm-inline-action" data-action="complete-task" data-task-id="${escapeHtml(item.id)}">Concluir</button>
+      <button type="button" class="comm-inline-action" data-action="cancel-task" data-task-id="${escapeHtml(item.id)}">Cancelar</button>
+    </div>
+  `;
+}
+
 function renderTasksPage(data = {}) {
   const summary = data.summary || {};
   const items = Array.isArray(data.items) ? data.items : [];
@@ -107,27 +122,37 @@ function renderTasksPage(data = {}) {
       })}
       ${renderContentCard({
         title: "Tarefas pendentes",
+        headerActionHtml: `
+          <button type="button" class="feed-composer-submit" data-action="open-task-modal">
+            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            Nova tarefa / atividade
+          </button>
+        `,
         bodyHtml: items.length
           ? `
             <div class="hr-profile-table-wrap">
               <table class="hr-profile-table">
                 <thead>
                   <tr>
+                    <th>Tipo</th>
                     <th>Tarefa</th>
                     <th>Prioridade</th>
                     <th>Prazo</th>
                     <th>Responsavel</th>
                     <th>Status</th>
+                    <th>Acoes</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${items.map((item) => `
                     <tr>
+                      <td>${escapeHtml(item.typeLabel || item.typeKey || "—")}</td>
                       <td>${escapeHtml(item.title)}</td>
                       <td>${renderPriorityPill(item.priority)}</td>
                       <td>${escapeHtml(formatDate(item.dueDate))}</td>
                       <td>${escapeHtml(item.assignee)}</td>
                       <td>${renderStatusPill(item.status)}</td>
+                      <td>${renderTaskRowActions(item)}</td>
                     </tr>
                   `).join("")}
                 </tbody>
@@ -136,6 +161,7 @@ function renderTasksPage(data = {}) {
           `
           : renderEmptyState("Nenhuma tarefa", "Suas tarefas pendentes aparecerao aqui.")
       })}
+      ${renderTaskModalShell()}
     `
   });
 }
