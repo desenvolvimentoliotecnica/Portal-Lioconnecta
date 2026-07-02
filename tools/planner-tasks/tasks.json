@@ -980,12 +980,13 @@
       "ambiente": "PRD",
       "referencias": {
         "commits": [
-          "6a90546"
+          "6a90546",
+          "c543529"
         ],
         "branch": "Lioconnecta_HML",
         "prHml": "Promocao DEV/HML/PRD (pipelines 28598972622, 28598982960, 28598988834)"
       },
-      "observacoes": "Entrega inicial em 6a90546; UX do modal (largura 3 cards, clique avanca etapa) e tasks.json no commit seguinte."
+      "observacoes": "Entrega funcional em 6a90546; UX modal (960px, 3 cards, clique avanca) e registro Planner em c543529."
     }
   ]
 }
