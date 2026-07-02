@@ -1058,7 +1058,7 @@
       "ambiente": "PRD",
       "referencias": {
         "commits": [
-          "a9f5cdf"
+          "032035d"
         ],
         "branch": "Lioconnecta_HML",
         "prHml": "Promocao DEV/HML/PRD pendente pipeline"
