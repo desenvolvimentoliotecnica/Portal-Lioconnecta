@@ -1364,7 +1364,7 @@
   text-decoration: none;
 }
 
-.quick-item strong {
+.quick-item strong:not(.quick-item-mark) {
   display: block;
   font-size: 15px;
   margin-bottom: 0;
@@ -2117,15 +2117,22 @@ body.feed-photo-viewer-open {
 }
 
 .quick-item-mark {
-  display: inline-grid;
+  display: grid;
   place-items: center;
-  min-width: 34px;
-  min-height: 34px;
-  padding: 0 6px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  padding: 0;
   border-radius: 999px;
   background: #f4f8fd;
   line-height: 1;
   font-size: 16px;
+  font-weight: 700;
+}
+
+.quick-item-mark i {
+  display: block;
+  line-height: 1;
 }
 
 .quick-item-label {

@@ -8,7 +8,7 @@
     "minutosMinimos": 30,
     "jornadaComercial": "08:00-18:00",
     "backfillPre23Em": "2026-06-29",
-    "totalTarefas": 33
+    "totalTarefas": 34
   },
   "tarefas": [
     {
@@ -887,6 +887,29 @@
         "prHml": "Promocao DEV/HML/PRD (pipelines 28520788906, 28520790845, 28520793167)"
       },
       "observacoes": "Inclui correcao de teste de enquete com data de encerramento expirada."
+    },
+    {
+      "id": "TASK-2026-034",
+      "nome": "[LIOCONNECTA] Corrige paineis HML e icones de Acessos Rapidos",
+      "descricaoAmigavel": "Trata campos nulos do calendario Microsoft Graph (onlineMeeting, location) que causavam HTTP 500 em /api/panels no HML, e corrige centralizacao dos icones na barra lateral de Acessos Rapidos.",
+      "inicio": "2026-07-01",
+      "horarioInicio": "10:30",
+      "conclusao": "2026-07-01",
+      "horarioConclusao": "11:00",
+      "totalHoras": 0.5,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Investigar erro 500 em /api/panels no .80 antes do commit; promover fix do Graph e alinhamento dos icones para DEV, HML e PRD.",
+      "entregavel": "API tolera eventos Graph com onlineMeeting nulo; CSS dos icones de Acessos Rapidos alinhado; publicado em DEV, HML e PRD.",
+      "ambiente": "PRD",
+      "referencias": {
+        "commits": [],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV/HML/PRD"
+      },
+      "observacoes": "Causa raiz: ReadJoinUrl chamava TryGetProperty em JsonElement Null quando Graph retornava onlineMeeting: null."
     }
   ]
 }

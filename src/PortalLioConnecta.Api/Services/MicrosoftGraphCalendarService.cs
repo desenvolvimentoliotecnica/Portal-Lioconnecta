@@ -192,6 +192,7 @@ public class MicrosoftGraphCalendarService : IMicrosoftGraphCalendarService
         var id = item.TryGetProperty("id", out var idElement) ? idElement.GetString() : null;
         var description = item.TryGetProperty("bodyPreview", out var bodyElement) ? bodyElement.GetString() : null;
         var location = item.TryGetProperty("location", out var locationElement) &&
+                       locationElement.ValueKind == JsonValueKind.Object &&
                        locationElement.TryGetProperty("displayName", out var locationNameElement)
             ? locationNameElement.GetString()
             : null;
@@ -217,6 +218,7 @@ public class MicrosoftGraphCalendarService : IMicrosoftGraphCalendarService
         var seenEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         if (item.TryGetProperty("organizer", out var organizerElement) &&
+            organizerElement.ValueKind == JsonValueKind.Object &&
             TryReadEmailAddress(organizerElement, out var organizerName, out var organizerEmail))
         {
             participants.Add(new AgendaParticipantDto(
@@ -247,6 +249,7 @@ public class MicrosoftGraphCalendarService : IMicrosoftGraphCalendarService
                 }
 
                 var response = attendee.TryGetProperty("status", out var statusElement) &&
+                                 statusElement.ValueKind == JsonValueKind.Object &&
                                  statusElement.TryGetProperty("response", out var responseElement)
                     ? responseElement.GetString()
                     : null;
@@ -270,7 +273,8 @@ public class MicrosoftGraphCalendarService : IMicrosoftGraphCalendarService
         name = string.Empty;
         email = string.Empty;
 
-        if (!element.TryGetProperty("emailAddress", out var emailAddressElement))
+        if (!element.TryGetProperty("emailAddress", out var emailAddressElement) ||
+            emailAddressElement.ValueKind != JsonValueKind.Object)
         {
             return false;
         }
@@ -320,6 +324,7 @@ public class MicrosoftGraphCalendarService : IMicrosoftGraphCalendarService
     private static string? ReadJoinUrl(JsonElement item)
     {
         if (item.TryGetProperty("onlineMeeting", out var onlineMeetingElement) &&
+            onlineMeetingElement.ValueKind == JsonValueKind.Object &&
             onlineMeetingElement.TryGetProperty("joinUrl", out var joinUrlElement))
         {
             var joinUrl = joinUrlElement.GetString();
