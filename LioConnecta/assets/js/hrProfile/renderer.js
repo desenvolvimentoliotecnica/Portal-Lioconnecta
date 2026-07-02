@@ -22,7 +22,7 @@ function formatDate(value) {
   return date.toLocaleDateString("pt-BR");
 }
 
-function renderPageShell({ title, provider, isSimulated, bodyHtml }) {
+function renderPageShell({ title, provider, isSimulated, bodyHtml, heroImage = "", heroImageLabel = "" }) {
   const providerLabel = provider || "TOTVS RM";
   const description = isSimulated
     ? `Consulta integrada ao ${providerLabel}. Os dados exibidos nesta fase sao simulados para validacao da experiencia.`
@@ -33,7 +33,9 @@ function renderPageShell({ title, provider, isSimulated, bodyHtml }) {
       ${renderRhAdminHero({
         eyebrow: "PERFIL RH",
         title: title || "Perfil RH",
-        description
+        description,
+        heroImage,
+        heroImageLabel
       })}
       ${bodyHtml}
     </div>
@@ -89,6 +91,8 @@ function renderVacationPage(data = {}) {
     title: data.title,
     provider: data.provider,
     isSimulated: data.isSimulated,
+    heroImage: "./assets/img/hero-ferias-perfil-rh.png",
+    heroImageLabel: "Paisagem serena simbolizando descanso e periodo de ferias",
     bodyHtml: `
       ${renderContentCard({
         title: "Saldo de ferias",
@@ -142,6 +146,8 @@ function renderPayslipPage(data = {}) {
     title: data.title,
     provider: data.provider,
     isSimulated: data.isSimulated,
+    heroImage: "./assets/img/hero-holerite-perfil-rh.png",
+    heroImageLabel: "Mesa financeira simbolizando holerite e remuneracao",
     bodyHtml: `
       ${renderContentCard({
         title: "Comprovantes disponiveis",
@@ -192,6 +198,8 @@ function renderBenefitsPage(data = {}) {
     title: data.title,
     provider: data.provider,
     isSimulated: data.isSimulated,
+    heroImage: "./assets/img/hero-beneficios-perfil-rh.png",
+    heroImageLabel: "Elementos de bem-estar simbolizando beneficios corporativos",
     bodyHtml: renderContentCard({
       title: "Beneficios ativos",
       bodyHtml: `
