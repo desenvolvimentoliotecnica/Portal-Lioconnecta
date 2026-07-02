@@ -18,10 +18,16 @@ let currentStep = 1;
 let hooks = {};
 
 function renderStepper(activeStep) {
+  const selectedType = getRequestType(selectedTypeKey);
+  const stepOneLabel = activeStep === 2 && selectedType
+    ? `Tipo (${selectedType.label})`
+    : "Tipo";
+
   return `
     <nav class="journey-request-modal__stepper ldap-wizard__stepper" aria-label="Etapas da solicitacao">
       ${STEP_PANELS.map((step, index) => {
         const state = step.id < activeStep ? "is-complete" : step.id === activeStep ? "is-active" : "";
+        const label = step.id === 1 ? stepOneLabel : step.label;
         const connector = index < STEP_PANELS.length - 1
           ? `<span class="ldap-wizard__step-connector ${step.id < activeStep ? "is-complete" : ""}" aria-hidden="true"></span>`
           : "";
@@ -29,7 +35,7 @@ function renderStepper(activeStep) {
         return `
           <div class="ldap-wizard__step ${state}">
             <span class="ldap-wizard__step-badge">${step.id}</span>
-            <span class="ldap-wizard__step-label">${escapeHtml(step.label)}</span>
+            <span class="ldap-wizard__step-label">${escapeHtml(label)}</span>
           </div>
           ${connector}
         `;
@@ -146,28 +152,12 @@ function renderFormField(field) {
 }
 
 function renderDynamicFormStep(typeKey, activeStep) {
-  const type = getRequestType(typeKey);
   const fields = getFieldsForType(typeKey);
 
   return `
     <section class="journey-request-modal__panel ${activeStep !== 2 ? "is-hidden" : ""}" data-request-step-panel="2">
-      <div class="journey-request-modal__selected-type">
-        <span class="journey-request-modal__selected-type-icon" aria-hidden="true">
-          <i class="${escapeHtml(type?.icon || "fa-solid fa-file-lines")}"></i>
-        </span>
-        <div>
-          <strong>${escapeHtml(type?.label || "Solicitacao")}</strong>
-          <button type="button" class="comm-inline-action" data-action="request-modal-change-type">
-            Alterar tipo
-          </button>
-        </div>
-      </div>
       <div class="communication-form-grid admin-user-form-grid">
         ${fields.map((field) => renderFormField(field)).join("")}
-      </div>
-      <div class="journey-request-modal__notice" role="note">
-        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-        <span>Simulacao: em producao, a solicitacao sera registrada no ServiceNow.</span>
       </div>
     </section>
   `;
@@ -445,7 +435,7 @@ export function bindRequestModal(root = document, nextHooks = {}) {
       return;
     }
 
-    if (action === "request-modal-back" || action === "request-modal-change-type") {
+    if (action === "request-modal-back") {
       event.preventDefault();
       currentStep = 1;
       refreshModalContent(root);
