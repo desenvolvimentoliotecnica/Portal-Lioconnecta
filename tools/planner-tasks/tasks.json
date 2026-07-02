@@ -8,7 +8,7 @@
     "minutosMinimos": 30,
     "jornadaComercial": "08:00-18:00",
     "backfillPre23Em": "2026-06-29",
-    "totalTarefas": 36
+    "totalTarefas": 37
   },
   "tarefas": [
     {
@@ -961,6 +961,31 @@
         "prHml": "Promocao DEV/HML/PRD (pipelines 28595176329, 28595196827, 28595213516)"
       },
       "observacoes": "Regra global em base.css; deploy concluido nos tres ambientes."
+    },
+    {
+      "id": "TASK-2026-037",
+      "nome": "[LIOCONNECTA] Nova solicitacao multi-tipo na Minha Jornada",
+      "descricaoAmigavel": "Colaborador abre chamados pelo portal em modal de dois passos (tipo service desk e RH), com formulario dinamico por categoria. Ajuste de UX: modal mais largo com tres cards por linha e avanco automatico ao clicar no tipo.",
+      "inicio": "2026-07-02",
+      "horarioInicio": "11:15",
+      "conclusao": "2026-07-02",
+      "horarioConclusao": "15:05",
+      "totalHoras": 3.83,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Melhorar experiencia da view Solicitacoes em Andamento com modal Nova solicitacao multi-tipo (ferias, reembolso, chamado TI, etc.), commit/promocao DEV-HML-PRD e registro no Planner.",
+      "entregavel": "Modal 2 passos com 9 tipos de solicitacao, POST simulado /api/journey/solicitacoes, lista atualizada apos envio; modal 960px com grid 3 colunas e clique no card avanca para detalhes.",
+      "ambiente": "PRD",
+      "referencias": {
+        "commits": [
+          "6a90546"
+        ],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV/HML/PRD (pipelines 28598972622, 28598982960, 28598988834)"
+      },
+      "observacoes": "Entrega inicial em 6a90546; UX do modal (largura 3 cards, clique avanca etapa) e tasks.json no commit seguinte."
     }
   ]
 }

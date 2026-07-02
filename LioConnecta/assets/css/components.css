@@ -5999,7 +5999,7 @@ body.agenda-event-modal-open {
 }
 
 .journey-request-modal__dialog {
-  width: min(640px, 100%);
+  width: min(960px, 94vw);
   max-height: calc(100vh - 56px);
   overflow: hidden;
   display: grid;
@@ -6065,7 +6065,7 @@ body.agenda-event-modal-open {
 .journey-request-modal__type-grid {
   display: grid;
   gap: 10px;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .journey-request-type-card {
@@ -6190,6 +6190,10 @@ body.agenda-event-modal-open {
   border-top: 1px solid #e6eef5;
 }
 
+.journey-request-modal__footer--step-one {
+  justify-content: flex-end;
+}
+
 .journey-request-modal__footer-actions {
   display: flex;
   align-items: center;
@@ -6209,9 +6213,23 @@ body.agenda-event-modal-open {
   gap: 8px;
 }
 
+@media (max-width: 900px) {
+  .journey-request-modal__type-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 640px) {
   .journey-request-modal {
     padding: 16px;
+  }
+
+  .journey-request-modal__dialog {
+    width: 100%;
+  }
+
+  .journey-request-modal__type-grid {
+    grid-template-columns: 1fr;
   }
 
   .journey-request-modal__footer {

@@ -176,16 +176,8 @@ function renderDynamicFormStep(typeKey, activeStep) {
 function renderModalFooter(activeStep) {
   if (activeStep === 1) {
     return `
-      <footer class="journey-request-modal__footer">
+      <footer class="journey-request-modal__footer journey-request-modal__footer--step-one">
         <button type="button" class="comm-secondary-button" data-action="close-request-modal">Cancelar</button>
-        <button
-          type="button"
-          class="feed-composer-submit"
-          data-action="request-modal-next"
-          ${selectedTypeKey ? "" : "disabled"}
-        >
-          Continuar
-        </button>
       </footer>
     `;
   }
@@ -270,6 +262,16 @@ function updateStepPanels(form, activeStep) {
   form.querySelectorAll(".ldap-wizard__step-connector").forEach((connector, index) => {
     connector.classList.toggle("is-complete", index + 1 < activeStep);
   });
+}
+
+function advanceToFormStep(root = document) {
+  if (!selectedTypeKey) {
+    return;
+  }
+
+  currentStep = 2;
+  refreshModalContent(root);
+  getForm(root)?.querySelector("[name='subject']")?.focus();
 }
 
 function refreshModalContent(root = document) {
@@ -429,12 +431,7 @@ export function bindRequestModal(root = document, nextHooks = {}) {
     if (action === "select-request-type") {
       event.preventDefault();
       selectedTypeKey = target.dataset.typeKey || "";
-      form.querySelectorAll("[data-action='select-request-type']").forEach((card) => {
-        const isSelected = card.dataset.typeKey === selectedTypeKey;
-        card.classList.toggle("is-selected", isSelected);
-        card.setAttribute("aria-pressed", isSelected ? "true" : "false");
-      });
-      form.querySelector("[data-action='request-modal-next']")?.toggleAttribute("disabled", !selectedTypeKey);
+      advanceToFormStep(root);
       return;
     }
 
@@ -444,9 +441,7 @@ export function bindRequestModal(root = document, nextHooks = {}) {
         hooks.onValidation?.("Selecione um tipo de solicitacao para continuar.");
         return;
       }
-      currentStep = 2;
-      refreshModalContent(root);
-      form.querySelector("[name='subject']")?.focus();
+      advanceToFormStep(root);
       return;
     }
 
