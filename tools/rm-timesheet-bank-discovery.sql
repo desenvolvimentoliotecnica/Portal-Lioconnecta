@@ -22,16 +22,13 @@ WHERE CODCOLIGADA = @CodColigada
   AND CHAPA = @Chapa
 ORDER BY 1 DESC;
 
--- 3) ACOMPFUN filtrado pelo periodo 16/06 a 15/07 (ajuste nomes de coluna se necessario)
+-- 3) ACOMPFUN filtrado pelo periodo 16/06 a 15/07
 SELECT TOP 5 *
 FROM dbo.ACOMPFUN WITH (NOLOCK)
 WHERE CODCOLIGADA = @CodColigada
   AND CHAPA = @Chapa
-  AND (
-        TRY_CONVERT(date, INICIOMENSAL) = @DataDe AND TRY_CONVERT(date, FIMMENSAL) = @DataAte
-     OR TRY_CONVERT(date, DATAINICIO) = @DataDe AND TRY_CONVERT(date, DATAFIM) = @DataAte
-     OR TRY_CONVERT(date, DATINICIO) = @DataDe AND TRY_CONVERT(date, DATFIM) = @DataAte
-  );
+  AND TRY_CONVERT(date, INICIOPER) = @DataDe
+  AND TRY_CONVERT(date, FIMPER) = @DataAte;
 
 -- 4) ABANCOHORFUNDETALHE (guia Banco de Horas no espelho)
 SELECT TOP 20 *
@@ -40,12 +37,24 @@ WHERE CODCOLIGADA = @CodColigada
   AND CHAPA = @Chapa
 ORDER BY 1 DESC;
 
--- 5) ASALDOBANCOHOR (saldo sintetico)
+-- 5) ASALDOBANCOHOR (saldo sintetico do espelho — fonte dos KPIs)
 SELECT TOP 20 *
 FROM dbo.ASALDOBANCOHOR WITH (NOLOCK)
 WHERE CODCOLIGADA = @CodColigada
   AND CHAPA = @Chapa
-ORDER BY 1 DESC;
+ORDER BY FIMPER DESC;
+
+-- 5b) KPIs calculados (referencia: +17:40 / +12:06 / +29:46)
+SELECT
+    COALESCE(EXTRAANT, 0) - COALESCE(ATRASOANT, 0) - COALESCE(FALTAANT, 0) AS SaldoAnteriorMin,
+    COALESCE(EXTRAATU, 0) - COALESCE(ATRASOATU, 0) - COALESCE(FALTAATU, 0) AS SaldoPeriodoMin,
+    (COALESCE(EXTRAANT, 0) - COALESCE(ATRASOANT, 0) - COALESCE(FALTAANT, 0))
+      + (COALESCE(EXTRAATU, 0) - COALESCE(ATRASOATU, 0) - COALESCE(FALTAATU, 0)) AS TotalBancoMin
+FROM dbo.ASALDOBANCOHOR WITH (NOLOCK)
+WHERE CODCOLIGADA = @CodColigada
+  AND CHAPA = @Chapa
+  AND TRY_CONVERT(date, INICIOPER) = @DataDe
+  AND TRY_CONVERT(date, FIMPER) = @DataAte;
 
 -- 6) Conferencia diaria AAFHTFUN no periodo
 SELECT
