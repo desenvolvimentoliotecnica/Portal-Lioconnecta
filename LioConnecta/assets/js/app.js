@@ -184,8 +184,8 @@ let currentPeopleRhData = {
   moodFeedbackLoadError: ""
 };
 let timesheetQueryState = {
-  month: new Date().getMonth() + 1,
-  year: new Date().getFullYear()
+  month: null,
+  year: null
 };
 let currentAdminUsersPage = createEmptyPortalUsersPage();
 let currentAdminPollsPage = createEmptyAdminPollsPage();
@@ -557,19 +557,20 @@ function renderSavedFeedPage(data, route) {
 }
 
 function bindTimesheetPeriodSelector(root = document) {
-  const form = root.querySelector("#hr-timesheet-period-form");
-  if (!form) {
+  const select = root.querySelector("#hr-timesheet-period-select");
+  if (!select) {
     return;
   }
 
-  form.addEventListener("change", async (event) => {
-    const input = event.target.closest("[name='referenceMonth']");
-    if (!input?.value) {
+  select.addEventListener("change", async (event) => {
+    const option = event.target.selectedOptions[0];
+    if (!option) {
       return;
     }
 
-    const [year, month] = input.value.split("-").map(Number);
-    if (!year || !month) {
+    const month = Number(option.dataset.endMonth);
+    const year = Number(option.dataset.endYear);
+    if (!month || !year) {
       return;
     }
 
@@ -577,6 +578,14 @@ function bindTimesheetPeriodSelector(root = document) {
     const shellData = await loadPageData(ROUTES.HR_PROFILE, "ponto");
     renderHrProfilePage(shellData, ROUTES.HR_PROFILE, "ponto");
   });
+}
+
+function syncTimesheetQueryStateFromModule(moduleData = {}) {
+  const endMonth = moduleData.selectedPeriodEndMonth ?? moduleData.SelectedPeriodEndMonth;
+  const endYear = moduleData.selectedPeriodEndYear ?? moduleData.SelectedPeriodEndYear;
+  if (endMonth && endYear) {
+    timesheetQueryState = { month: endMonth, year: endYear };
+  }
 }
 
 function renderHrProfilePage(data, route, slug) {
@@ -591,6 +600,7 @@ function renderHrProfilePage(data, route, slug) {
   }
 
   if (slug === "ponto") {
+    syncTimesheetQueryStateFromModule(data.hrModule);
     bindTimesheetPeriodSelector(centerContent);
   }
 }
@@ -2359,7 +2369,7 @@ async function loadPageData(route, slug = "") {
       headers: getPortalAuthHeaders()
     };
 
-    if (slug === "ponto") {
+    if (slug === "ponto" && timesheetQueryState.month && timesheetQueryState.year) {
       hrOptions.month = timesheetQueryState.month;
       hrOptions.year = timesheetQueryState.year;
     }

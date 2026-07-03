@@ -34,7 +34,9 @@ export function collectTotvsRmSettingsPayload(form) {
     enableFerias: Boolean(formData.get("enableFerias")),
     enableBeneficios: Boolean(formData.get("enableBeneficios")),
     enablePonto: Boolean(formData.get("enablePonto")),
-    enableTeamDashboard: Boolean(formData.get("enableTeamDashboard"))
+    enableTeamDashboard: Boolean(formData.get("enableTeamDashboard")),
+    timesheetPeriodStartDay: Number(formData.get("timesheetPeriodStartDay") || 16),
+    timesheetPeriodEndDay: Number(formData.get("timesheetPeriodEndDay") || 15)
   };
 }
 
@@ -221,6 +223,35 @@ export function renderTotvsRmSettingsPage(settings = {}) {
             <input type="checkbox" name="enableTeamDashboard" ${renderModuleChecked(settings, settings.enableTeamDashboard)} />
             <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
             <span class="ldap-wizard__toggle-label">Dashboard de equipe (gestores)</span>
+          </label>
+
+          <div class="ldap-wizard__panel-head">
+            <h2>Periodo base do ponto</h2>
+            <p>Define o ciclo mensal do espelho de ponto, como no app TOTVS RM (padrao: dia 16 ao dia 15).</p>
+          </div>
+
+          <label class="ldap-wizard__field">
+            <span>Dia inicial do periodo</span>
+            <input
+              name="timesheetPeriodStartDay"
+              type="number"
+              min="1"
+              max="28"
+              value="${escapeHtml(String(settings.timesheetPeriodStartDay || 16))}"
+              required
+            />
+          </label>
+
+          <label class="ldap-wizard__field">
+            <span>Dia final do periodo</span>
+            <input
+              name="timesheetPeriodEndDay"
+              type="number"
+              min="1"
+              max="28"
+              value="${escapeHtml(String(settings.timesheetPeriodEndDay || 15))}"
+              required
+            />
           </label>
 
           <div class="ldap-wizard__info ldap-wizard__info--inline">

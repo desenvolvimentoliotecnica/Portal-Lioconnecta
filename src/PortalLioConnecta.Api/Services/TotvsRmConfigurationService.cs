@@ -49,6 +49,8 @@ public class TotvsRmConfigurationService : ITotvsRmConfigurationService
         entity.EnableBeneficios = request.EnableBeneficios;
         entity.EnablePonto = request.EnablePonto;
         entity.EnableTeamDashboard = request.EnableTeamDashboard;
+        entity.TimesheetPeriodStartDay = NormalizePeriodDay(request.TimesheetPeriodStartDay, TimesheetPeriodResolver.DefaultStartDay);
+        entity.TimesheetPeriodEndDay = NormalizePeriodDay(request.TimesheetPeriodEndDay, TimesheetPeriodResolver.DefaultEndDay);
         entity.UpdatedAtUtc = DateTime.UtcNow;
 
         if (!string.IsNullOrWhiteSpace(request.Password))
@@ -78,7 +80,9 @@ public class TotvsRmConfigurationService : ITotvsRmConfigurationService
                 entity.EnableFerias,
                 entity.EnableBeneficios,
                 entity.EnablePonto,
-                entity.EnableTeamDashboard));
+                entity.EnableTeamDashboard),
+            NormalizePeriodDay(entity.TimesheetPeriodStartDay, TimesheetPeriodResolver.DefaultStartDay),
+            NormalizePeriodDay(entity.TimesheetPeriodEndDay, TimesheetPeriodResolver.DefaultEndDay));
     }
 
     public async Task<TotvsRmConnectionTestResponse> TestConnectionAsync(
@@ -105,7 +109,9 @@ public class TotvsRmConfigurationService : ITotvsRmConfigurationService
                 request.EnableFerias,
                 request.EnableBeneficios,
                 request.EnablePonto,
-                request.EnableTeamDashboard));
+                request.EnableTeamDashboard),
+            NormalizePeriodDay(request.TimesheetPeriodStartDay, entity.TimesheetPeriodStartDay > 0 ? entity.TimesheetPeriodStartDay : TimesheetPeriodResolver.DefaultStartDay),
+            NormalizePeriodDay(request.TimesheetPeriodEndDay, entity.TimesheetPeriodEndDay > 0 ? entity.TimesheetPeriodEndDay : TimesheetPeriodResolver.DefaultEndDay));
 
         return await _connectionTester.TestAsync(runtime, cancellationToken);
     }
@@ -189,6 +195,8 @@ public class TotvsRmConfigurationService : ITotvsRmConfigurationService
             entity.EnableBeneficios,
             entity.EnablePonto,
             entity.EnableTeamDashboard,
+            NormalizePeriodDay(entity.TimesheetPeriodStartDay, TimesheetPeriodResolver.DefaultStartDay),
+            NormalizePeriodDay(entity.TimesheetPeriodEndDay, TimesheetPeriodResolver.DefaultEndDay),
             entity.UpdatedAtUtc);
     }
 
@@ -196,6 +204,9 @@ public class TotvsRmConfigurationService : ITotvsRmConfigurationService
     {
         return string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
     }
+
+    private static int NormalizePeriodDay(int value, int fallback) =>
+        value is >= 1 and <= 28 ? value : fallback;
 
     private static string ProtectSecret(string value)
     {

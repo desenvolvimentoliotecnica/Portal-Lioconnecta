@@ -14,4 +14,6 @@ public sealed record UpsertTotvsRmConfigurationRequest(
     bool EnableFerias,
     bool EnableBeneficios,
     bool EnablePonto,
-    bool EnableTeamDashboard);
+    bool EnableTeamDashboard,
+    int TimesheetPeriodStartDay,
+    int TimesheetPeriodEndDay);

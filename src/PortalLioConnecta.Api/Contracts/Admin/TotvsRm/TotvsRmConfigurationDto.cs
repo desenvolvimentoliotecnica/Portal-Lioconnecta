@@ -16,4 +16,6 @@ public sealed record TotvsRmConfigurationDto(
     bool EnableBeneficios,
     bool EnablePonto,
     bool EnableTeamDashboard,
+    int TimesheetPeriodStartDay,
+    int TimesheetPeriodEndDay,
     DateTime UpdatedAtUtc);

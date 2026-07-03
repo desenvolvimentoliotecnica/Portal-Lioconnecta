@@ -303,18 +303,36 @@ function renderTimesheetPage(data = {}, options = {}) {
   const entries = Array.isArray(data.entries) ? data.entries : [];
   const userMessage = data.userMessage || data.UserMessage || "";
   const availabilityStatus = data.availabilityStatus || data.AvailabilityStatus || "ok";
-  const period = options.timesheetPeriod || {};
-  const monthValue = period.year && period.month
-    ? `${String(period.year).padStart(4, "0")}-${String(period.month).padStart(2, "0")}`
+  const periodOptions = Array.isArray(data.periodOptions || data.PeriodOptions)
+    ? (data.periodOptions || data.PeriodOptions)
+    : [];
+  const selectedEndMonth = data.selectedPeriodEndMonth ?? data.SelectedPeriodEndMonth ?? options.timesheetPeriod?.month ?? null;
+  const selectedEndYear = data.selectedPeriodEndYear ?? data.SelectedPeriodEndYear ?? options.timesheetPeriod?.year ?? null;
+  const selectedPeriodValue = selectedEndMonth && selectedEndYear
+    ? `${selectedEndYear}-${String(selectedEndMonth).padStart(2, "0")}`
     : "";
 
   const alertHtml = userMessage
     ? `<div class="ldap-wizard__alert ldap-wizard__alert--danger hr-profile-alert">${escapeHtml(userMessage)}</div>`
     : "";
 
+  const periodSelectHtml = periodOptions.length
+    ? `
+      <select id="hr-timesheet-period-select" class="hr-profile-period-select" aria-label="Selecione o periodo de ponto">
+        ${periodOptions.map((item) => {
+          const endMonth = item.endMonth ?? item.EndMonth;
+          const endYear = item.endYear ?? item.EndYear;
+          const label = item.label || item.Label || "";
+          const value = `${endYear}-${String(endMonth).padStart(2, "0")}`;
+          const selected = value === selectedPeriodValue ? "selected" : "";
+          return `<option value="${escapeHtml(value)}" data-end-month="${endMonth}" data-end-year="${endYear}" ${selected}>${escapeHtml(label)}</option>`;
+        }).join("")}
+      </select>
+    `
+    : "";
+
   const summaryCards = availabilityStatus === "ok"
     ? renderMetricCards([
-      { label: "Periodo", value: summary.periodLabel || "—" },
       { label: "Horas trabalhadas", value: summary.workedHours || "—" },
       { label: "Horas previstas", value: summary.expectedHours || "—" },
       { label: "Banco de horas", value: summary.balanceHours || "—" },
@@ -322,7 +340,6 @@ function renderTimesheetPage(data = {}, options = {}) {
       { label: "Atrasos", value: String(summary.delays ?? 0) }
     ])
     : renderMetricCards([
-      { label: "Periodo", value: summary.periodLabel || "—" },
       { label: "Horas trabalhadas", value: "—" },
       { label: "Horas previstas", value: "—" },
       { label: "Banco de horas", value: "—" },
@@ -339,18 +356,8 @@ function renderTimesheetPage(data = {}, options = {}) {
     bodyHtml: `
       ${alertHtml}
       ${renderContentCard({
-        title: "Consultar periodo",
-        bodyHtml: `
-          <form id="hr-timesheet-period-form" class="hr-profile-period-form">
-            <label class="hr-profile-period-field">
-              <span>Mes de referencia</span>
-              <input type="month" name="referenceMonth" value="${escapeHtml(monthValue)}" />
-            </label>
-          </form>
-        `
-      })}
-      ${renderContentCard({
         title: "Resumo do periodo",
+        headerActionHtml: periodSelectHtml,
         bodyHtml: summaryCards
       })}
       ${renderContentCard({
@@ -362,10 +369,10 @@ function renderTimesheetPage(data = {}, options = {}) {
                 <thead>
                   <tr>
                     <th>Data</th>
-                    <th>Entrada</th>
-                    <th>Saida almoco</th>
-                    <th>Volta almoco</th>
-                    <th>Saida</th>
+                    <th>Entrada 1</th>
+                    <th>Saida 1</th>
+                    <th>Entrada 2</th>
+                    <th>Saida 2</th>
                     <th>Intervalo</th>
                     <th>Trabalhado</th>
                     <th>Saldo</th>

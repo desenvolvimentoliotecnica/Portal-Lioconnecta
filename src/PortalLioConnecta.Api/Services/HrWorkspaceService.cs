@@ -375,8 +375,7 @@ public class HrWorkspaceService : IHrWorkspaceService
         int? year,
         CancellationToken cancellationToken)
     {
-        var (dataDe, dataAte) = ResolvePeriod(month, year);
-        var (resolution, _) = await _accessGuard.EnsureAsync(
+        var (resolution, runtime) = await _accessGuard.EnsureAsync(
             user,
             flags => flags.Ponto,
             "Consulta de ponto temporariamente indisponivel.",
@@ -386,6 +385,19 @@ public class HrWorkspaceService : IHrWorkspaceService
         {
             return BuildUnavailableTimesheet(resolution.AvailabilityStatus, resolution.UserMessage!);
         }
+
+        var (dataDe, dataAte, selectedEndMonth, selectedEndYear) = TimesheetPeriodResolver.Resolve(
+            month,
+            year,
+            runtime.TimesheetPeriodStartDay,
+            runtime.TimesheetPeriodEndDay);
+        var periodOptions = TimesheetPeriodResolver
+            .BuildRecentPeriodOptions(
+                TimesheetPeriodResolver.DefaultRecentPeriodCount,
+                runtime.TimesheetPeriodStartDay,
+                runtime.TimesheetPeriodEndDay)
+            .Select(item => new HrTimesheetPeriodOptionDto(item.EndMonth, item.EndYear, item.Label))
+            .ToList();
 
         try
         {
@@ -405,7 +417,10 @@ public class HrWorkspaceService : IHrWorkspaceService
                 Provider,
                 false,
                 "ok",
-                null);
+                null,
+                selectedEndMonth,
+                selectedEndYear,
+                periodOptions);
         }
         catch (TotvsRmIntegrationDisabledException)
         {
@@ -423,7 +438,7 @@ public class HrWorkspaceService : IHrWorkspaceService
 
     public async Task<HrRhSummaryDto> GetRhSummaryAsync(PortalUser user, CancellationToken cancellationToken)
     {
-        var (resolution, _) = await _accessGuard.EnsureAsync(
+        var (resolution, runtime) = await _accessGuard.EnsureAsync(
             user,
             _ => true,
             "Resumo RH indisponivel.",
@@ -439,7 +454,11 @@ public class HrWorkspaceService : IHrWorkspaceService
             var chapa = resolution.Context!.Chapa;
             var balance = await _vacationRepository.GetBalanceAsync(chapa, cancellationToken);
             var payslips = await _payrollRepository.GetPayslipSummariesAsync(chapa, 1, cancellationToken);
-            var (dataDe, dataAte) = ResolvePeriod(null, null);
+            var (dataDe, dataAte, _, _) = TimesheetPeriodResolver.Resolve(
+                null,
+                null,
+                runtime.TimesheetPeriodStartDay,
+                runtime.TimesheetPeriodEndDay);
             var punches = await _totvsRmTimesheetRepository.GetPunchesAsync(chapa, dataDe, dataAte, cancellationToken);
             var processedDays = await _totvsRmTimesheetRepository.GetProcessedDaysAsync(chapa, dataDe, dataAte, cancellationToken);
             var (summary, _) = _timesheetMergeService.Merge(dataDe, dataAte, punches, processedDays);
@@ -579,16 +598,6 @@ public class HrWorkspaceService : IHrWorkspaceService
                mesComp is >= 1 and <= 12;
     }
 
-    private static (DateTime DataDe, DateTime DataAte) ResolvePeriod(int? month, int? year)
-    {
-        var now = DateTime.UtcNow;
-        var resolvedYear = year is >= 2000 and <= 2100 ? year.Value : now.Year;
-        var resolvedMonth = month is >= 1 and <= 12 ? month.Value : now.Month;
-        var dataDe = new DateTime(resolvedYear, resolvedMonth, 1);
-        var dataAte = dataDe.AddMonths(1).AddDays(-1);
-        return (dataDe, dataAte);
-    }
-
     private static HrTimesheetResponse BuildUnavailableTimesheet(string availabilityStatus, string userMessage) =>
-        new("Ponto", null, [], Provider, false, availabilityStatus, userMessage);
+        new("Ponto", null, [], Provider, false, availabilityStatus, userMessage, 0, 0, []);
 }

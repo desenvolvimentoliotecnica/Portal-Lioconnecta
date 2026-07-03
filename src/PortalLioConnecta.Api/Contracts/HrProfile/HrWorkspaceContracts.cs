@@ -142,6 +142,11 @@ public sealed record HrPersonalDataResponse(
     string? AvailabilityStatus = null,
     string? UserMessage = null);
 
+public sealed record HrTimesheetPeriodOptionDto(
+    int EndMonth,
+    int EndYear,
+    string Label);
+
 public sealed record HrTimesheetEntryDto(
     DateTime Date,
     string WeekdayLabel,
@@ -170,7 +175,10 @@ public sealed record HrTimesheetResponse(
     string Provider,
     bool IsSimulated,
     string? AvailabilityStatus,
-    string? UserMessage);
+    string? UserMessage,
+    int SelectedPeriodEndMonth = 0,
+    int SelectedPeriodEndYear = 0,
+    IReadOnlyList<HrTimesheetPeriodOptionDto>? PeriodOptions = null);
 
 public sealed record HrRhSummaryDto(
     string? VacationBalanceDays,

@@ -17,6 +17,8 @@ public class TotvsRmConfiguration
     public bool EnableBeneficios { get; set; } = true;
     public bool EnablePonto { get; set; } = true;
     public bool EnableTeamDashboard { get; set; } = true;
+    public int TimesheetPeriodStartDay { get; set; } = 16;
+    public int TimesheetPeriodEndDay { get; set; } = 15;
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
 }

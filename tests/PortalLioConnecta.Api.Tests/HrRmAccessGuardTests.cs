@@ -20,7 +20,9 @@ public class HrRmAccessGuardTests
                 "secret",
                 true,
                 1,
-                new TotvsRmModuleFlags(false, false, false, false, false, false))),
+                new TotvsRmModuleFlags(false, false, false, false, false, false),
+                16,
+                15)),
             new FakeTotvsRmHrContextService());
 
         var user = new PortalUser { Id = Guid.NewGuid(), DisplayName = "Test User" };
@@ -48,7 +50,9 @@ public class HrRmAccessGuardTests
                 "secret",
                 true,
                 1,
-                new TotvsRmModuleFlags(true, true, true, true, false, true))),
+                new TotvsRmModuleFlags(true, true, true, true, false, true),
+                16,
+                15)),
             new FakeTotvsRmHrContextService());
 
         var user = new PortalUser { Id = Guid.NewGuid(), DisplayName = "Test User" };

@@ -114,9 +114,7 @@ public sealed class TimesheetMergeService
         IReadOnlyList<HrTimesheetEntryDto> entries,
         IReadOnlyList<RmProcessedDayRecord> processedDays)
     {
-        var periodLabel = dataDe.Month == dataAte.Month && dataDe.Year == dataAte.Year
-            ? dataDe.ToString("MMMM/yyyy", CultureInfo.GetCultureInfo("pt-BR"))
-            : $"{dataDe:dd/MM/yyyy} - {dataAte:dd/MM/yyyy}";
+        var periodLabel = TimesheetPeriodResolver.FormatPeriodLabel(dataDe.Date, dataAte.Date);
 
         var workedMinutes = processedDays.Sum(item => item.WorkedMinutes ?? 0);
         if (workedMinutes == 0)
@@ -137,7 +135,7 @@ public sealed class TimesheetMergeService
             || string.Equals(item.StatusCode, "A", StringComparison.OrdinalIgnoreCase));
 
         return new HrTimesheetSummaryDto(
-            CultureInfo.GetCultureInfo("pt-BR").TextInfo.ToTitleCase(periodLabel),
+            periodLabel,
             TimesheetAggregationService.FormatMinutes(workedMinutes),
             expectedMinutes > 0 ? TimesheetAggregationService.FormatMinutes(expectedMinutes) : "—",
             FormatSignedMinutes(balanceMinutes),

@@ -888,7 +888,9 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
             true,
             true,
             true,
-            true);
+            true,
+            16,
+            15);
 
         var saveResponse = await _client.PutAsJsonAsync("/api/admin/totvs-rm", request);
         Assert.Equal(HttpStatusCode.OK, saveResponse.StatusCode);
@@ -928,7 +930,9 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
             true,
             true,
             true,
-            true));
+            true,
+            16,
+            15));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var payload = await response.Content.ReadFromJsonAsync<TotvsRmConnectionTestResponse>();

@@ -9,7 +9,9 @@ public sealed record TotvsRmRuntimeConfiguration(
     string? Password,
     bool TrustServerCertificate,
     short CodColigada,
-    TotvsRmModuleFlags ModuleFlags);
+    TotvsRmModuleFlags ModuleFlags,
+    int TimesheetPeriodStartDay,
+    int TimesheetPeriodEndDay);
 
 public sealed record TotvsRmModuleFlags(
     bool Cadastro,
