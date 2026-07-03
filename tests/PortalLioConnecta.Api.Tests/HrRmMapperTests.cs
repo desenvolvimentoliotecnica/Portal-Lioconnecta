@@ -16,7 +16,7 @@ public class HrRmMapperTests
 
     [Theory]
     [InlineData(2026, 6, 1, "FOLHA", "2026-06")]
-    [InlineData(2026, 6, 2, "FOLHA", "2026-06-2")]
+    [InlineData(2026, 6, 2, "ADIANTAMENTO", "2026-06-ADIANTAMENTO")]
     [InlineData(2026, 6, 1, "ADIANTAMENTO", "2026-06-ADIANTAMENTO")]
     public void BuildPayslipId_UsesPeriodSuffixWhenNeeded(int year, int month, int period, string paymentType, string expected)
     {
@@ -25,7 +25,7 @@ public class HrRmMapperTests
 
     [Theory]
     [InlineData("2026-06", 2026, 6, null, null)]
-    [InlineData("2026-06-2", 2026, 6, 2, null)]
+    [InlineData("2026-06-2", 2026, 6, 2, "ADIANTAMENTO")]
     [InlineData("2026-06-ADIANTAMENTO", 2026, 6, null, "ADIANTAMENTO")]
     public void TryParsePayslipId_ParsesLegacyAndEnvelopeIds(
         string id,

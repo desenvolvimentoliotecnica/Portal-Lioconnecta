@@ -5587,6 +5587,20 @@ body.agenda-event-modal-open {
   font-weight: 600;
 }
 
+.hr-profile-table--timesheet th,
+.hr-profile-table--timesheet td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.hr-profile-table--timesheet tr.hr-timesheet-row--negative td {
+  color: var(--color-danger);
+}
+
+.hr-profile-table--timesheet tr.hr-timesheet-row--no-punches td {
+  color: #e65100;
+}
+
 .hr-profile-table__actions {
   display: flex;
   flex-wrap: wrap;
@@ -5635,12 +5649,8 @@ body.agenda-event-modal-open {
   margin-bottom: 12px;
 }
 
-.payslip-envelope-panel[data-payslip-values-visible="false"] [data-sensitive-value] {
-  filter: blur(8px);
-  user-select: none;
-}
-
-.payslip-envelope-table-wrap[data-payslip-values-visible="false"] [data-sensitive-value] {
+.payslip-envelope-panel[data-payslip-values-visible="false"] [data-sensitive-value],
+body[data-payslip-values-visible="false"] [data-sensitive-value] {
   filter: blur(8px);
   user-select: none;
 }

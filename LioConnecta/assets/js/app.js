@@ -90,8 +90,9 @@ import {
   isHrProfileModuleSlug,
   getHrProfileModuleData,
   renderHrProfileModulePage,
-  bindPayslipModal
-} from "./hrProfile/index.js?v=0.23.11";
+  bindPayslipModal,
+  initPayslipValuesPrivacy
+} from "./hrProfile/index.js?v=0.25.4";
 import {
   JOURNEY_ROUTE,
   isJourneyModuleSlug,
@@ -509,6 +510,7 @@ function renderShell(data, route) {
   );
   bindAgendaEventModalActions();
   bindPortalTopbarActions();
+  initPayslipValuesPrivacy(document);
 }
 
 function renderHomePage(data, route) {

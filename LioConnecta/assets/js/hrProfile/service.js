@@ -7,7 +7,7 @@ const MOCK_PAYSLIP_ITEMS = Object.freeze([
   { id: "2026-06", periodLabel: "Junho/2026", referenceMonth: "2026-06", grossAmount: 11687.46, netAmount: 2686.42, paymentDate: "2026-06-30", status: "Disponivel", paymentType: "FOLHA", competenceYear: "2026", referenceMonthShort: "JUN." },
   { id: "2026-06-ADIANTAMENTO", periodLabel: "Junho/2026", referenceMonth: "2026-06", grossAmount: 4644.58, netAmount: 4644.58, paymentDate: "2026-06-15", status: "Disponivel", paymentType: "ADIANTAMENTO", competenceYear: "2026", referenceMonthShort: "JUN." },
   { id: "2026-05", periodLabel: "Maio/2026", referenceMonth: "2026-05", grossAmount: 8420.55, netAmount: 6780.69, paymentDate: "2026-05-30", status: "Disponivel", paymentType: "FOLHA", competenceYear: "2026", referenceMonthShort: "MAI." },
-  { id: "2026-05-2", periodLabel: "Maio/2026", referenceMonth: "2026-05", grossAmount: 4056.40, netAmount: 4056.40, paymentDate: "2026-05-15", status: "Disponivel", paymentType: "ADIANTAMENTO", competenceYear: "2026", referenceMonthShort: "MAI." }
+  { id: "2026-05-ADIANTAMENTO", periodLabel: "Maio/2026", referenceMonth: "2026-05", grossAmount: 4056.40, netAmount: 4056.40, paymentDate: "2026-05-15", status: "Disponivel", paymentType: "ADIANTAMENTO", competenceYear: "2026", referenceMonthShort: "MAI." }
 ]);
 
 const MOCK_PAYSLIP_DETAILS = Object.freeze({
@@ -210,11 +210,27 @@ function inferPaymentType(item = {}) {
   return "FOLHA";
 }
 
+function normalizePayslipListId(rawId, paymentType, anoComp, mesComp) {
+  const legacyMatch = /^(\d{4}-\d{2})-(\d+)$/.exec(String(rawId || ""));
+  if (legacyMatch && Number(legacyMatch[2]) > 1) {
+    return `${legacyMatch[1]}-ADIANTAMENTO`;
+  }
+
+  if (paymentType === "ADIANTAMENTO" && !String(rawId || "").toUpperCase().includes("ADIANTAMENTO")) {
+    return `${anoComp}-${String(mesComp).padStart(2, "0")}-ADIANTAMENTO`;
+  }
+
+  return rawId;
+}
+
 function normalizePayslipItem(item = {}) {
   const paymentType = inferPaymentType(item);
   const anoComp = Number(item.competenceYear || item.CompetenceYear || String(item.referenceMonth || item.ReferenceMonth || "").split("-")[0] || 0);
   const mesComp = Number(String(item.referenceMonth || item.ReferenceMonth || "").split("-")[1] || 0);
-  const id = item.id || item.Id || HrPayslipFallbackId(anoComp, mesComp, paymentType);
+  const rawId = item.id || item.Id || "";
+  const id = rawId
+    ? normalizePayslipListId(rawId, paymentType, anoComp, mesComp)
+    : HrPayslipFallbackId(anoComp, mesComp, paymentType);
 
   return {
     id,
@@ -292,21 +308,37 @@ function normalizePayslipDetail(payload = {}) {
   };
 }
 
+function resolvePayslipDetailId(payslipId) {
+  const legacyMatch = /^(\d{4}-\d{2})-(\d+)$/.exec(String(payslipId || ""));
+  if (legacyMatch && Number(legacyMatch[2]) > 1) {
+    return `${legacyMatch[1]}-ADIANTAMENTO`;
+  }
+
+  return payslipId;
+}
+
 export async function getPayslipDetail(payslipId, options = {}) {
   const config = getRuntimeConfig();
+  const normalizedId = resolvePayslipDetailId(payslipId);
+
   if (config.dataMode !== DATA_MODES.API) {
-    const mock = MOCK_PAYSLIP_DETAILS[payslipId] || MOCK_PAYSLIP_DETAILS["2026-05"];
+    const mock = MOCK_PAYSLIP_DETAILS[normalizedId]
+      || MOCK_PAYSLIP_DETAILS[payslipId]
+      || MOCK_PAYSLIP_DETAILS["2026-05"];
     return normalizePayslipDetail({
       ...mock,
-      id: payslipId || mock.id
+      id: normalizedId || payslipId || mock.id
     });
   }
 
-  const endpoint = `${resolveApiEndpoint("hrHolerite")}/${encodeURIComponent(payslipId)}`;
+  const endpoint = `${resolveApiEndpoint("hrHolerite")}/${encodeURIComponent(normalizedId)}`;
   const payload = await getJson(endpoint, {
     headers: getPortalAuthHeaders(),
     ...options
   });
 
-  return normalizePayslipDetail(payload);
+  return normalizePayslipDetail({
+    ...payload,
+    id: normalizedId
+  });
 }

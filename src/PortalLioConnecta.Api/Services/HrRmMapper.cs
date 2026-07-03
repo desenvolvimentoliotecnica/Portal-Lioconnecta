@@ -21,7 +21,7 @@ public static class HrRmMapper
 
     public static string BuildPayslipId(int anoComp, int mesComp, int nroPeriodo, string paymentType = "FOLHA")
     {
-        if (string.Equals(paymentType, "ADIANTAMENTO", StringComparison.OrdinalIgnoreCase) && nroPeriodo <= 1)
+        if (string.Equals(paymentType, "ADIANTAMENTO", StringComparison.OrdinalIgnoreCase))
         {
             return $"{anoComp:D4}-{mesComp:D2}-ADIANTAMENTO";
         }
@@ -63,10 +63,77 @@ public static class HrRmMapper
             if (int.TryParse(parts[2], out var parsedPeriod))
             {
                 nroPeriodo = parsedPeriod;
+                if (parsedPeriod > 1)
+                {
+                    paymentTypeHint = "ADIANTAMENTO";
+                }
             }
         }
 
         return true;
+    }
+
+    public static IEnumerable<RmPayslipSummaryRecord> EnumerateEnvelopeCandidates(
+        IReadOnlyList<RmPayslipSummaryRecord> envelopes,
+        int? explicitNroPeriodo,
+        string? paymentTypeHint)
+    {
+        var yielded = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var envelope in SelectEnvelopeCandidates(envelopes, explicitNroPeriodo, paymentTypeHint))
+        {
+            var key = $"{envelope.NroPeriodo}:{envelope.PaymentDate:yyyyMMdd}:{envelope.NetAmount}";
+            if (yielded.Add(key))
+            {
+                yield return envelope;
+            }
+        }
+    }
+
+    private static IEnumerable<RmPayslipSummaryRecord> SelectEnvelopeCandidates(
+        IReadOnlyList<RmPayslipSummaryRecord> envelopes,
+        int? explicitNroPeriodo,
+        string? paymentTypeHint)
+    {
+        if (!string.IsNullOrWhiteSpace(paymentTypeHint))
+        {
+            foreach (var envelope in envelopes.Where(item =>
+                         string.Equals(MapPaymentTypeLabel(item), paymentTypeHint, StringComparison.OrdinalIgnoreCase)))
+            {
+                yield return envelope;
+            }
+        }
+
+        if (explicitNroPeriodo is int period)
+        {
+            var byPeriod = envelopes.FirstOrDefault(item => item.NroPeriodo == period);
+            if (byPeriod is not null)
+            {
+                yield return byPeriod;
+            }
+
+            if (period > 1)
+            {
+                var advance = envelopes.FirstOrDefault(item => MapPaymentTypeLabel(item) == "ADIANTAMENTO");
+                if (advance is not null)
+                {
+                    yield return advance;
+                }
+
+                var ordered = envelopes
+                    .OrderBy(item => item.PaymentDate ?? DateTime.MinValue)
+                    .ToList();
+                if (period <= ordered.Count)
+                {
+                    yield return ordered[period - 1];
+                }
+            }
+        }
+
+        foreach (var envelope in envelopes.OrderByDescending(item => item.PaymentDate ?? DateTime.MinValue))
+        {
+            yield return envelope;
+        }
     }
 
     public static bool TryParsePayslipId(string payslipId, out int anoComp, out int mesComp, out int? nroPeriodo) =>

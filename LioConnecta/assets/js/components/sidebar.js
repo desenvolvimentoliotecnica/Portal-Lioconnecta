@@ -148,6 +148,21 @@ function renderPanelPill(label, tone = "neutral") {
   return `<span class="panel-pill panel-pill--${tone}">${escapeHtml(label)}</span>`;
 }
 
+function isSensitivePanelValue(label, value, panelTitle) {
+  const normalizedTitle = String(panelTitle || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+  if (normalizedTitle === "resumo rh") {
+    return true;
+  }
+
+  const normalizedValue = String(value || "");
+  return normalizedValue.includes("R$") || /\d/.test(normalizedValue);
+}
+
 export function renderMenuCard(panel) {
   const items = Array.isArray(panel.items) ? panel.items : [];
 
@@ -165,7 +180,9 @@ export function renderMenuCard(panel) {
                 <span>${escapeHtml(label)}</span>
               </span>
               ${typeof item === "object" && item.badge ? `<span class="menu-badge">${escapeHtml(item.badge)}</span>` : ""}
-              ${typeof item === "object" && item.value ? `<strong>${escapeHtml(item.value)}</strong>` : ""}
+              ${typeof item === "object" && item.value
+    ? `<strong${isSensitivePanelValue(label, item.value, panel.title) ? ' data-sensitive-value' : ""}>${escapeHtml(item.value)}</strong>`
+    : ""}
             `;
 
             return url

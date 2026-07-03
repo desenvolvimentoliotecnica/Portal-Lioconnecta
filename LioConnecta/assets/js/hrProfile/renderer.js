@@ -22,6 +22,70 @@ function formatDate(value) {
   return date.toLocaleDateString("pt-BR");
 }
 
+const TIMESHEET_WEEKDAY_ABBR = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SAB"];
+
+function formatTimesheetGridDate(value) {
+  if (!value) {
+    return "—";
+  }
+
+  const raw = String(value);
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    const date = new Date(Number(year), Number(month) - 1, Number(day));
+    const weekday = TIMESHEET_WEEKDAY_ABBR[date.getDay()];
+    return `${weekday} ${day}/${month}`;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const weekday = TIMESHEET_WEEKDAY_ABBR[date.getDay()];
+  return `${weekday} ${day}/${month}`;
+}
+
+function readTimesheetEntryField(item, camelKey, pascalKey) {
+  return item?.[camelKey] ?? item?.[pascalKey] ?? "";
+}
+
+function isEmptyTimesheetPunch(value) {
+  const normalized = String(value ?? "").trim();
+  return !normalized || normalized === "—" || normalized === "-";
+}
+
+function isNegativeTimesheetBalance(value) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized || normalized === "—" || normalized === "-") {
+    return false;
+  }
+
+  return normalized.startsWith("-");
+}
+
+function resolveTimesheetRowClass(item) {
+  const clockIn = readTimesheetEntryField(item, "clockIn", "ClockIn");
+  const lunchOut = readTimesheetEntryField(item, "lunchOut", "LunchOut");
+  const lunchIn = readTimesheetEntryField(item, "lunchIn", "LunchIn");
+  const clockOut = readTimesheetEntryField(item, "clockOut", "ClockOut");
+  const balanceHours = readTimesheetEntryField(item, "balanceHours", "BalanceHours");
+  const allPunchesEmpty = [clockIn, lunchOut, lunchIn, clockOut].every(isEmptyTimesheetPunch);
+
+  if (isNegativeTimesheetBalance(balanceHours)) {
+    return "hr-timesheet-row--negative";
+  }
+
+  if (allPunchesEmpty) {
+    return "hr-timesheet-row--no-punches";
+  }
+
+  return "";
+}
+
 function renderPageShell({ title, provider, isSimulated, bodyHtml, heroImage = "", heroImageLabel = "" }) {
   const providerLabel = provider || "TOTVS RM";
   const description = isSimulated
@@ -205,17 +269,17 @@ function renderPayslipPage(data = {}) {
         title: "Envelope de pagamento",
         bodyHtml: items.length
           ? `
-            <div class="payslip-envelope-panel" data-payslip-values-visible="true">
+            <div class="payslip-envelope-panel" data-payslip-values-visible="false">
               <div class="payslip-envelope-toolbar">
-                <button
-                  type="button"
-                  class="comm-secondary-button payslip-envelope-toggle"
-                  data-action="toggle-payslip-values"
-                  aria-pressed="false"
-                >
-                  <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
-                  Ocultar valores
-                </button>
+              <button
+                type="button"
+                class="comm-secondary-button payslip-envelope-toggle"
+                data-action="toggle-payslip-values"
+                aria-pressed="true"
+              >
+                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                Mostrar valores
+              </button>
               </div>
               <div class="hr-profile-table-wrap payslip-envelope-table-wrap">
                 <table class="hr-profile-table payslip-envelope-table">
@@ -417,7 +481,7 @@ function renderTimesheetPage(data = {}, options = {}) {
         bodyHtml: entries.length
           ? `
             <div class="hr-profile-table-wrap">
-              <table class="hr-profile-table">
+              <table class="hr-profile-table hr-profile-table--timesheet">
                 <thead>
                   <tr>
                     <th>Data</th>
@@ -432,19 +496,32 @@ function renderTimesheetPage(data = {}, options = {}) {
                   </tr>
                 </thead>
                 <tbody>
-                  ${entries.map((item) => `
-                    <tr>
-                      <td>${escapeHtml(formatDate(item.date))} • ${escapeHtml(item.weekdayLabel)}</td>
-                      <td>${escapeHtml(item.clockIn)}</td>
-                      <td>${escapeHtml(item.lunchOut)}</td>
-                      <td>${escapeHtml(item.lunchIn)}</td>
-                      <td>${escapeHtml(item.clockOut)}</td>
-                      <td>${escapeHtml(item.breakMinutes)} min</td>
-                      <td>${escapeHtml(item.workedHours)}</td>
-                      <td>${escapeHtml(item.balanceHours)}</td>
-                      <td>${renderStatusPill(item.status)}</td>
+                  ${entries.map((item) => {
+                    const rowClass = resolveTimesheetRowClass(item);
+                    const clockIn = readTimesheetEntryField(item, "clockIn", "ClockIn");
+                    const lunchOut = readTimesheetEntryField(item, "lunchOut", "LunchOut");
+                    const lunchIn = readTimesheetEntryField(item, "lunchIn", "LunchIn");
+                    const clockOut = readTimesheetEntryField(item, "clockOut", "ClockOut");
+                    const breakMinutes = readTimesheetEntryField(item, "breakMinutes", "BreakMinutes");
+                    const workedHours = readTimesheetEntryField(item, "workedHours", "WorkedHours");
+                    const balanceHours = readTimesheetEntryField(item, "balanceHours", "BalanceHours");
+                    const status = readTimesheetEntryField(item, "status", "Status");
+                    const dateValue = readTimesheetEntryField(item, "date", "Date");
+
+                    return `
+                    <tr class="${rowClass}">
+                      <td>${escapeHtml(formatTimesheetGridDate(dateValue))}</td>
+                      <td>${escapeHtml(clockIn || "—")}</td>
+                      <td>${escapeHtml(lunchOut || "—")}</td>
+                      <td>${escapeHtml(lunchIn || "—")}</td>
+                      <td>${escapeHtml(clockOut || "—")}</td>
+                      <td>${escapeHtml(breakMinutes)} min</td>
+                      <td>${escapeHtml(workedHours)}</td>
+                      <td>${escapeHtml(balanceHours)}</td>
+                      <td>${renderStatusPill(status)}</td>
                     </tr>
-                  `).join("")}
+                  `;
+                  }).join("")}
                 </tbody>
               </table>
             </div>

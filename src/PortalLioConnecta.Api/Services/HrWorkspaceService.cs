@@ -185,17 +185,34 @@ public class HrWorkspaceService : IHrWorkspaceService
                 return null;
             }
 
-            var nroPeriodo = HrRmMapper.ResolveNroPeriodo(envelopes, explicitNroPeriodo, paymentTypeHint);
-            var envelope = envelopes.FirstOrDefault(item => item.NroPeriodo == nroPeriodo) ?? envelopes[0];
-            var paymentType = HrRmMapper.MapPaymentTypeLabel(envelope);
-
             var profile = await _employeeRepository.GetProfileByChapaAsync(chapa, cancellationToken);
-            var lines = await _payrollRepository.GetPayslipLinesAsync(chapa, anoComp, mesComp, envelope.NroPeriodo, cancellationToken);
-            if (lines.Count == 0)
+            RmPayslipSummaryRecord? envelope = null;
+            IReadOnlyList<RmPayslipLineRecord> lines = [];
+
+            foreach (var candidate in HrRmMapper.EnumerateEnvelopeCandidates(envelopes, explicitNroPeriodo, paymentTypeHint))
+            {
+                var candidateLines = await _payrollRepository.GetPayslipLinesAsync(
+                    chapa,
+                    anoComp,
+                    mesComp,
+                    candidate.NroPeriodo,
+                    cancellationToken);
+                if (candidateLines.Count == 0)
+                {
+                    continue;
+                }
+
+                envelope = candidate;
+                lines = candidateLines;
+                break;
+            }
+
+            if (envelope is null || lines.Count == 0)
             {
                 return null;
             }
 
+            var paymentType = HrRmMapper.MapPaymentTypeLabel(envelope);
             var period = await _payrollRepository.GetPayslipPeriodAsync(chapa, anoComp, mesComp, envelope.NroPeriodo, cancellationToken);
 
             var earnings = lines.Where(line => !line.IsDeduction)

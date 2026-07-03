@@ -85,7 +85,7 @@ export function renderRmPayslipDetailView(detail = {}) {
   const totalDeductions = detail.totalDeductions ?? deductions.reduce((sum, line) => sum + Number(line.amount || 0), 0);
 
   return `
-    <div class="payslip-rm" data-payslip-values-visible="true">
+    <div class="payslip-rm" data-payslip-values-visible="false">
       <header class="payslip-rm__header">
         <div>
           <h2>${escapeHtml(detail.competenceTitle || detail.periodLabel || "Holerite")}</h2>
@@ -387,7 +387,7 @@ export async function openPayslipModal(payslipId, root = document) {
       subtitle.textContent = `${detail.paymentTypeTitle || "Pagamento"} • ${formatDate(detail.paymentDate)} • ${getPayslipBuildLabel()}`;
     }
     body.innerHTML = renderRmPayslipDetailView(detail);
-    setPayslipValuesVisible(root, true);
+    setPayslipValuesVisible(root, arePayslipValuesVisible(root));
     bindPayslipValueToggle(root);
     setPayslipActionsEnabled(modal, true);
   } catch {
@@ -403,6 +403,32 @@ export async function openPayslipModal(payslipId, root = document) {
   }
 }
 
+const PAYSLIP_VALUES_STORAGE_KEY = "payslipValuesVisible";
+
+function readStoredPayslipValuesVisible() {
+  try {
+    return sessionStorage.getItem(PAYSLIP_VALUES_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeStoredPayslipValuesVisible(visible) {
+  try {
+    sessionStorage.setItem(PAYSLIP_VALUES_STORAGE_KEY, visible ? "true" : "false");
+  } catch {
+    // Ignora indisponibilidade de storage no navegador.
+  }
+}
+
+export function arePayslipValuesVisible(root = document) {
+  return root.body?.dataset?.payslipValuesVisible !== "false";
+}
+
+export function initPayslipValuesPrivacy(root = document) {
+  setPayslipValuesVisible(root, readStoredPayslipValuesVisible());
+}
+
 function findPayslipValuesScope(button, root) {
   return button.closest("#center-content")
     || button.closest("#payslip-modal-body")
@@ -410,9 +436,15 @@ function findPayslipValuesScope(button, root) {
 }
 
 function setPayslipValuesVisible(root, visible) {
+  if (root.body) {
+    root.body.dataset.payslipValuesVisible = visible ? "true" : "false";
+  }
+
   root.querySelectorAll("[data-payslip-values-visible]").forEach((container) => {
     container.dataset.payslipValuesVisible = visible ? "true" : "false";
   });
+
+  writeStoredPayslipValuesVisible(visible);
 
   root.querySelectorAll("[data-action='toggle-payslip-values']").forEach((button) => {
     button.setAttribute("aria-pressed", visible ? "false" : "true");
@@ -430,13 +462,11 @@ function bindPayslipValueToggle(root = document) {
 
     button.dataset.bound = "true";
     button.addEventListener("click", () => {
-      const scope = findPayslipValuesScope(button, root);
-      const container = button.closest("[data-payslip-values-visible]")
-        || scope?.querySelector("[data-payslip-values-visible]");
-      const visible = !container || container.dataset.payslipValuesVisible !== "false";
-      setPayslipValuesVisible(root, !visible);
+      setPayslipValuesVisible(root, !arePayslipValuesVisible(root));
     });
   });
+
+  setPayslipValuesVisible(root, arePayslipValuesVisible(root));
 }
 
 export function bindPayslipModal(root = document) {
