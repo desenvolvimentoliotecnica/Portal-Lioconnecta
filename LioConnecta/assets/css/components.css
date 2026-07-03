@@ -5691,9 +5691,18 @@ body[data-payslip-values-visible="false"] [data-sensitive-value="monetary"] {
   gap: 12px;
 }
 
-.payslip-rm[data-payslip-values-visible="false"] [data-sensitive-value] {
-  filter: blur(8px);
-  user-select: none;
+.payslip-rm__grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.payslip-rm__span-full {
+  grid-column: 1 / -1;
+}
+
+.payslip-rm__toggle {
+  justify-self: stretch;
 }
 
 .payslip-rm__header {
@@ -5701,6 +5710,11 @@ body[data-payslip-values-visible="false"] [data-sensitive-value="monetary"] {
   display: flex;
   gap: 12px;
   justify-content: space-between;
+}
+
+.payslip-rm[data-payslip-values-visible="false"] [data-sensitive-value] {
+  filter: blur(8px);
+  user-select: none;
 }
 
 .payslip-rm__header h2 {
@@ -5717,10 +5731,6 @@ body[data-payslip-values-visible="false"] [data-sensitive-value="monetary"] {
 .payslip-rm__header-actions {
   display: flex;
   gap: 8px;
-}
-
-.payslip-rm__toggle {
-  justify-self: stretch;
 }
 
 .payslip-rm-card,
@@ -5773,6 +5783,12 @@ body[data-payslip-values-visible="false"] [data-sensitive-value="monetary"] {
 .payslip-rm-bases {
   display: grid;
   gap: 10px;
+}
+
+.payslip-rm-bases__grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .payslip-rm-card__empty {
@@ -5903,7 +5919,7 @@ body[data-payslip-values-visible="false"] [data-sensitive-value="monetary"] {
 }
 
 .payslip-modal__dialog {
-  width: min(980px, 100%);
+  width: min(1180px, 100%);
   max-height: calc(100vh - 48px);
   overflow: hidden;
   display: grid;
@@ -6258,6 +6274,11 @@ body[data-payslip-values-visible="false"] [data-sensitive-value="monetary"] {
   .payslip-modal,
   .document-viewer-modal {
     padding: 12px;
+  }
+
+  .payslip-rm__grid,
+  .payslip-rm-bases__grid {
+    grid-template-columns: 1fr;
   }
 
   .payslip-modal__header,

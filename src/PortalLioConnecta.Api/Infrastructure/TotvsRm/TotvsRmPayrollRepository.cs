@@ -165,7 +165,7 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
                 COALESCE(PER.BASEIRRF, PER.BASEIR, 0) AS BaseIrrf,
                 COALESCE(PER.BASEIRPLR, 0) AS BaseIrPlr,
                 COALESCE(PER.BASEINSS, PER.SALARIO, PER.SALCONTRIB, 0) AS BaseInss,
-                COALESCE(PER.VLRFGTS, PER.FGTSMES, PER.VALORFGTS, 0) AS FgtsAmount,
+                COALESCE(PER.VLRFGTS, PER.FGTSMES, PER.VALORFGTS, PER.FGTS, 0) AS FgtsAmount,
                 COALESCE(PER.PENSAO, PER.PENSAOALIM, 0) AS PensionAlimony,
                 COALESCE(PER.SALARIO, PER.SALBASE, 0) AS BaseSalary
             FROM dbo.PFPERFF PER WITH (NOLOCK)
@@ -206,7 +206,7 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
                 COALESCE(PER.BASEIRRF, PER.BASEIR, 0) AS BaseIrrf,
                 COALESCE(PER.BASEIRPLR, 0) AS BaseIrPlr,
                 COALESCE(PER.BASEINSS, PER.SALARIO, PER.SALCONTRIB, 0) AS BaseInss,
-                COALESCE(PER.VLRFGTS, PER.FGTSMES, PER.VALORFGTS, 0) AS FgtsAmount,
+                COALESCE(PER.VLRFGTS, PER.FGTSMES, PER.VALORFGTS, PER.FGTS, 0) AS FgtsAmount,
                 COALESCE(PER.PENSAO, PER.PENSAOALIM, 0) AS PensionAlimony,
                 COALESCE(PER.SALARIO, PER.SALBASE, 0) AS BaseSalary
             FROM dbo.PFPERFF PER WITH (NOLOCK)

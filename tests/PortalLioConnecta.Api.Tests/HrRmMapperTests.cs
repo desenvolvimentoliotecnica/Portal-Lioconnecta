@@ -139,4 +139,22 @@ public class HrRmMapperTests
         Assert.Equal("Sao Paulo / SP", HrRmMapper.FormatCityState("Sao Paulo", "SP"));
         Assert.Equal("—", HrRmMapper.FormatCityState(null, null));
     }
+
+    [Fact]
+    public void ResolveFgtsAmount_UsesStoredValueWhenPresent()
+    {
+        Assert.Equal(934.99m, HrRmMapper.ResolveFgtsAmount(11687.46m, 934.99m));
+    }
+
+    [Fact]
+    public void ResolveFgtsAmount_DerivesEightPercentWhenMissing()
+    {
+        Assert.Equal(934.99m, HrRmMapper.ResolveFgtsAmount(11687.46m, 0m));
+    }
+
+    [Fact]
+    public void ResolveFgtsAmount_ReturnsZeroWithoutBase()
+    {
+        Assert.Equal(0m, HrRmMapper.ResolveFgtsAmount(0m, 0m));
+    }
 }

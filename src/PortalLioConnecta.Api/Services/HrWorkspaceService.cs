@@ -291,6 +291,10 @@ public class HrWorkspaceService : IHrWorkspaceService
                 envelope,
                 gross,
                 cancellationToken);
+            var baseFgts = period?.BaseFgts ?? gross;
+            var fgtsAmount = string.Equals(paymentType, "ADIANTAMENTO", StringComparison.OrdinalIgnoreCase)
+                ? period?.FgtsAmount ?? 0m
+                : HrRmMapper.ResolveFgtsAmount(baseFgts, period?.FgtsAmount ?? 0m);
             var periodLabel = HrRmMapper.BuildPeriodLabel(anoComp, mesComp);
             var resolvedId = HrRmMapper.BuildPayslipId(
                 anoComp,
@@ -323,8 +327,8 @@ public class HrWorkspaceService : IHrWorkspaceService
                 profile?.Conta ?? "—",
                 period?.BaseSalary ?? gross,
                 period?.BaseInss ?? gross,
-                period?.BaseFgts ?? gross,
-                period?.FgtsAmount ?? 0m,
+                baseFgts,
+                fgtsAmount,
                 earnings,
                 deductions,
                 gross,
@@ -731,6 +735,7 @@ public class HrWorkspaceService : IHrWorkspaceService
         if (direct is not null)
         {
             direct.NroPeriodo = envelope.NroPeriodo;
+            HrRmMapper.NormalizePayslipPeriod(direct);
         }
 
         if (HasMeaningfulPeriodBases(direct))
@@ -744,9 +749,11 @@ public class HrWorkspaceService : IHrWorkspaceService
             return direct;
         }
 
-        return periods.FirstOrDefault(item => item.NroPeriodo == envelope.NroPeriodo)
+        var resolved = periods.FirstOrDefault(item => item.NroPeriodo == envelope.NroPeriodo)
             ?? periods.FirstOrDefault(item => Math.Abs(item.BaseFgts - displayGross) < 1m)
             ?? periods.OrderByDescending(item => item.BaseFgts).FirstOrDefault();
+        HrRmMapper.NormalizePayslipPeriod(resolved);
+        return resolved;
     }
 
     private static bool HasMeaningfulPeriodBases(RmPayslipPeriodRecord? period) =>

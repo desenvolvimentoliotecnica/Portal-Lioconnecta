@@ -112,52 +112,56 @@ export function renderRmPayslipDetailView(detail = {}) {
         Ocultar valores
       </button>
 
-      <section class="payslip-rm-card payslip-rm-card--earnings">
-        <div class="payslip-rm-card__head">
-          <strong>Proventos</strong>
-          <span data-sensitive-value>${escapeHtml(formatSignedCurrency(totalEarnings))}</span>
-        </div>
-        <div class="payslip-rm-card__body">
-          ${earnings.length
-            ? earnings.map((line) => renderRmLineItem(line, false)).join("")
-            : `<p class="payslip-rm-card__empty">Sem proventos</p>`}
-        </div>
-      </section>
+      <div class="payslip-rm__grid">
+        <section class="payslip-rm-card payslip-rm-card--earnings">
+          <div class="payslip-rm-card__head">
+            <strong>Proventos</strong>
+            <span data-sensitive-value>${escapeHtml(formatSignedCurrency(totalEarnings))}</span>
+          </div>
+          <div class="payslip-rm-card__body">
+            ${earnings.length
+              ? earnings.map((line) => renderRmLineItem(line, false)).join("")
+              : `<p class="payslip-rm-card__empty">Sem proventos</p>`}
+          </div>
+        </section>
 
-      <section class="payslip-rm-card payslip-rm-card--deductions">
-        <div class="payslip-rm-card__head">
-          <strong>Descontos</strong>
-          <span data-sensitive-value>${escapeHtml(totalDeductions > 0 ? `-${formatSignedCurrency(totalDeductions)}` : "0,00")}</span>
-        </div>
-        <div class="payslip-rm-card__body">
-          ${deductions.length
-            ? deductions.map((line) => renderRmLineItem(line, true)).join("")
-            : `<p class="payslip-rm-card__empty">0,00</p>`}
-        </div>
-      </section>
+        <section class="payslip-rm-card payslip-rm-card--deductions">
+          <div class="payslip-rm-card__head">
+            <strong>Descontos</strong>
+            <span data-sensitive-value>${escapeHtml(totalDeductions > 0 ? `-${formatSignedCurrency(totalDeductions)}` : "0,00")}</span>
+          </div>
+          <div class="payslip-rm-card__body">
+            ${deductions.length
+              ? deductions.map((line) => renderRmLineItem(line, true)).join("")
+              : `<p class="payslip-rm-card__empty">0,00</p>`}
+          </div>
+        </section>
 
-      <section class="payslip-rm-card payslip-rm-card--net">
-        <div class="payslip-rm-card__head">
-          <strong>Liquido</strong>
-          <span data-sensitive-value>${escapeHtml(formatSignedCurrency(detail.netAmount))}</span>
-        </div>
-      </section>
+        <section class="payslip-rm-card payslip-rm-card--net payslip-rm__span-full">
+          <div class="payslip-rm-card__head">
+            <strong>Liquido</strong>
+            <span data-sensitive-value>${escapeHtml(formatSignedCurrency(detail.netAmount))}</span>
+          </div>
+        </section>
 
-      <section class="payslip-rm-bases">
-        ${[
-          ["Base para FGTS", detail.baseFgts],
-          ["Base calc. IRRF", detail.baseIrrf ?? detail.baseFgts],
-          ["Base IR PLR Anual", detail.baseIrPlr],
-          ["Sal. Contribuicao INSS", detail.baseInss],
-          ["FGTS do mes", detail.fgtsAmount],
-          ["Pensao Alimenticia Judicial", detail.pensionAlimony]
-        ].map(([label, value]) => `
-          <article class="payslip-rm-card payslip-rm-card--base">
-            <span>${escapeHtml(label)}</span>
-            <strong data-sensitive-value>${escapeHtml(formatSignedCurrency(value))}</strong>
-          </article>
-        `).join("")}
-      </section>
+        <div class="payslip-rm-bases payslip-rm__span-full">
+          <div class="payslip-rm-bases__grid">
+            ${[
+              ["Base para FGTS", detail.baseFgts],
+              ["Base calc. IRRF", detail.baseIrrf ?? detail.baseFgts],
+              ["Base IR PLR Anual", detail.baseIrPlr],
+              ["Sal. Contribuicao INSS", detail.baseInss],
+              ["FGTS do mes", detail.fgtsAmount],
+              ["Pensao Alimenticia Judicial", detail.pensionAlimony]
+            ].map(([label, value]) => `
+              <article class="payslip-rm-card payslip-rm-card--base">
+                <span>${escapeHtml(label)}</span>
+                <strong data-sensitive-value>${escapeHtml(formatSignedCurrency(value))}</strong>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }

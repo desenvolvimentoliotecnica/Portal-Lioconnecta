@@ -364,4 +364,30 @@ public static class HrRmMapper
 
     public static string FormatPaymentDateShort(DateTime? date) =>
         date?.ToString("dd/MM") ?? "—";
+
+    public static decimal ResolveFgtsAmount(decimal baseFgts, decimal fgtsAmount)
+    {
+        if (fgtsAmount > 0m)
+        {
+            return fgtsAmount;
+        }
+
+        if (baseFgts <= 0m)
+        {
+            return 0m;
+        }
+
+        // RM apura 8% da base FGTS truncando centavos quando o valor nao vem gravado em PFPERFF.
+        return Math.Truncate(baseFgts * 0.08m * 100m) / 100m;
+    }
+
+    public static void NormalizePayslipPeriod(RmPayslipPeriodRecord? period)
+    {
+        if (period is null)
+        {
+            return;
+        }
+
+        period.FgtsAmount = ResolveFgtsAmount(period.BaseFgts, period.FgtsAmount);
+    }
 }
