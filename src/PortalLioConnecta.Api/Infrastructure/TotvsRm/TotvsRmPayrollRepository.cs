@@ -78,7 +78,8 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
                 COALESCE(LTRIM(RTRIM(E.DESCRICAO)), LTRIM(RTRIM(F.CODEVENTO))) AS Description,
                 COALESCE(LTRIM(RTRIM(CAST(F.REF AS VARCHAR(32)))), '—') AS Reference,
                 F.VALOR AS Amount,
-                CASE WHEN E.PROVDESCBASE = 'D' THEN 1 ELSE 0 END AS IsDeduction
+                CASE WHEN E.PROVDESCBASE = 'D' THEN 1 ELSE 0 END AS IsDeduction,
+                COALESCE(LTRIM(RTRIM(E.PROVDESCBASE)), '') AS ProvisionType
             FROM dbo.PFFINANC F WITH (NOLOCK)
             LEFT JOIN dbo.PEVENTO E WITH (NOLOCK)
                 ON E.CODCOLIGADA = F.CODCOLIGADA AND E.CODIGO = F.CODEVENTO
@@ -121,7 +122,8 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
                 COALESCE(LTRIM(RTRIM(E.DESCRICAO)), LTRIM(RTRIM(F.CODEVENTO))) AS Description,
                 COALESCE(LTRIM(RTRIM(CAST(F.REF AS VARCHAR(32)))), '—') AS Reference,
                 F.VALOR AS Amount,
-                CASE WHEN E.PROVDESCBASE = 'D' THEN 1 ELSE 0 END AS IsDeduction
+                CASE WHEN E.PROVDESCBASE = 'D' THEN 1 ELSE 0 END AS IsDeduction,
+                COALESCE(LTRIM(RTRIM(E.PROVDESCBASE)), '') AS ProvisionType
             FROM dbo.PFFINANC F WITH (NOLOCK)
             LEFT JOIN dbo.PEVENTO E WITH (NOLOCK)
                 ON E.CODCOLIGADA = F.CODCOLIGADA AND E.CODIGO = F.CODEVENTO
@@ -157,7 +159,8 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
         CancellationToken cancellationToken)
     {
         const string sql = """
-            SELECT TOP 1
+            SELECT
+                PER.NROPERIODO AS NroPeriodo,
                 COALESCE(PER.BASEFGTS, 0) AS BaseFgts,
                 COALESCE(PER.BASEIRRF, PER.BASEIR, 0) AS BaseIrrf,
                 COALESCE(PER.BASEIRPLR, 0) AS BaseIrPlr,
@@ -188,5 +191,45 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
             },
             cancellationToken,
             throwWhenDisabled: false);
+    }
+
+    public async Task<IReadOnlyList<RmPayslipPeriodRecord>> GetPayslipPeriodsForMonthAsync(
+        string chapa,
+        int anoComp,
+        int mesComp,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT
+                PER.NROPERIODO AS NroPeriodo,
+                COALESCE(PER.BASEFGTS, 0) AS BaseFgts,
+                COALESCE(PER.BASEIRRF, PER.BASEIR, 0) AS BaseIrrf,
+                COALESCE(PER.BASEIRPLR, 0) AS BaseIrPlr,
+                COALESCE(PER.BASEINSS, PER.SALARIO, PER.SALCONTRIB, 0) AS BaseInss,
+                COALESCE(PER.VLRFGTS, PER.FGTSMES, PER.VALORFGTS, 0) AS FgtsAmount,
+                COALESCE(PER.PENSAO, PER.PENSAOALIM, 0) AS PensionAlimony,
+                COALESCE(PER.SALARIO, PER.SALBASE, 0) AS BaseSalary
+            FROM dbo.PFPERFF PER WITH (NOLOCK)
+            WHERE PER.CODCOLIGADA = @CodColigada
+              AND PER.CHAPA = @Chapa
+              AND PER.ANOCOMP = @AnoComp
+              AND PER.MESCOMP = @MesComp
+            ORDER BY PER.NROPERIODO;
+            """;
+
+        var rows = await _queryExecutor.TryQueryAsync<List<RmPayslipPeriodRecord>>(
+            "PFPERFF month periods",
+            async (runtime, connection, token) =>
+                (await connection.QueryAsync<RmPayslipPeriodRecord>(sql, new
+                {
+                    CodColigada = runtime.CodColigada,
+                    Chapa = chapa,
+                    AnoComp = anoComp,
+                    MesComp = mesComp
+                })).ToList(),
+            cancellationToken,
+            throwWhenDisabled: false);
+
+        return rows ?? [];
     }
 }

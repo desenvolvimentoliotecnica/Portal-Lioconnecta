@@ -1,7 +1,7 @@
 import { renderEmptyState } from "../components/cards.js";
 import { escapeHtml } from "../components/html.js";
 import { renderRhAdminHero } from "../people/adminNav.js";
-import { getHrProfileModule } from "./moduleCatalog.js";
+import { getHrProfileModule, HR_PROFILE_HERO_DESCRIPTIONS } from "./moduleCatalog.js";
 import { renderPayslipModalShell } from "./payslipModal.js";
 
 function formatCurrency(value) {
@@ -91,18 +91,18 @@ function resolveTimesheetRowClass(item) {
   return "";
 }
 
-function renderPageShell({ title, provider, isSimulated, bodyHtml, heroImage = "", heroImageLabel = "" }) {
-  const providerLabel = provider || "TOTVS RM";
-  const description = isSimulated
-    ? `Consulta integrada ao ${providerLabel}. Os dados exibidos nesta fase sao simulados para validacao da experiencia.`
-    : `Consulta integrada ao ${providerLabel}.`;
+function renderPageShell({ title, description, isSimulated, bodyHtml, heroImage = "", heroImageLabel = "" }) {
+  const baseDescription = description || "Acompanhe suas informacoes de RH.";
+  const heroDescription = isSimulated
+    ? `${baseDescription} Os dados exibidos nesta fase sao simulados para validacao da experiencia.`
+    : baseDescription;
 
   return `
     <div class="hr-profile-main">
       ${renderRhAdminHero({
         eyebrow: "PERFIL RH",
         title: title || "Perfil RH",
-        description,
+        description: heroDescription,
         heroImage,
         heroImageLabel
       })}
@@ -160,7 +160,7 @@ function renderVacationPage(data = {}) {
 
   return renderPageShell({
     title: data.title,
-    provider: data.provider,
+    description: data.heroDescription,
     isSimulated: data.isSimulated,
     heroImage: "./assets/img/hero-ferias-perfil-rh.png",
     heroImageLabel: "Paisagem serena simbolizando descanso e periodo de ferias",
@@ -267,7 +267,7 @@ function renderPayslipPage(data = {}) {
 
   return renderPageShell({
     title: data.title || "Envelope de pagamento",
-    provider: data.provider,
+    description: data.heroDescription,
     isSimulated: data.isSimulated,
     heroImage: "./assets/img/hero-holerite-perfil-rh.png",
     heroImageLabel: "Mesa financeira simbolizando holerite e remuneracao",
@@ -323,7 +323,7 @@ function renderBenefitsPage(data = {}) {
 
   return renderPageShell({
     title: data.title,
-    provider: data.provider,
+    description: data.heroDescription,
     isSimulated: data.isSimulated,
     heroImage: "./assets/img/hero-beneficios-perfil-rh.png",
     heroImageLabel: "Elementos de bem-estar simbolizando beneficios corporativos",
@@ -353,7 +353,7 @@ function renderEvaluationPage(data = {}) {
 
   return renderPageShell({
     title: data.title,
-    provider: data.provider,
+    description: data.heroDescription,
     isSimulated: data.isSimulated,
     heroImage: "./assets/img/hero-avaliacao-perfil-rh.png",
     heroImageLabel: "Ambiente de feedback simbolizando avaliacao de desempenho",
@@ -398,7 +398,7 @@ function renderPersonalDataPage(data = {}) {
 
   return renderPageShell({
     title: data.title,
-    provider: data.provider,
+    description: data.heroDescription,
     isSimulated: data.isSimulated,
     heroImage: "./assets/img/hero-cadastro-perfil-rh.png",
     heroImageLabel: "Documentos organizados simbolizando dados cadastrais do colaborador",
@@ -472,7 +472,7 @@ function renderTimesheetPage(data = {}, options = {}) {
 
   return renderPageShell({
     title: data.title,
-    provider: data.provider,
+    description: data.heroDescription,
     isSimulated: data.isSimulated,
     heroImage: "./assets/img/hero-ponto-perfil-rh.png",
     heroImageLabel: "Relogio e ambiente corporativo simbolizando controle de ponto",
@@ -553,11 +553,15 @@ const PAGE_RENDERERS = Object.freeze({
 
 export function renderHrProfileModulePage(slug, data = {}, options = {}) {
   const renderer = PAGE_RENDERERS[slug];
+  const pageData = {
+    ...data,
+    heroDescription: HR_PROFILE_HERO_DESCRIPTIONS[slug] || "Acompanhe suas informacoes de RH."
+  };
   if (!renderer) {
     const module = getHrProfileModule(slug);
     return renderPageShell({
       title: module?.label || "Perfil RH",
-      provider: data.provider,
+      description: pageData.heroDescription,
       isSimulated: data.isSimulated,
       bodyHtml: renderContentCard({
         title: "Modulo indisponivel",
@@ -566,5 +570,5 @@ export function renderHrProfileModulePage(slug, data = {}, options = {}) {
     });
   }
 
-  return renderer(data, options);
+  return renderer(pageData, options);
 }

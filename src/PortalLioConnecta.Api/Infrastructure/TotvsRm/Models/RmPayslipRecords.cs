@@ -21,10 +21,12 @@ public sealed class RmPayslipLineRecord
     public string Reference { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public bool IsDeduction { get; set; }
+    public string ProvisionType { get; set; } = string.Empty;
 }
 
 public sealed class RmPayslipPeriodRecord
 {
+    public int NroPeriodo { get; set; }
     public decimal BaseFgts { get; set; }
     public decimal BaseIrrf { get; set; }
     public decimal BaseIrPlr { get; set; }

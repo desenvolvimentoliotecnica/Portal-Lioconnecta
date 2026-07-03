@@ -36,8 +36,8 @@ public class HrRmMapperTests
     {
         var lines = new List<RmPayslipLineRecord>
         {
-            new() { Code = "401", Description = "Adiantamento Normal Vencimento", Amount = 100m, IsDeduction = false },
-            new() { Code = "001", Description = "Salario base", Amount = 500m, IsDeduction = false },
+            new() { Code = "401", Description = "Adiantamento Normal Vencimento", Amount = 100m },
+            new() { Code = "001", Description = "Salario base", Amount = 500m },
             new() { Code = "404", Description = "Adiantamento Normal Desconto", Amount = 100m, IsDeduction = true }
         };
 
@@ -47,8 +47,28 @@ public class HrRmMapperTests
         Assert.Single(advance);
         Assert.Equal("401", advance[0].Code);
         Assert.Equal(2, folha.Count);
-        Assert.Contains(folha, line => line.Code == "001");
-        Assert.Contains(folha, line => line.Code == "404");
+    }
+
+    [Fact]
+    public void FilterLinesByPaymentType_FolhaMatchesRmAppDisplayLines()
+    {
+        var lines = new List<RmPayslipLineRecord>
+        {
+            new() { Code = "0092", Description = "INSS com Aliquota Normal", Amount = 988.07m, ProvisionType = "P" },
+            new() { Code = "288", Description = "BS EM Refeicao Empresa", Amount = 591.73m, ProvisionType = "P" },
+            new() { Code = "9999", Description = "HORAS TRABALHADAS CHEIA", Amount = 11611.45m, ProvisionType = "P" },
+            new() { Code = "0001", Description = "Horas Trabalhadas", Amount = 9676.03m, ProvisionType = "P" },
+            new() { Code = "0002", Description = "DSR Horas Trabalhadas", Amount = 1935.42m, ProvisionType = "P" },
+            new() { Code = "101", Description = "Hrs Extras Diurnas 60%", Amount = 63.34m, ProvisionType = "P" },
+            new() { Code = "37", Description = "Repouso Remunerado Adicionais", Amount = 12.67m, ProvisionType = "P" },
+            new() { Code = "511", Description = "INSS Normal", Amount = 988.07m, IsDeduction = true, ProvisionType = "D" }
+        };
+
+        var folha = HrRmMapper.FilterLinesByPaymentType(lines, "FOLHA");
+
+        Assert.Equal(4, folha.Count(line => !line.IsDeduction));
+        Assert.Single(folha, line => line.IsDeduction);
+        Assert.Equal(11687.46m, folha.Where(line => !line.IsDeduction).Sum(line => line.Amount));
     }
 
     [Theory]

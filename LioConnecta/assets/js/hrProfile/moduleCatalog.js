@@ -4,34 +4,46 @@ export const HR_PROFILE_MODULES = Object.freeze({
   ferias: {
     key: "ferias",
     label: "Ferias (Consultar/Solicitar)",
-    endpointKey: "hrFerias"
+    endpointKey: "hrFerias",
+    heroDescription: "Acompanhe ferias."
   },
   holerite: {
     key: "holerite",
     label: "Holerite",
-    endpointKey: "hrHolerite"
+    endpointKey: "hrHolerite",
+    heroDescription: "Acompanhe pagamentos."
   },
   beneficios: {
     key: "beneficios",
     label: "Beneficios (VR/VT)",
-    endpointKey: "hrBeneficios"
+    endpointKey: "hrBeneficios",
+    heroDescription: "Acompanhe beneficios."
   },
   avaliacao: {
     key: "avaliacao",
     label: "Minha Avaliacao",
-    endpointKey: "hrAvaliacao"
+    endpointKey: "hrAvaliacao",
+    heroDescription: "Acompanhe avaliacoes."
   },
   cadastro: {
     key: "cadastro",
     label: "Dados Cadastrais",
-    endpointKey: "hrCadastro"
+    endpointKey: "hrCadastro",
+    heroDescription: "Acompanhe seus dados."
   },
   ponto: {
     key: "ponto",
     label: "Ponto",
-    endpointKey: "hrPonto"
+    endpointKey: "hrPonto",
+    heroDescription: "Acompanhe seu ponto."
   }
 });
+
+export const HR_PROFILE_HERO_DESCRIPTIONS = Object.freeze(
+  Object.fromEntries(
+    Object.values(HR_PROFILE_MODULES).map((module) => [module.key, module.heroDescription || "Acompanhe suas informacoes de RH."])
+  )
+);
 
 export function isHrProfileModuleSlug(slug = "") {
   return Boolean(HR_PROFILE_MODULES[slug]);

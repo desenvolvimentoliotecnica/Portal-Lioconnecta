@@ -8,6 +8,7 @@ public interface ITotvsRmPayrollRepository
     Task<IReadOnlyList<RmPayslipLineRecord>> GetPayslipLinesAsync(string chapa, int anoComp, int mesComp, int nroPeriodo, CancellationToken cancellationToken);
     Task<IReadOnlyList<RmPayslipLineRecord>> GetPayslipLinesForMonthAsync(string chapa, int anoComp, int mesComp, CancellationToken cancellationToken);
     Task<RmPayslipPeriodRecord?> GetPayslipPeriodAsync(string chapa, int anoComp, int mesComp, int nroPeriodo, CancellationToken cancellationToken);
+    Task<IReadOnlyList<RmPayslipPeriodRecord>> GetPayslipPeriodsForMonthAsync(string chapa, int anoComp, int mesComp, CancellationToken cancellationToken);
 }
 
 public interface ITotvsRmVacationRepository

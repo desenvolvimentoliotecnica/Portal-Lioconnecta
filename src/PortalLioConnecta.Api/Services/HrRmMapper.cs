@@ -55,23 +55,84 @@ public static class HrRmMapper
                line.Description.Contains("ADIANTAMENTO", StringComparison.OrdinalIgnoreCase);
     }
 
+    public static bool IsInformationalEarningLine(RmPayslipLineRecord line)
+    {
+        if (line.IsDeduction)
+        {
+            return false;
+        }
+
+        if (string.Equals(line.ProvisionType, "B", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var code = line.Code.Trim();
+        var description = line.Description.Trim();
+
+        if (code is "9999" or "0092")
+        {
+            return true;
+        }
+
+        if (description.StartsWith("BS ", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (description.Contains("INSS com Aliquota", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (description.Contains("Requisicao Interna", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (description.Contains("SENAI", StringComparison.OrdinalIgnoreCase)
+            || description.Contains("SESI", StringComparison.OrdinalIgnoreCase)
+            || description.Contains("Contr Adicional Senai", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (description.Contains("HORAS TRABALHADAS CHEIA", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool IsDisplayableFolhaEarningLine(RmPayslipLineRecord line) =>
+        !line.IsDeduction && !IsAdvanceLine(line) && !IsInformationalEarningLine(line);
+
+    public static IReadOnlyList<RmPayslipLineRecord> FilterFolhaDisplayLines(IReadOnlyList<RmPayslipLineRecord> lines)
+    {
+        var filtered = lines
+            .Where(line => line.IsDeduction || IsDisplayableFolhaEarningLine(line))
+            .ToList();
+
+        return filtered.Count > 0 ? filtered : lines;
+    }
+
     public static IReadOnlyList<RmPayslipLineRecord> FilterLinesByPaymentType(
         IReadOnlyList<RmPayslipLineRecord> lines,
         string? paymentTypeHint)
     {
-        if (string.IsNullOrWhiteSpace(paymentTypeHint) || lines.Count == 0)
+        if (lines.Count == 0)
         {
             return lines;
         }
 
-        if (paymentTypeHint.Equals("ADIANTAMENTO", StringComparison.OrdinalIgnoreCase))
+        if (paymentTypeHint?.Equals("ADIANTAMENTO", StringComparison.OrdinalIgnoreCase) == true)
         {
             var advanceLines = lines.Where(IsAdvanceLine).ToList();
             return advanceLines.Count > 0 ? advanceLines : lines;
         }
 
-        var folhaLines = lines.Where(line => !IsAdvanceLine(line)).ToList();
-        return folhaLines.Count > 0 ? folhaLines : lines;
+        return FilterFolhaDisplayLines(lines);
     }
 
     public static bool TryParsePayslipId(
