@@ -44,7 +44,10 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
                     "distinguishedName",
                     "manager",
                     "employeeId",
-                    "employeeNumber"
+                    "employeeNumber",
+                    "extensionAttribute1",
+                    "extensionAttribute2",
+                    "extensionAttribute3"
                 });
 
             var response = (SearchResponse)directoryConnection.SendRequest(request);
@@ -88,6 +91,7 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
     public Task<LdapAuthenticatedUser?> LookupUserProfileAsync(
         LdapRuntimeConfiguration configuration,
         IEnumerable<string> lookupCandidates,
+        string? distinguishedName,
         CancellationToken cancellationToken)
     {
         return Task.Run(() =>
@@ -101,6 +105,25 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
             using var directoryConnection = CreateConnection(configuration);
             directoryConnection.Credential = new NetworkCredential(configuration.BindDn, configuration.BindPassword);
             directoryConnection.Bind();
+
+            if (!string.IsNullOrWhiteSpace(distinguishedName))
+            {
+                var entryByDn = ReadEntryByDistinguishedName(directoryConnection, distinguishedName);
+                if (entryByDn is not null)
+                {
+                    var employeeIdByDn = ReadEmployeeId(entryByDn);
+                    if (!string.IsNullOrWhiteSpace(employeeIdByDn))
+                    {
+                        var login = lookupCandidates.FirstOrDefault(item => !string.IsNullOrWhiteSpace(item)) ?? distinguishedName;
+                        return CreateAuthenticatedUserFromEntry(
+                            directoryConnection,
+                            configuration,
+                            login,
+                            login,
+                            entryByDn);
+                    }
+                }
+            }
 
             foreach (var candidate in lookupCandidates
                          .Where(item => !string.IsNullOrWhiteSpace(item))
@@ -194,7 +217,10 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
                 "distinguishedName",
                 "manager",
                 "employeeId",
-                "employeeNumber"
+                "employeeNumber",
+                "extensionAttribute1",
+                "extensionAttribute2",
+                "extensionAttribute3"
             });
 
         var response = (SearchResponse)connection.SendRequest(request);
@@ -463,11 +489,54 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
         return string.Join(' ', parts);
     }
 
+    private static SearchResultEntry? ReadEntryByDistinguishedName(
+        LdapConnection connection,
+        string distinguishedName)
+    {
+        try
+        {
+            var request = new SearchRequest(
+                distinguishedName,
+                "(objectClass=*)",
+                SearchScope.Base,
+                new[]
+                {
+                    "displayName",
+                    "mail",
+                    "userPrincipalName",
+                    "sAMAccountName",
+                    "department",
+                    "title",
+                    "distinguishedName",
+                    "manager",
+                    "employeeId",
+                    "employeeNumber",
+                    "extensionAttribute1",
+                    "extensionAttribute2",
+                    "extensionAttribute3"
+                });
+
+            var response = (SearchResponse)connection.SendRequest(request);
+            return response.Entries.Count > 0 ? response.Entries[0] : null;
+        }
+        catch (DirectoryOperationException)
+        {
+            return null;
+        }
+        catch (LdapException)
+        {
+            return null;
+        }
+    }
+
     private static string? ReadEmployeeId(SearchResultEntry entry)
     {
         return ReadAttribute(entry, "employeeId")
             ?? ReadAttribute(entry, "employeeID")
-            ?? ReadAttribute(entry, "employeeNumber");
+            ?? ReadAttribute(entry, "employeeNumber")
+            ?? ReadAttribute(entry, "extensionAttribute1")
+            ?? ReadAttribute(entry, "extensionAttribute2")
+            ?? ReadAttribute(entry, "extensionAttribute3");
     }
 
     private static string? ReadAttribute(SearchResultEntry entry, string attributeName)

@@ -110,10 +110,20 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
             return null;
         }
 
+        if (string.IsNullOrWhiteSpace(configuration.BindDn) ||
+            string.IsNullOrWhiteSpace(configuration.BindPassword))
+        {
+            _logger.LogWarning(
+                "Consulta LDAP de matricula ignorada para {PortalUserId}: conta de servico (Bind DN/senha) nao configurada.",
+                user.Id);
+            return null;
+        }
+
         var candidates = BuildLookupCandidates(user);
         var ldapUser = await _ldapDirectoryAuthenticator.LookupUserProfileAsync(
             configuration,
             candidates,
+            user.DistinguishedName,
             cancellationToken);
 
         if (ldapUser is null || string.IsNullOrWhiteSpace(ldapUser.EmployeeId))
@@ -368,7 +378,12 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
     {
         var employeeId = FirstNonEmpty(
             ReadStringProperty(item, "employeeId"),
-            ReadStringProperty(item, "employeeNumber"));
+            ReadStringProperty(item, "employeeNumber"),
+            ReadOnPremisesExtensionAttribute(item, 1),
+            ReadOnPremisesExtensionAttribute(item, 2),
+            ReadOnPremisesExtensionAttribute(item, 3),
+            ReadOnPremisesExtensionAttribute(item, 4),
+            ReadOnPremisesExtensionAttribute(item, 5));
 
         if (string.IsNullOrWhiteSpace(employeeId))
         {
@@ -393,6 +408,17 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         {
             yield return user.Login.Split('\\', 2)[1];
         }
+    }
+
+    private static string? ReadOnPremisesExtensionAttribute(JsonElement item, int attributeNumber)
+    {
+        if (!item.TryGetProperty("onPremisesExtensionAttributes", out var extensionAttributes) ||
+            extensionAttributes.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        return ReadStringProperty(extensionAttributes, $"extensionAttribute{attributeNumber}");
     }
 
     private static string? ReadStringProperty(JsonElement item, string propertyName)
@@ -430,7 +456,7 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         value.Replace("'", "''", StringComparison.Ordinal);
 
     private const string GraphUserSelectFields =
-        "employeeId,employeeNumber,displayName,jobTitle,department,mail,userPrincipalName";
+        "employeeId,employeeNumber,onPremisesExtensionAttributes,displayName,jobTitle,department,mail,userPrincipalName";
 
     internal sealed record GraphUserProfile(
         string EmployeeId,

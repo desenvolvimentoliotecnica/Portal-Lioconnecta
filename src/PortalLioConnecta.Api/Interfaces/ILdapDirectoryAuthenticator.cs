@@ -13,5 +13,6 @@ public interface ILdapDirectoryAuthenticator
     Task<LdapAuthenticatedUser?> LookupUserProfileAsync(
         LdapRuntimeConfiguration configuration,
         IEnumerable<string> lookupCandidates,
+        string? distinguishedName,
         CancellationToken cancellationToken);
 }

@@ -70,6 +70,7 @@ public class FakeLdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
     public Task<LdapAuthenticatedUser?> LookupUserProfileAsync(
         LdapRuntimeConfiguration configuration,
         IEnumerable<string> lookupCandidates,
+        string? distinguishedName,
         CancellationToken cancellationToken)
     {
         if (!configuration.IsEnabled)

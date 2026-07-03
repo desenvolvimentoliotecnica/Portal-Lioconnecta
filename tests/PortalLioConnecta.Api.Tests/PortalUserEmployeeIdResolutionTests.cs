@@ -37,4 +37,21 @@ public class PortalUserEmployeeIdResolutionTests
 
         Assert.Equal("00000581", employeeId);
     }
+
+    [Fact]
+    public void TryReadEmployeeIdFromGraph_UsesOnPremisesExtensionAttribute()
+    {
+        using var document = JsonDocument.Parse("""
+            {
+              "displayName": "Leonardo Sabino Mendes",
+              "onPremisesExtensionAttributes": {
+                "extensionAttribute1": "00000581"
+              }
+            }
+            """);
+
+        var employeeId = PortalUserEmployeeIdResolver.TryReadEmployeeIdFromGraph(document.RootElement);
+
+        Assert.Equal("00000581", employeeId);
+    }
 }
