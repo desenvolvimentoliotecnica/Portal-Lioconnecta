@@ -98,13 +98,8 @@ function createPrintFrame(payslipHtml, root = document) {
   return { frame, frameWindow, frameDocument };
 }
 
-export async function printPayslipDocument(root = document) {
-  const payslip = root.querySelector("#payslip-modal-body .payslip-doc");
-  if (!payslip) {
-    throw new Error("Holerite nao carregado para impressao.");
-  }
-
-  const printTarget = createPrintFrame(payslip.outerHTML, root);
+export async function printPayslipHtml(payslipHtml, root = document) {
+  const printTarget = createPrintFrame(payslipHtml, root);
   if (!printTarget) {
     throw new Error("Nao foi possivel preparar a impressao do holerite.");
   }
@@ -120,6 +115,15 @@ export async function printPayslipDocument(root = document) {
   frameWindow.addEventListener("afterprint", cleanup);
   frameWindow.print();
   root.defaultView?.setTimeout(cleanup, 1000);
+}
+
+export async function printPayslipDocument(root = document) {
+  const payslip = root.querySelector("#payslip-modal-body .payslip-doc");
+  if (!payslip) {
+    throw new Error("Holerite nao carregado para impressao.");
+  }
+
+  await printPayslipHtml(payslip.outerHTML, root);
 }
 
 export function createPayslipExportHost(detail, renderPayslipDocument, root = document) {

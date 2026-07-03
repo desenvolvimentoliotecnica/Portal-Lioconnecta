@@ -6,6 +6,7 @@ import {
   createPayslipExportHost,
   downloadPayslipPdf,
   getPayslipBuildLabel,
+  printPayslipHtml,
   printPayslipDocument
 } from "./payslipExport.js";
 
@@ -349,10 +350,32 @@ async function handleDownloadPayslipPdf(payslipId, root = document) {
   }
 }
 
-function handlePrintPayslip(root = document) {
-  printPayslipDocument(root).catch(() => {
+async function handlePrintPayslip(root = document) {
+  try {
+    const docInModal = root.querySelector("#payslip-modal-body .payslip-doc");
+    if (docInModal) {
+      await printPayslipHtml(docInModal.outerHTML, root);
+      return;
+    }
+
+    if (!currentPayslipDetail) {
+      throw new Error("Holerite nao carregado para impressao.");
+    }
+
+    const host = createPayslipExportHost(currentPayslipDetail, renderPayslipDocument, root);
+    try {
+      const documentNode = host.querySelector(".payslip-doc");
+      if (!documentNode) {
+        throw new Error("Documento do holerite indisponivel.");
+      }
+
+      await printPayslipHtml(documentNode.outerHTML, root);
+    } finally {
+      host.remove();
+    }
+  } catch {
     showToast("Nao foi possivel imprimir o holerite.", "danger");
-  });
+  }
 }
 
 export function closePayslipModal(root = document) {
