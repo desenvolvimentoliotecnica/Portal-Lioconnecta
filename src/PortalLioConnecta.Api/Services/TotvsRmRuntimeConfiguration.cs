@@ -7,4 +7,17 @@ public sealed record TotvsRmRuntimeConfiguration(
     string Database,
     string UserName,
     string? Password,
-    bool TrustServerCertificate);
+    bool TrustServerCertificate,
+    short CodColigada,
+    TotvsRmModuleFlags ModuleFlags);
+
+public sealed record TotvsRmModuleFlags(
+    bool Cadastro,
+    bool Holerite,
+    bool Ferias,
+    bool Beneficios,
+    bool Ponto,
+    bool TeamDashboard)
+{
+    public static TotvsRmModuleFlags AllEnabled { get; } = new(true, true, true, true, true, true);
+}

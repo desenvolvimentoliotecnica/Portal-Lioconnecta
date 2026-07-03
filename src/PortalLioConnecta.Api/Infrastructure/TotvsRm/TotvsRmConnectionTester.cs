@@ -56,7 +56,7 @@ public class TotvsRmConnectionTester
             var aafhtfunCount = await CountTableAsync(connection, TotvsRmConstants.ProcessedDayTableName, cancellationToken);
             var pfuncCount = await CountTableAsync(connection, TotvsRmConstants.EmployeeTableName, cancellationToken);
 
-            var detail = $"Tabelas acessiveis: {TotvsRmConstants.PunchTableName} ({abatfunCount} registros), {TotvsRmConstants.ProcessedDayTableName} ({aafhtfunCount} registros), {TotvsRmConstants.EmployeeTableName} ({pfuncCount} registros). CodColigada fixa: {TotvsRmConstants.CodColigada}.";
+            var detail = $"Tabelas acessiveis: {TotvsRmConstants.PunchTableName} ({abatfunCount} registros), {TotvsRmConstants.ProcessedDayTableName} ({aafhtfunCount} registros), {TotvsRmConstants.EmployeeTableName} ({pfuncCount} registros). CodColigada: {configuration.CodColigada}.";
             return new TotvsRmConnectionTestResponse(true, "Conexao com TOTVS RM realizada com sucesso.", detail);
         }
         catch (Exception exception)

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PortalLioConnecta.Api.Contracts.HrProfile;
+using PortalLioConnecta.Api.Infrastructure.TotvsRm;
 using PortalLioConnecta.Api.Interfaces;
 using PortalLioConnecta.Api.Models;
 using PortalLioConnecta.Api.Security;
@@ -65,6 +66,16 @@ public class HrWorkspaceController : ControllerBase
         [FromQuery] int? year,
         CancellationToken cancellationToken)
         => ExecuteAsync(user => _hrWorkspaceService.GetTimesheetAsync(user, month, year, cancellationToken));
+
+    [HttpGet("rh-summary")]
+    [ProducesResponseType(typeof(HrRhSummaryDto), StatusCodes.Status200OK)]
+    public Task<IActionResult> GetRhSummary(CancellationToken cancellationToken)
+        => ExecuteAsync(user => _hrWorkspaceService.GetRhSummaryAsync(user, cancellationToken));
+
+    [HttpGet("equipe")]
+    [ProducesResponseType(typeof(HrTeamDashboardResponse), StatusCodes.Status200OK)]
+    public Task<IActionResult> GetTeamDashboard(CancellationToken cancellationToken)
+        => ExecuteAsync(user => _hrWorkspaceService.GetTeamDashboardAsync(user, cancellationToken));
 
     private async Task<IActionResult> ExecuteAsync<TResponse>(
         Func<PortalUser, Task<TResponse>> action)

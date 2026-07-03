@@ -42,6 +42,13 @@ public class TotvsRmConfigurationService : ITotvsRmConfigurationService
         entity.Database = Normalize(request.Database);
         entity.UserName = Normalize(request.UserName);
         entity.TrustServerCertificate = request.TrustServerCertificate;
+        entity.CodColigada = request.CodColigada > 0 ? request.CodColigada : (short)1;
+        entity.EnableCadastro = request.EnableCadastro;
+        entity.EnableHolerite = request.EnableHolerite;
+        entity.EnableFerias = request.EnableFerias;
+        entity.EnableBeneficios = request.EnableBeneficios;
+        entity.EnablePonto = request.EnablePonto;
+        entity.EnableTeamDashboard = request.EnableTeamDashboard;
         entity.UpdatedAtUtc = DateTime.UtcNow;
 
         if (!string.IsNullOrWhiteSpace(request.Password))
@@ -63,7 +70,15 @@ public class TotvsRmConfigurationService : ITotvsRmConfigurationService
             entity.Database,
             entity.UserName,
             TryUnprotectSecret(entity),
-            entity.TrustServerCertificate);
+            entity.TrustServerCertificate,
+            entity.CodColigada > 0 ? entity.CodColigada : (short)1,
+            new TotvsRmModuleFlags(
+                entity.EnableCadastro,
+                entity.EnableHolerite,
+                entity.EnableFerias,
+                entity.EnableBeneficios,
+                entity.EnablePonto,
+                entity.EnableTeamDashboard));
     }
 
     public async Task<TotvsRmConnectionTestResponse> TestConnectionAsync(
@@ -82,7 +97,15 @@ public class TotvsRmConfigurationService : ITotvsRmConfigurationService
             Normalize(request.Database),
             Normalize(request.UserName),
             password,
-            request.TrustServerCertificate);
+            request.TrustServerCertificate,
+            request.CodColigada > 0 ? request.CodColigada : entity.CodColigada,
+            new TotvsRmModuleFlags(
+                request.EnableCadastro,
+                request.EnableHolerite,
+                request.EnableFerias,
+                request.EnableBeneficios,
+                request.EnablePonto,
+                request.EnableTeamDashboard));
 
         return await _connectionTester.TestAsync(runtime, cancellationToken);
     }
@@ -130,6 +153,13 @@ public class TotvsRmConfigurationService : ITotvsRmConfigurationService
             entity.UserName,
             !string.IsNullOrWhiteSpace(entity.PasswordProtected),
             entity.TrustServerCertificate,
+            entity.CodColigada > 0 ? entity.CodColigada : (short)1,
+            entity.EnableCadastro,
+            entity.EnableHolerite,
+            entity.EnableFerias,
+            entity.EnableBeneficios,
+            entity.EnablePonto,
+            entity.EnableTeamDashboard,
             entity.UpdatedAtUtc);
     }
 

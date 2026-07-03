@@ -791,7 +791,7 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task HrWorkspaceEndpoints_ReturnSimulatedDataForPortalSession()
+    public async Task HrWorkspaceEndpoints_ReturnRmUnavailableResponsesWhenIntegrationDisabled()
     {
         await EnsureLdapEnabledAsync();
         var portalSession = await LoginPortalUserAsync();
@@ -803,36 +803,48 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
         var avaliacao = await _client.GetFromJsonAsync<HrEvaluationResponse>("/api/hr/avaliacao");
         var cadastro = await _client.GetFromJsonAsync<HrPersonalDataResponse>("/api/hr/cadastro");
         var ponto = await _client.GetFromJsonAsync<HrTimesheetResponse>("/api/hr/ponto");
+        var rhSummary = await _client.GetFromJsonAsync<HrRhSummaryDto>("/api/hr/rh-summary");
+        var equipe = await _client.GetFromJsonAsync<HrTeamDashboardResponse>("/api/hr/equipe");
 
         Assert.NotNull(ferias);
-        Assert.True(ferias.IsSimulated);
-        Assert.NotEmpty(ferias.Requests);
-        Assert.NotNull(holerite);
-        Assert.True(holerite.IsSimulated);
-        Assert.NotEmpty(holerite.Items);
+        Assert.False(ferias.IsSimulated);
+        Assert.Equal("rm_disabled", ferias.AvailabilityStatus);
+        Assert.Empty(ferias.Requests);
 
-        var holeriteDetail = await _client.GetFromJsonAsync<HrPayslipDetailDto>("/api/hr/holerite/2026-05");
-        Assert.NotNull(holeriteDetail);
-        Assert.Equal("2026-05", holeriteDetail.Id);
-        Assert.NotEmpty(holeriteDetail.Earnings);
-        Assert.NotEmpty(holeriteDetail.Deductions);
+        Assert.NotNull(holerite);
+        Assert.False(holerite.IsSimulated);
+        Assert.Equal("rm_disabled", holerite.AvailabilityStatus);
+        Assert.Empty(holerite.Items);
 
         var missingHolerite = await _client.GetAsync("/api/hr/holerite/inexistente");
         Assert.Equal(HttpStatusCode.NotFound, missingHolerite.StatusCode);
+
         Assert.NotNull(beneficios);
-        Assert.True(beneficios.IsSimulated);
-        Assert.NotEmpty(beneficios.Items);
+        Assert.False(beneficios.IsSimulated);
+        Assert.Equal("rm_disabled", beneficios.AvailabilityStatus);
+        Assert.Empty(beneficios.Items);
+
         Assert.NotNull(avaliacao);
-        Assert.True(avaliacao.IsSimulated);
-        Assert.NotEmpty(avaliacao.Competencies);
+        Assert.False(avaliacao.IsSimulated);
+        Assert.Equal("module_disabled", avaliacao.AvailabilityStatus);
+        Assert.Empty(avaliacao.Competencies);
+
         Assert.NotNull(cadastro);
         Assert.True(cadastro.IsSimulated);
+        Assert.Equal("rm_disabled", cadastro.AvailabilityStatus);
         Assert.NotEmpty(cadastro.Sections);
+
         Assert.NotNull(ponto);
         Assert.False(ponto.IsSimulated);
         Assert.Equal("rm_disabled", ponto.AvailabilityStatus);
         Assert.NotNull(ponto.UserMessage);
         Assert.Empty(ponto.Entries);
+
+        Assert.NotNull(rhSummary);
+        Assert.Equal("rm_disabled", rhSummary.AvailabilityStatus);
+
+        Assert.NotNull(equipe);
+        Assert.Equal("rm_disabled", equipe.AvailabilityStatus);
     }
 
     [Fact]
@@ -869,6 +881,13 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
             "Corpore",
             "portal_rm_read",
             "Secret@123",
+            true,
+            1,
+            true,
+            true,
+            true,
+            true,
+            true,
             true);
 
         var saveResponse = await _client.PutAsJsonAsync("/api/admin/totvs-rm", request);
@@ -902,6 +921,13 @@ public class ApiSmokeTests : IClassFixture<CustomWebApplicationFactory>
             "Corpore",
             "portal_rm_read",
             "Secret@123",
+            true,
+            1,
+            true,
+            true,
+            true,
+            true,
+            true,
             true));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

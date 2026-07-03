@@ -1,4 +1,4 @@
-export const APP_VERSION = "v0.24.1";
+export const APP_VERSION = "v0.25.0";
 
 export const DATA_MODES = Object.freeze({
   MOCK: "mock",
@@ -84,6 +84,9 @@ const DEFAULT_RUNTIME_CONFIG = Object.freeze({
     hrAvaliacao: "/hr/avaliacao",
     hrCadastro: "/hr/cadastro",
     hrPonto: "/hr/ponto",
+    hrRhSummary: "/hr/rh-summary",
+    hrEquipe: "/hr/equipe",
+    rmHealth: "/health/rm",
     portalLdapLogin: "/auth/ldap/login",
     portalSession: "/auth/session",
     portalLogout: "/auth/logout",

@@ -13,7 +13,14 @@ export function collectTotvsRmSettingsPayload(form) {
     database: String(formData.get("database") || "").trim(),
     userName: String(formData.get("userName") || "").trim(),
     password: String(formData.get("password") || ""),
-    trustServerCertificate: Boolean(formData.get("trustServerCertificate"))
+    trustServerCertificate: Boolean(formData.get("trustServerCertificate")),
+    codColigada: Number(formData.get("codColigada") || 1),
+    enableCadastro: Boolean(formData.get("enableCadastro")),
+    enableHolerite: Boolean(formData.get("enableHolerite")),
+    enableFerias: Boolean(formData.get("enableFerias")),
+    enableBeneficios: Boolean(formData.get("enableBeneficios")),
+    enablePonto: Boolean(formData.get("enablePonto")),
+    enableTeamDashboard: Boolean(formData.get("enableTeamDashboard"))
   };
 }
 
@@ -54,10 +61,10 @@ export function renderTotvsRmSettingsPage(settings = {}) {
       <header class="ldap-wizard__hero">
         <div class="ldap-wizard__hero-copy">
           <h1>TOTVS RM</h1>
-          <p class="ldap-wizard__subtitle">Integracao de ponto (Automação de Ponto)</p>
+          <p class="ldap-wizard__subtitle">Integracao read-only com TOTVS RM (Corpore)</p>
           <p class="ldap-wizard__description">
-            Configure a conexao SQL Server read-only com o banco Corpore para consultar batidas (ABATFUN)
-            e espelho processado (AAFHTFUN) na secao MEU PERFIL RH &gt; Ponto.
+            Configure a conexao SQL Server read-only com o banco Corpore para consultar cadastro, holerite,
+            ferias, beneficios e ponto na secao MEU PERFIL RH.
           </p>
         </div>
         <div class="ldap-wizard__hero-icon" aria-hidden="true">
@@ -71,8 +78,20 @@ export function renderTotvsRmSettingsPage(settings = {}) {
         <section class="ldap-wizard__panel">
           <div class="ldap-wizard__panel-head">
             <h2>Conexao SQL Server</h2>
-            <p>Credenciais com permissao de leitura nas tabelas ABATFUN, ANATUBAT e AAFHTFUN. CodColigada fixa: 1.</p>
+            <p>Credenciais com permissao de leitura nas tabelas PFUNC, PPESSOA, PFFINANC, PFUFERIAS, ABATFUN e AAFHTFUN.</p>
           </div>
+
+          <label class="ldap-wizard__field">
+            <span>CodColigada</span>
+            <input
+              name="codColigada"
+              type="number"
+              min="1"
+              max="32767"
+              value="${escapeHtml(String(settings.codColigada || 1))}"
+              required
+            />
+          </label>
 
           <label class="ldap-wizard__toggle">
             <input type="checkbox" name="isEnabled" ${renderChecked(settings.isEnabled)} />
@@ -152,6 +171,42 @@ export function renderTotvsRmSettingsPage(settings = {}) {
             <input type="checkbox" name="trustServerCertificate" ${renderChecked(settings.trustServerCertificate !== false)} />
             <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
             <span class="ldap-wizard__toggle-label">Confiar no certificado do servidor (TrustServerCertificate)</span>
+          </label>
+
+          <div class="ldap-wizard__panel-head">
+            <h2>Modulos habilitados</h2>
+            <p>Controle quais consultas RH usam o RM neste ambiente.</p>
+          </div>
+
+          <label class="ldap-wizard__toggle">
+            <input type="checkbox" name="enableCadastro" ${renderChecked(settings.enableCadastro !== false)} />
+            <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
+            <span class="ldap-wizard__toggle-label">Dados cadastrais</span>
+          </label>
+          <label class="ldap-wizard__toggle">
+            <input type="checkbox" name="enableHolerite" ${renderChecked(settings.enableHolerite !== false)} />
+            <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
+            <span class="ldap-wizard__toggle-label">Holerite</span>
+          </label>
+          <label class="ldap-wizard__toggle">
+            <input type="checkbox" name="enableFerias" ${renderChecked(settings.enableFerias !== false)} />
+            <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
+            <span class="ldap-wizard__toggle-label">Ferias</span>
+          </label>
+          <label class="ldap-wizard__toggle">
+            <input type="checkbox" name="enableBeneficios" ${renderChecked(settings.enableBeneficios !== false)} />
+            <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
+            <span class="ldap-wizard__toggle-label">Beneficios</span>
+          </label>
+          <label class="ldap-wizard__toggle">
+            <input type="checkbox" name="enablePonto" ${renderChecked(settings.enablePonto !== false)} />
+            <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
+            <span class="ldap-wizard__toggle-label">Ponto</span>
+          </label>
+          <label class="ldap-wizard__toggle">
+            <input type="checkbox" name="enableTeamDashboard" ${renderChecked(settings.enableTeamDashboard !== false)} />
+            <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
+            <span class="ldap-wizard__toggle-label">Dashboard de equipe (gestores)</span>
           </label>
 
           <div class="ldap-wizard__info ldap-wizard__info--inline">

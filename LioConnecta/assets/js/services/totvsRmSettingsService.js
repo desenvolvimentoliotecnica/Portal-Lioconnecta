@@ -9,6 +9,13 @@ const DEFAULT_TOTVS_RM_SETTINGS = Object.freeze({
   userName: "",
   hasPassword: false,
   trustServerCertificate: true,
+  codColigada: 1,
+  enableCadastro: true,
+  enableHolerite: true,
+  enableFerias: true,
+  enableBeneficios: true,
+  enablePonto: true,
+  enableTeamDashboard: true,
   updatedAtUtc: "",
   loadError: ""
 });
@@ -27,6 +34,13 @@ function normalizeSettings(payload = {}, loadError = "") {
     userName: normalizeText(payload.userName),
     hasPassword: Boolean(payload.hasPassword),
     trustServerCertificate: payload.trustServerCertificate !== false,
+    codColigada: Number(payload.codColigada || 1),
+    enableCadastro: payload.enableCadastro !== false,
+    enableHolerite: payload.enableHolerite !== false,
+    enableFerias: payload.enableFerias !== false,
+    enableBeneficios: payload.enableBeneficios !== false,
+    enablePonto: payload.enablePonto !== false,
+    enableTeamDashboard: payload.enableTeamDashboard !== false,
     updatedAtUtc: normalizeText(payload.updatedAtUtc),
     loadError
   };
@@ -40,7 +54,14 @@ function mapSavePayload(payload = {}) {
     database: normalizeText(payload.database),
     userName: normalizeText(payload.userName),
     password: String(payload.password || ""),
-    trustServerCertificate: payload.trustServerCertificate !== false
+    trustServerCertificate: payload.trustServerCertificate !== false,
+    codColigada: Number(payload.codColigada || 1),
+    enableCadastro: payload.enableCadastro !== false,
+    enableHolerite: payload.enableHolerite !== false,
+    enableFerias: payload.enableFerias !== false,
+    enableBeneficios: payload.enableBeneficios !== false,
+    enablePonto: payload.enablePonto !== false,
+    enableTeamDashboard: payload.enableTeamDashboard !== false
   };
 }
 

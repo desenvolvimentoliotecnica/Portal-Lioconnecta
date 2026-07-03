@@ -51,6 +51,8 @@ public interface IHrWorkspaceService
     Task<HrEvaluationResponse> GetEvaluationAsync(PortalUser user, CancellationToken cancellationToken);
     Task<HrPersonalDataResponse> GetPersonalDataAsync(PortalUser user, CancellationToken cancellationToken);
     Task<HrTimesheetResponse> GetTimesheetAsync(PortalUser user, int? month, int? year, CancellationToken cancellationToken);
+    Task<HrRhSummaryDto> GetRhSummaryAsync(PortalUser user, CancellationToken cancellationToken);
+    Task<HrTeamDashboardResponse> GetTeamDashboardAsync(PortalUser user, CancellationToken cancellationToken);
 }
 
 public interface ICorporateSystemsService

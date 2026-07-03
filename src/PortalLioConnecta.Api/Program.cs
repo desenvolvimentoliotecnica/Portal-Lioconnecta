@@ -35,8 +35,15 @@ builder.Services.AddScoped<ILdapConfigurationService, LdapConfigurationService>(
 builder.Services.AddScoped<IMicrosoftGraphConfigurationService, MicrosoftGraphConfigurationService>();
 builder.Services.AddScoped<ITotvsRmConfigurationService, TotvsRmConfigurationService>();
 builder.Services.AddScoped<TotvsRmConnectionTester>();
+builder.Services.AddScoped<TotvsRmQueryExecutor>();
 builder.Services.AddScoped<ITotvsRmTimesheetRepository, TotvsRmTimesheetRepository>();
 builder.Services.AddScoped<ITotvsRmEmployeeRepository, TotvsRmEmployeeRepository>();
+builder.Services.AddScoped<ITotvsRmPayrollRepository, TotvsRmPayrollRepository>();
+builder.Services.AddScoped<ITotvsRmVacationRepository, TotvsRmVacationRepository>();
+builder.Services.AddScoped<ITotvsRmBenefitsRepository, TotvsRmBenefitsRepository>();
+builder.Services.AddScoped<ITotvsRmTeamRepository, TotvsRmTeamRepository>();
+builder.Services.AddScoped<ITotvsRmHrContextService, TotvsRmHrContextService>();
+builder.Services.AddScoped<HrRmAccessGuard>();
 builder.Services.AddScoped<TimesheetAggregationService>();
 builder.Services.AddScoped<TimesheetMergeService>();
 builder.Services.AddScoped<IPortalAuthService, PortalAuthService>();

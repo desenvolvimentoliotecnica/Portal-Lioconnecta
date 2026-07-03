@@ -10,6 +10,13 @@ public class TotvsRmConfiguration
     public string UserName { get; set; } = string.Empty;
     public string? PasswordProtected { get; set; }
     public bool TrustServerCertificate { get; set; } = true;
+    public short CodColigada { get; set; } = 1;
+    public bool EnableCadastro { get; set; } = true;
+    public bool EnableHolerite { get; set; } = true;
+    public bool EnableFerias { get; set; } = true;
+    public bool EnableBeneficios { get; set; } = true;
+    public bool EnablePonto { get; set; } = true;
+    public bool EnableTeamDashboard { get; set; } = true;
     public DateTime CreatedAtUtc { get; set; }
     public DateTime UpdatedAtUtc { get; set; }
 }

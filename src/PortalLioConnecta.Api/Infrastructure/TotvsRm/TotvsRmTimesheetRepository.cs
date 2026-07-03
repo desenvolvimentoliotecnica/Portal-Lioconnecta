@@ -3,23 +3,20 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using PortalLioConnecta.Api.Infrastructure.TotvsRm.Models;
 using PortalLioConnecta.Api.Interfaces;
+using PortalLioConnecta.Api.Services;
 
 namespace PortalLioConnecta.Api.Infrastructure.TotvsRm;
 
 public class TotvsRmTimesheetRepository : ITotvsRmTimesheetRepository
 {
-    private readonly ITotvsRmConfigurationService _configurationService;
-    private readonly ILogger<TotvsRmTimesheetRepository> _logger;
+    private readonly TotvsRmQueryExecutor _queryExecutor;
 
-    public TotvsRmTimesheetRepository(
-        ITotvsRmConfigurationService configurationService,
-        ILogger<TotvsRmTimesheetRepository> logger)
+    public TotvsRmTimesheetRepository(TotvsRmQueryExecutor queryExecutor)
     {
-        _configurationService = configurationService;
-        _logger = logger;
+        _queryExecutor = queryExecutor;
     }
 
-    public async Task<IReadOnlyList<RmPunchRecord>> GetPunchesAsync(
+    public Task<IReadOnlyList<RmPunchRecord>> GetPunchesAsync(
         string chapa,
         DateTime dataDe,
         DateTime dataAte,
@@ -42,26 +39,23 @@ public class TotvsRmTimesheetRepository : ITotvsRmTimesheetRepository
             ORDER BY B.DATA, B.BATIDA;
             """;
 
-        return await QueryAsync<RmPunchRecord>(
+        return _queryExecutor.QueryAsync(
             TotvsRmConstants.PunchTableName,
-            chapa,
-            dataDe,
-            dataAte,
-            async connection =>
+            async (runtime, connection, token) =>
             {
                 var rows = await connection.QueryAsync<RmPunchRecord>(sql, new
                 {
-                    CodColigada = TotvsRmConstants.CodColigada,
+                    CodColigada = runtime.CodColigada,
                     Chapa = chapa,
                     DataDe = dataDe.Date,
                     DataAte = dataAte.Date
                 });
-                return rows.ToList();
+                return (IReadOnlyList<RmPunchRecord>)rows.ToList();
             },
             cancellationToken);
     }
 
-    public async Task<IReadOnlyList<RmProcessedDayRecord>> GetProcessedDaysAsync(
+    public Task<IReadOnlyList<RmProcessedDayRecord>> GetProcessedDaysAsync(
         string chapa,
         DateTime dataDe,
         DateTime dataAte,
@@ -91,97 +85,19 @@ public class TotvsRmTimesheetRepository : ITotvsRmTimesheetRepository
             ORDER BY H.DATA;
             """;
 
-        return await QueryAsync<RmProcessedDayRecord>(
+        return _queryExecutor.QueryAsync(
             TotvsRmConstants.ProcessedDayTableName,
-            chapa,
-            dataDe,
-            dataAte,
-            async connection =>
+            async (runtime, connection, token) =>
             {
                 var rows = await connection.QueryAsync<RmProcessedDayRecord>(sql, new
                 {
-                    CodColigada = TotvsRmConstants.CodColigada,
+                    CodColigada = runtime.CodColigada,
                     Chapa = chapa,
                     DataDe = dataDe.Date,
                     DataAte = dataAte.Date
                 });
-                return rows.ToList();
+                return (IReadOnlyList<RmProcessedDayRecord>)rows.ToList();
             },
             cancellationToken);
-    }
-
-    private async Task<IReadOnlyList<T>> QueryAsync<T>(
-        string operationLabel,
-        string chapa,
-        DateTime dataDe,
-        DateTime dataAte,
-        Func<SqlConnection, Task<IReadOnlyList<T>>> queryFactory,
-        CancellationToken cancellationToken)
-    {
-        var runtime = await _configurationService.GetRuntimeConfigurationAsync(cancellationToken);
-        if (!runtime.IsEnabled)
-        {
-            throw new TotvsRmIntegrationDisabledException();
-        }
-
-        if (string.IsNullOrWhiteSpace(runtime.Password))
-        {
-            throw new TotvsRmIntegrationMisconfiguredException("Credenciais TOTVS RM incompletas.");
-        }
-
-        try
-        {
-            await using var connection = TotvsRmConnectionFactory.CreateConnection(runtime);
-            await connection.OpenAsync(cancellationToken);
-            return await queryFactory(connection);
-        }
-        catch (TotvsRmIntegrationException)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            _logger.LogWarning(
-                exception,
-                "Falha ao consultar TOTVS RM ({OperationLabel}) para CHAPA {Chapa} entre {DataDe:yyyy-MM-dd} e {DataAte:yyyy-MM-dd}.",
-                operationLabel,
-                chapa,
-                dataDe,
-                dataAte);
-
-            throw new TotvsRmIntegrationUnavailableException();
-        }
-    }
-}
-
-public abstract class TotvsRmIntegrationException : Exception
-{
-    protected TotvsRmIntegrationException(string message)
-        : base(message)
-    {
-    }
-}
-
-public sealed class TotvsRmIntegrationDisabledException : TotvsRmIntegrationException
-{
-    public TotvsRmIntegrationDisabledException()
-        : base("Integracao TOTVS RM desabilitada.")
-    {
-    }
-}
-
-public sealed class TotvsRmIntegrationMisconfiguredException : TotvsRmIntegrationException
-{
-    public TotvsRmIntegrationMisconfiguredException(string message)
-        : base(message)
-    {
-    }
-}
-
-public sealed class TotvsRmIntegrationUnavailableException : TotvsRmIntegrationException
-{
-    public TotvsRmIntegrationUnavailableException()
-        : base("Integracao TOTVS RM indisponivel.")
-    {
     }
 }

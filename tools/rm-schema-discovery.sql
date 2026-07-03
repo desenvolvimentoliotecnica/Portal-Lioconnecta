@@ -1,0 +1,23 @@
+-- Descoberta de schema TOTVS RM (Corpore)
+-- Execute no SQL Server Management Studio conectado ao banco Corpore.
+
+DECLARE @Tables TABLE (TableName SYSNAME);
+INSERT INTO @Tables VALUES
+ ('PFUNC'), ('PPESSOA'), ('PSECAO'), ('PFUNCAO'),
+ ('PFFINANC'), ('PEVENTO'), ('PFPERFF'),
+ ('PFUFERIAS'), ('PFUFERIASPER'),
+ ('PFDEPEND'), ('ABATFUN'), ('AAFHTFUN'), ('ANATUBAT');
+
+SELECT
+    t.TableName,
+    c.COLUMN_NAME,
+    c.DATA_TYPE,
+    c.CHARACTER_MAXIMUM_LENGTH
+FROM @Tables t
+INNER JOIN INFORMATION_SCHEMA.COLUMNS c
+    ON c.TABLE_NAME = t.TableName
+ORDER BY t.TableName, c.ORDINAL_POSITION;
+
+SELECT TOP 5 * FROM dbo.PFUNC WITH (NOLOCK);
+SELECT TOP 5 * FROM dbo.PFFINANC WITH (NOLOCK);
+SELECT TOP 5 * FROM dbo.PFUFERIAS WITH (NOLOCK);

@@ -9,4 +9,11 @@ public sealed record TotvsRmConfigurationDto(
     string UserName,
     bool HasPassword,
     bool TrustServerCertificate,
+    short CodColigada,
+    bool EnableCadastro,
+    bool EnableHolerite,
+    bool EnableFerias,
+    bool EnableBeneficios,
+    bool EnablePonto,
+    bool EnableTeamDashboard,
     DateTime UpdatedAtUtc);

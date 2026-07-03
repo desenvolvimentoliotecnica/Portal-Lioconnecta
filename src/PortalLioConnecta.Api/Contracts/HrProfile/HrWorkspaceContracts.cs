@@ -1,5 +1,9 @@
 namespace PortalLioConnecta.Api.Contracts.HrProfile;
 
+public sealed record HrAvailabilityFields(
+    string? AvailabilityStatus = null,
+    string? UserMessage = null);
+
 public sealed record HrVacationBalanceDto(
     int AvailableDays,
     int ScheduledDays,
@@ -16,11 +20,13 @@ public sealed record HrVacationRequestDto(
 
 public sealed record HrVacationResponse(
     string Title,
-    HrVacationBalanceDto Balance,
+    HrVacationBalanceDto? Balance,
     IReadOnlyList<HrVacationRequestDto> Requests,
     bool CanRequest,
     string Provider,
-    bool IsSimulated);
+    bool IsSimulated,
+    string? AvailabilityStatus = null,
+    string? UserMessage = null);
 
 public sealed record HrPayslipDto(
     string Id,
@@ -35,7 +41,9 @@ public sealed record HrPayslipResponse(
     string Title,
     IReadOnlyList<HrPayslipDto> Items,
     string Provider,
-    bool IsSimulated);
+    bool IsSimulated,
+    string? AvailabilityStatus = null,
+    string? UserMessage = null);
 
 public sealed record HrPayslipLineDto(
     string Code,
@@ -72,7 +80,9 @@ public sealed record HrPayslipDetailDto(
     decimal TotalEarnings,
     decimal TotalDeductions,
     string Provider,
-    bool IsSimulated);
+    bool IsSimulated,
+    string? AvailabilityStatus = null,
+    string? UserMessage = null);
 
 public sealed record HrBenefitItemDto(
     string Code,
@@ -82,11 +92,19 @@ public sealed record HrBenefitItemDto(
     string Status,
     string Details);
 
+public sealed record HrDependentItemDto(
+    string Name,
+    string Relationship,
+    string Status);
+
 public sealed record HrBenefitsResponse(
     string Title,
     IReadOnlyList<HrBenefitItemDto> Items,
+    IReadOnlyList<HrDependentItemDto> Dependents,
     string Provider,
-    bool IsSimulated);
+    bool IsSimulated,
+    string? AvailabilityStatus = null,
+    string? UserMessage = null);
 
 public sealed record HrEvaluationCompetencyDto(
     string Name,
@@ -103,7 +121,9 @@ public sealed record HrEvaluationResponse(
     IReadOnlyList<HrEvaluationCompetencyDto> Competencies,
     string ManagerFeedback,
     string Provider,
-    bool IsSimulated);
+    bool IsSimulated,
+    string? AvailabilityStatus = null,
+    string? UserMessage = null);
 
 public sealed record HrPersonalDataFieldDto(
     string Label,
@@ -118,7 +138,9 @@ public sealed record HrPersonalDataResponse(
     string Title,
     IReadOnlyList<HrPersonalDataSectionDto> Sections,
     string Provider,
-    bool IsSimulated);
+    bool IsSimulated,
+    string? AvailabilityStatus = null,
+    string? UserMessage = null);
 
 public sealed record HrTimesheetEntryDto(
     DateTime Date,
@@ -138,7 +160,8 @@ public sealed record HrTimesheetSummaryDto(
     string ExpectedHours,
     string BalanceHours,
     int Absences,
-    int Delays);
+    int Delays,
+    string? BankHours = null);
 
 public sealed record HrTimesheetResponse(
     string Title,
@@ -148,3 +171,30 @@ public sealed record HrTimesheetResponse(
     bool IsSimulated,
     string? AvailabilityStatus,
     string? UserMessage);
+
+public sealed record HrRhSummaryDto(
+    string? VacationBalanceDays,
+    string? LastPayslipNet,
+    string? LastPayslipPeriod,
+    string? MonthlyWorkedHours,
+    string? MonthlyBalanceHours,
+    string Provider,
+    bool IsSimulated,
+    string? AvailabilityStatus = null,
+    string? UserMessage = null);
+
+public sealed record HrTeamMemberDto(
+    string Chapa,
+    string Name,
+    string Role,
+    string Department,
+    string Status);
+
+public sealed record HrTeamDashboardResponse(
+    string Title,
+    IReadOnlyList<HrTeamMemberDto> Members,
+    int ActiveCount,
+    string Provider,
+    bool IsSimulated,
+    string? AvailabilityStatus = null,
+    string? UserMessage = null);

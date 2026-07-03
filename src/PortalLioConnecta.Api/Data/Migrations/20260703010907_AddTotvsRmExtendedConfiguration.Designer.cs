@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PortalLioConnecta.Api.Data;
@@ -11,9 +12,11 @@ using PortalLioConnecta.Api.Data;
 namespace PortalLioConnecta.Api.Data.Migrations
 {
     [DbContext(typeof(PortalLioConnectaDbContext))]
-    partial class PortalLioConnectaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260703010907_AddTotvsRmExtendedConfiguration")]
+    partial class AddTotvsRmExtendedConfiguration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

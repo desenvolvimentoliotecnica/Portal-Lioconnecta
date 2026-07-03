@@ -7,4 +7,11 @@ public sealed record UpsertTotvsRmConfigurationRequest(
     string Database,
     string UserName,
     string? Password,
-    bool TrustServerCertificate);
+    bool TrustServerCertificate,
+    short CodColigada,
+    bool EnableCadastro,
+    bool EnableHolerite,
+    bool EnableFerias,
+    bool EnableBeneficios,
+    bool EnablePonto,
+    bool EnableTeamDashboard);
