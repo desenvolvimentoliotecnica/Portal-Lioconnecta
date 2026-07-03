@@ -66,4 +66,37 @@ public class FakeLdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
             "CN=Elizabete Rodrigues da Silva,OU=Gestores,DC=liotecnica,DC=com,DC=br",
             "887"));
     }
+
+    public Task<LdapAuthenticatedUser?> LookupUserProfileAsync(
+        LdapRuntimeConfiguration configuration,
+        IEnumerable<string> lookupCandidates,
+        CancellationToken cancellationToken)
+    {
+        if (!configuration.IsEnabled)
+        {
+            return Task.FromResult<LdapAuthenticatedUser?>(null);
+        }
+
+        foreach (var candidate in lookupCandidates)
+        {
+            if (string.Equals(candidate, "roberto.almeida@liotecnica.com.br", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(candidate, "roberto.almeida", StringComparison.OrdinalIgnoreCase))
+            {
+                return Task.FromResult<LdapAuthenticatedUser?>(new LdapAuthenticatedUser(
+                    "roberto.almeida@liotecnica.com.br",
+                    "roberto.almeida",
+                    "roberto.almeida@liotecnica.com.br",
+                    "roberto.almeida@liotecnica.com.br",
+                    "Roberto Almeida",
+                    "Recursos Humanos",
+                    "Analista de RH",
+                    "CN=Roberto Almeida,OU=Usuarios,DC=liotecnica,DC=com,DC=br",
+                    "Elizabete Rodrigues da Silva",
+                    "CN=Elizabete Rodrigues da Silva,OU=Gestores,DC=liotecnica,DC=com,DC=br",
+                    "887"));
+            }
+        }
+
+        return Task.FromResult<LdapAuthenticatedUser?>(null);
+    }
 }

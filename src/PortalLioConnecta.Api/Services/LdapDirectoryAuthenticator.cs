@@ -85,6 +85,52 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
         }, cancellationToken);
     }
 
+    public Task<LdapAuthenticatedUser?> LookupUserProfileAsync(
+        LdapRuntimeConfiguration configuration,
+        IEnumerable<string> lookupCandidates,
+        CancellationToken cancellationToken)
+    {
+        return Task.Run(() =>
+        {
+            if (string.IsNullOrWhiteSpace(configuration.BindDn) ||
+                string.IsNullOrWhiteSpace(configuration.BindPassword))
+            {
+                return (LdapAuthenticatedUser?)null;
+            }
+
+            using var directoryConnection = CreateConnection(configuration);
+            directoryConnection.Credential = new NetworkCredential(configuration.BindDn, configuration.BindPassword);
+            directoryConnection.Bind();
+
+            foreach (var candidate in lookupCandidates
+                         .Where(item => !string.IsNullOrWhiteSpace(item))
+                         .Select(item => item.Trim())
+                         .Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                var entry = SearchUserEntry(directoryConnection, configuration, candidate);
+                if (entry is null)
+                {
+                    continue;
+                }
+
+                var employeeId = ReadEmployeeId(entry);
+                if (string.IsNullOrWhiteSpace(employeeId))
+                {
+                    continue;
+                }
+
+                return CreateAuthenticatedUserFromEntry(
+                    directoryConnection,
+                    configuration,
+                    candidate,
+                    candidate,
+                    entry);
+            }
+
+            return (LdapAuthenticatedUser?)null;
+        }, cancellationToken);
+    }
+
     private static LdapAuthenticatedUser? AuthenticateWithDirectBind(
         LdapRuntimeConfiguration configuration,
         string login,
@@ -419,7 +465,9 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
 
     private static string? ReadEmployeeId(SearchResultEntry entry)
     {
-        return ReadAttribute(entry, "employeeId") ?? ReadAttribute(entry, "employeeNumber");
+        return ReadAttribute(entry, "employeeId")
+            ?? ReadAttribute(entry, "employeeID")
+            ?? ReadAttribute(entry, "employeeNumber");
     }
 
     private static string? ReadAttribute(SearchResultEntry entry, string attributeName)

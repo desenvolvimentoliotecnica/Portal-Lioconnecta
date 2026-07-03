@@ -1,4 +1,6 @@
 using PortalLioConnecta.Api.Interfaces;
+using PortalLioConnecta.Api.Services;
+using System.Text.Json;
 
 namespace PortalLioConnecta.Api.Tests;
 
@@ -19,5 +21,20 @@ public class PortalUserEmployeeIdResolutionTests
         var message = PortalUserEmployeeIdResolution.BuildMissingProfileMessage(null);
 
         Assert.Contains("(nao informada)", message);
+    }
+
+    [Fact]
+    public void MapGraphProfile_UsesEmployeeNumberWhenEmployeeIdMissing()
+    {
+        using var document = JsonDocument.Parse("""
+            {
+              "displayName": "Leonardo Sabino Mendes",
+              "employeeNumber": "00000581"
+            }
+            """);
+
+        var employeeId = PortalUserEmployeeIdResolver.TryReadEmployeeIdFromGraph(document.RootElement);
+
+        Assert.Equal("00000581", employeeId);
     }
 }

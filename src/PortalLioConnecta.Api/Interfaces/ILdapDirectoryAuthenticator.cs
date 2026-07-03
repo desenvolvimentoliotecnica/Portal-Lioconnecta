@@ -9,4 +9,9 @@ public interface ILdapDirectoryAuthenticator
         string login,
         string password,
         CancellationToken cancellationToken);
+
+    Task<LdapAuthenticatedUser?> LookupUserProfileAsync(
+        LdapRuntimeConfiguration configuration,
+        IEnumerable<string> lookupCandidates,
+        CancellationToken cancellationToken);
 }

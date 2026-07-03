@@ -11,6 +11,8 @@ namespace PortalLioConnecta.Api.Services;
 public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
 {
     private readonly PortalLioConnectaDbContext _dbContext;
+    private readonly ILdapConfigurationService _ldapConfigurationService;
+    private readonly ILdapDirectoryAuthenticator _ldapDirectoryAuthenticator;
     private readonly IMicrosoftGraphConfigurationService _graphConfigurationService;
     private readonly MicrosoftGraphAuthClient _graphAuthClient;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -18,12 +20,16 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
 
     public PortalUserEmployeeIdResolver(
         PortalLioConnectaDbContext dbContext,
+        ILdapConfigurationService ldapConfigurationService,
+        ILdapDirectoryAuthenticator ldapDirectoryAuthenticator,
         IMicrosoftGraphConfigurationService graphConfigurationService,
         MicrosoftGraphAuthClient graphAuthClient,
         IHttpClientFactory httpClientFactory,
         ILogger<PortalUserEmployeeIdResolver> logger)
     {
         _dbContext = dbContext;
+        _ldapConfigurationService = ldapConfigurationService;
+        _ldapDirectoryAuthenticator = ldapDirectoryAuthenticator;
         _graphConfigurationService = graphConfigurationService;
         _graphAuthClient = graphAuthClient;
         _httpClientFactory = httpClientFactory;
@@ -44,9 +50,30 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
             };
         }
 
+        var ldapProfile = await FetchLdapProfileAsync(user, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(ldapProfile?.EmployeeId))
+        {
+            var employeeId = ldapProfile.EmployeeId.Trim();
+            if (persistWhenFound)
+            {
+                await PersistAsync(user, employeeId, ldapProfile.Title, ldapProfile.Department, "ldap", cancellationToken);
+            }
+
+            return new PortalUserEmployeeIdResolution
+            {
+                EmployeeId = employeeId,
+                Source = "ldap"
+            };
+        }
+
         var graphProfile = await FetchGraphProfileAsync(user, cancellationToken);
         if (string.IsNullOrWhiteSpace(graphProfile?.EmployeeId))
         {
+            _logger.LogWarning(
+                "Matricula nao encontrada para o usuario {PortalUserId} ({Login}). Fontes tentadas: portal_user, ldap, microsoft_graph.",
+                user.Id,
+                FirstNonEmpty(user.UserPrincipalName, user.Email, user.Login));
+
             return new PortalUserEmployeeIdResolution
             {
                 EmployeeId = null,
@@ -54,23 +81,58 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
             };
         }
 
-        var employeeId = graphProfile.EmployeeId.Trim();
+        var graphEmployeeId = graphProfile.EmployeeId.Trim();
         if (persistWhenFound)
         {
-            await PersistAsync(user, employeeId, graphProfile, cancellationToken);
+            await PersistAsync(
+                user,
+                graphEmployeeId,
+                graphProfile.JobTitle,
+                graphProfile.Department,
+                "microsoft_graph",
+                cancellationToken);
         }
 
         return new PortalUserEmployeeIdResolution
         {
-            EmployeeId = employeeId,
+            EmployeeId = graphEmployeeId,
             Source = "microsoft_graph"
         };
+    }
+
+    private async Task<LdapProfileSnapshot?> FetchLdapProfileAsync(
+        PortalUser user,
+        CancellationToken cancellationToken)
+    {
+        var configuration = await _ldapConfigurationService.GetRuntimeConfigurationAsync(cancellationToken);
+        if (!configuration.IsEnabled)
+        {
+            return null;
+        }
+
+        var candidates = BuildLookupCandidates(user);
+        var ldapUser = await _ldapDirectoryAuthenticator.LookupUserProfileAsync(
+            configuration,
+            candidates,
+            cancellationToken);
+
+        if (ldapUser is null || string.IsNullOrWhiteSpace(ldapUser.EmployeeId))
+        {
+            return null;
+        }
+
+        return new LdapProfileSnapshot(
+            ldapUser.EmployeeId.Trim(),
+            ldapUser.Title,
+            ldapUser.Department);
     }
 
     private async Task PersistAsync(
         PortalUser user,
         string employeeId,
-        GraphUserProfile graphProfile,
+        string? title,
+        string? department,
+        string source,
         CancellationToken cancellationToken)
     {
         var trackedUser = await _dbContext.PortalUsers
@@ -90,16 +152,16 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
             changed = true;
         }
 
-        if (string.IsNullOrWhiteSpace(trackedUser.Title) && !string.IsNullOrWhiteSpace(graphProfile.JobTitle))
+        if (string.IsNullOrWhiteSpace(trackedUser.Title) && !string.IsNullOrWhiteSpace(title))
         {
-            trackedUser.Title = graphProfile.JobTitle.Trim();
+            trackedUser.Title = title.Trim();
             user.Title = trackedUser.Title;
             changed = true;
         }
 
-        if (string.IsNullOrWhiteSpace(trackedUser.Department) && !string.IsNullOrWhiteSpace(graphProfile.Department))
+        if (string.IsNullOrWhiteSpace(trackedUser.Department) && !string.IsNullOrWhiteSpace(department))
         {
-            trackedUser.Department = graphProfile.Department.Trim();
+            trackedUser.Department = department.Trim();
             user.Department = trackedUser.Department;
             changed = true;
         }
@@ -113,8 +175,9 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation(
-            "Matricula {EmployeeId} sincronizada via Microsoft Graph para o usuario {PortalUserId}.",
+            "Matricula {EmployeeId} sincronizada via {Source} para o usuario {PortalUserId}.",
             employeeId,
+            source,
             user.Id);
     }
 
@@ -124,12 +187,6 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
     {
         var configuration = await _graphConfigurationService.GetRuntimeConfigurationAsync(cancellationToken);
         if (!configuration.IsEnabled)
-        {
-            return null;
-        }
-
-        var userIdentifier = ResolveUserIdentifier(user, configuration.UserIdentifier);
-        if (string.IsNullOrWhiteSpace(userIdentifier))
         {
             return null;
         }
@@ -149,20 +206,49 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
             return null;
         }
 
-        var profile = await FetchGraphProfileByIdentifierAsync(tokenResult.AccessToken, userIdentifier, cancellationToken);
-        if (profile is not null)
+        var accessToken = tokenResult.AccessToken;
+        var userIdentifier = ResolveUserIdentifier(user, configuration.UserIdentifier);
+        if (!string.IsNullOrWhiteSpace(userIdentifier))
         {
-            return profile;
+            var profile = await FetchGraphProfileByIdentifierAsync(accessToken, userIdentifier, cancellationToken);
+            if (profile is not null)
+            {
+                return profile;
+            }
+
+            profile = await FetchGraphProfileByFilterAsync(
+                accessToken,
+                $"userPrincipalName eq '{EscapeODataString(userIdentifier)}'",
+                cancellationToken);
+            if (profile is not null)
+            {
+                return profile;
+            }
         }
 
         var mail = FirstNonEmpty(user.Email, user.UserPrincipalName);
-        if (string.IsNullOrWhiteSpace(mail) ||
-            string.Equals(mail, userIdentifier, StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(mail))
         {
-            return null;
+            var profile = await FetchGraphProfileByFilterAsync(
+                accessToken,
+                $"mail eq '{EscapeODataString(mail)}'",
+                cancellationToken);
+            if (profile is not null)
+            {
+                return profile;
+            }
         }
 
-        return await FetchGraphProfileByMailFilterAsync(tokenResult.AccessToken, mail, cancellationToken);
+        var login = FirstNonEmpty(user.SamAccountName, user.Login);
+        if (!string.IsNullOrWhiteSpace(login) && !login.Contains('@', StringComparison.Ordinal))
+        {
+            return await FetchGraphProfileByFilterAsync(
+                accessToken,
+                $"startswith(userPrincipalName,'{EscapeODataString(login)}@')",
+                cancellationToken);
+        }
+
+        return null;
     }
 
     private async Task<GraphUserProfile?> FetchGraphProfileByIdentifierAsync(
@@ -171,18 +257,18 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         CancellationToken cancellationToken)
     {
         var requestUri =
-            $"https://graph.microsoft.com/v1.0/users/{Uri.EscapeDataString(userIdentifier)}?$select=employeeId,displayName,jobTitle,department,mail,userPrincipalName";
+            $"https://graph.microsoft.com/v1.0/users/{Uri.EscapeDataString(userIdentifier)}?$select={GraphUserSelectFields}";
 
         return await SendGraphProfileRequestAsync(accessToken, requestUri, cancellationToken);
     }
 
-    private async Task<GraphUserProfile?> FetchGraphProfileByMailFilterAsync(
+    private async Task<GraphUserProfile?> FetchGraphProfileByFilterAsync(
         string accessToken,
-        string mail,
+        string filterExpression,
         CancellationToken cancellationToken)
     {
         var requestUri =
-            $"https://graph.microsoft.com/v1.0/users?$filter=mail eq '{EscapeODataString(mail)}'&$select=employeeId,displayName,jobTitle,department,mail,userPrincipalName&$top=1";
+            $"https://graph.microsoft.com/v1.0/users?$filter={Uri.EscapeDataString(filterExpression)}&$select={GraphUserSelectFields}&$top=1";
 
         var client = _httpClientFactory.CreateClient(nameof(PortalUserEmployeeIdResolver));
         using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
@@ -195,7 +281,7 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         }
         catch (Exception exception)
         {
-            _logger.LogWarning(exception, "Falha ao consultar Microsoft Graph por mail {Mail}.", mail);
+            _logger.LogWarning(exception, "Falha ao consultar Microsoft Graph com filtro {Filter}.", filterExpression);
             return null;
         }
 
@@ -203,9 +289,9 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogWarning(
-                "Microsoft Graph users filter retornou HTTP {StatusCode} para {Mail}: {Body}",
+                "Microsoft Graph users filter retornou HTTP {StatusCode} para {Filter}: {Body}",
                 (int)response.StatusCode,
-                mail,
+                filterExpression,
                 body);
             return null;
         }
@@ -226,7 +312,7 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         }
         catch (JsonException exception)
         {
-            _logger.LogWarning(exception, "Resposta invalida do Microsoft Graph users filter para {Mail}.", mail);
+            _logger.LogWarning(exception, "Resposta invalida do Microsoft Graph para filtro {Filter}.", filterExpression);
         }
 
         return null;
@@ -275,9 +361,15 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         }
     }
 
-    private static GraphUserProfile? MapGraphProfile(JsonElement item)
+    public static string? TryReadEmployeeIdFromGraph(JsonElement item) =>
+        MapGraphProfile(item)?.EmployeeId;
+
+    internal static GraphUserProfile? MapGraphProfile(JsonElement item)
     {
-        var employeeId = ReadStringProperty(item, "employeeId");
+        var employeeId = FirstNonEmpty(
+            ReadStringProperty(item, "employeeId"),
+            ReadStringProperty(item, "employeeNumber"));
+
         if (string.IsNullOrWhiteSpace(employeeId))
         {
             return null;
@@ -288,6 +380,19 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
             ReadStringProperty(item, "displayName"),
             ReadStringProperty(item, "jobTitle"),
             ReadStringProperty(item, "department"));
+    }
+
+    private static IEnumerable<string> BuildLookupCandidates(PortalUser user)
+    {
+        yield return user.Email ?? string.Empty;
+        yield return user.UserPrincipalName ?? string.Empty;
+        yield return user.Login ?? string.Empty;
+        yield return user.SamAccountName ?? string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(user.Login) && user.Login.Contains('\\', StringComparison.Ordinal))
+        {
+            yield return user.Login.Split('\\', 2)[1];
+        }
     }
 
     private static string? ReadStringProperty(JsonElement item, string propertyName)
@@ -324,9 +429,17 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
     private static string EscapeODataString(string value) =>
         value.Replace("'", "''", StringComparison.Ordinal);
 
-    private sealed record GraphUserProfile(
+    private const string GraphUserSelectFields =
+        "employeeId,employeeNumber,displayName,jobTitle,department,mail,userPrincipalName";
+
+    internal sealed record GraphUserProfile(
         string EmployeeId,
         string? DisplayName,
         string? JobTitle,
+        string? Department);
+
+    private sealed record LdapProfileSnapshot(
+        string EmployeeId,
+        string? Title,
         string? Department);
 }
