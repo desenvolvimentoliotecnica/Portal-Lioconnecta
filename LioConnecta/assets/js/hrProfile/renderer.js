@@ -141,50 +141,104 @@ function renderVacationPage(data = {}) {
 
 function renderPayslipPage(data = {}) {
   const items = Array.isArray(data.items) ? data.items : [];
+  const groupedByYear = items.reduce((groups, item) => {
+    const year = item.competenceYear || String(item.referenceMonth || "").split("-")[0] || "—";
+    if (!groups[year]) {
+      groups[year] = [];
+    }
+    groups[year].push(item);
+    return groups;
+  }, {});
+
+  const years = Object.keys(groupedByYear).sort((left, right) => Number(right) - Number(left));
+
+  function formatPaymentDateShort(value) {
+    if (!value) {
+      return "—";
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return String(value);
+    }
+    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  }
+
+  function renderEnvelopeRow(item) {
+    return `
+      <tr class="payslip-envelope-row">
+        <td>${escapeHtml(item.referenceMonthShort || item.periodLabel || "—")}</td>
+        <td>
+          <button
+            type="button"
+            class="payslip-envelope-link"
+            data-action="open-payslip-modal"
+            data-payslip-id="${escapeHtml(item.id)}"
+          >
+            ${escapeHtml(item.paymentType || "FOLHA")}
+          </button>
+        </td>
+        <td>${escapeHtml(formatPaymentDateShort(item.paymentDate))}</td>
+        <td class="payslip-envelope-row__amount" data-sensitive-value>${escapeHtml(formatCurrency(item.netAmount))}</td>
+        <td class="payslip-envelope-row__actions">
+          <button
+            type="button"
+            class="comm-secondary-button"
+            data-action="download-payslip-pdf-list"
+            data-payslip-id="${escapeHtml(item.id)}"
+            aria-label="Baixar PDF"
+          >
+            <i class="fa-solid fa-file-pdf" aria-hidden="true"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }
 
   return renderPageShell({
-    title: data.title,
+    title: data.title || "Envelope de pagamento",
     provider: data.provider,
     isSimulated: data.isSimulated,
     heroImage: "./assets/img/hero-holerite-perfil-rh.png",
     heroImageLabel: "Mesa financeira simbolizando holerite e remuneracao",
     bodyHtml: `
       ${renderContentCard({
-        title: "Comprovantes disponiveis",
+        title: "Envelope de pagamento",
         bodyHtml: items.length
           ? `
-            <div class="hr-profile-list">
-              ${items.map((item) => `
-                <article class="hr-profile-list-item">
-                  <div>
-                    <strong>${escapeHtml(item.periodLabel)}</strong>
-                    <span>Pagamento em ${escapeHtml(formatDate(item.paymentDate))}</span>
-                  </div>
-                  <div class="hr-profile-list-item__meta">
-                    <span>Liquido ${escapeHtml(formatCurrency(item.netAmount))}</span>
-                    ${renderStatusPill(item.status)}
-                    <button
-                      type="button"
-                      class="feed-composer-submit"
-                      data-action="open-payslip-modal"
-                      data-payslip-id="${escapeHtml(item.id)}"
-                    >
-                      Visualizar
-                    </button>
-                    <button
-                      type="button"
-                      class="comm-secondary-button"
-                      data-action="download-payslip-pdf-list"
-                      data-payslip-id="${escapeHtml(item.id)}"
-                    >
-                      Baixar PDF
-                    </button>
-                  </div>
-                </article>
-              `).join("")}
+            <div class="payslip-envelope-toolbar">
+              <button
+                type="button"
+                class="comm-secondary-button payslip-envelope-toggle"
+                data-action="toggle-payslip-values"
+                aria-pressed="false"
+              >
+                <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+                Ocultar valores
+              </button>
+            </div>
+            <div class="hr-profile-table-wrap payslip-envelope-table-wrap" data-payslip-values-visible="true">
+              <table class="hr-profile-table payslip-envelope-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Ref.</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Pgto.</th>
+                    <th scope="col">Liquido</th>
+                    <th scope="col"><span class="sr-only">Acoes</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${years.map((year) => `
+                    <tr class="payslip-envelope-year">
+                      <td colspan="5">${escapeHtml(year)}</td>
+                    </tr>
+                    ${groupedByYear[year].map(renderEnvelopeRow).join("")}
+                  `).join("")}
+                </tbody>
+              </table>
             </div>
           `
-          : renderEmptyState("Nenhum holerite", "Os holerites liberados pelo RH aparecerao aqui.")
+          : renderEmptyState("Nenhum holerite", "Os envelopes liberados pelo RH aparecerao aqui.")
       })}
       ${renderPayslipModalShell()}
     `

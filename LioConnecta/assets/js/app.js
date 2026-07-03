@@ -1,4 +1,5 @@
 import { bindAnalytics, trackInteraction } from "./analytics.js?v=0.12.8";
+import { getHrTeamDashboard, normalizeHrTeamDashboard } from "./hrProfile/teamService.js?v=0.25.3";
 import { renderHeaderShell, renderSidebarPanels } from "./layout/index.js?v=0.12.8";
 import {
   renderHero,
@@ -181,7 +182,9 @@ let currentPeopleRhData = {
   moodDashboard: null,
   moodDashboardLoadError: "",
   moodFeedbackPage: null,
-  moodFeedbackLoadError: ""
+  moodFeedbackLoadError: "",
+  teamDashboard: null,
+  teamDashboardLoadError: ""
 };
 let timesheetQueryState = {
   month: null,
@@ -2048,7 +2051,8 @@ function renderPeopleRhCurrentView() {
       feedbackPage: canManageMoodSurveyFeedback() ? currentPeopleRhData.moodFeedbackPage : null,
       feedbackLoadError: currentPeopleRhData.moodFeedbackLoadError || "",
       feedbackOptionKey: moodFeedbackQueryState.optionKey,
-      feedbackEditingId: moodFeedbackQueryState.editingId
+      feedbackEditingId: moodFeedbackQueryState.editingId,
+      teamDashboard: currentPeopleRhData.teamDashboard
     });
 
   centerContent.innerHTML = wrapRhAdminShell(pageContent, "humor");
@@ -2091,7 +2095,9 @@ async function refreshPeopleRhRoute(feedbackMessage = "", feedbackTone = "succes
     moodDashboard: data.moodDashboard,
     moodDashboardLoadError: data.moodDashboardLoadError || "",
     moodFeedbackPage: data.moodFeedbackPage,
-    moodFeedbackLoadError: data.moodFeedbackLoadError || ""
+    moodFeedbackLoadError: data.moodFeedbackLoadError || "",
+    teamDashboard: data.teamDashboard,
+    teamDashboardLoadError: data.teamDashboardLoadError || ""
   };
   renderPeopleRhCurrentView();
 
@@ -2220,7 +2226,9 @@ function renderPeopleRhPage(data, route) {
     moodDashboard: data.moodDashboard,
     moodDashboardLoadError: data.moodDashboardLoadError || "",
     moodFeedbackPage: data.moodFeedbackPage,
-    moodFeedbackLoadError: data.moodFeedbackLoadError || ""
+    moodFeedbackLoadError: data.moodFeedbackLoadError || "",
+    teamDashboard: data.teamDashboard,
+    teamDashboardLoadError: data.teamDashboardLoadError || ""
   };
   renderPeopleRhCurrentView();
 }
@@ -2479,7 +2487,9 @@ async function loadPageData(route, slug = "") {
         moodDashboard: null,
         moodDashboardLoadError: "",
         moodFeedbackPage: null,
-        moodFeedbackLoadError: ""
+        moodFeedbackLoadError: "",
+        teamDashboard: null,
+        teamDashboardLoadError: ""
       };
     }
 
@@ -2487,12 +2497,23 @@ async function loadPageData(route, slug = "") {
     let moodDashboardLoadError = "";
     let moodFeedbackPage = null;
     let moodFeedbackLoadError = "";
+    let teamDashboard = null;
+    let teamDashboardLoadError = "";
 
     try {
       moodDashboard = await getMoodSurveyDashboard(buildMoodDashboardQuery());
     } catch (error) {
       console.error("Falha ao carregar dashboard de humor do RH.", error);
       moodDashboardLoadError = "Nao foi possivel consultar a distribuicao de humor. Verifique se a API do ambiente esta ativa.";
+    }
+
+    try {
+      teamDashboard = normalizeHrTeamDashboard(await getHrTeamDashboard({
+        headers: getPortalAuthHeaders()
+      }));
+    } catch (error) {
+      console.error("Falha ao carregar dashboard de equipe do RM.", error);
+      teamDashboardLoadError = "Nao foi possivel consultar a equipe no RM.";
     }
 
     if (canManageMoodSurveyFeedback()) {
@@ -2509,7 +2530,9 @@ async function loadPageData(route, slug = "") {
       moodDashboard,
       moodDashboardLoadError,
       moodFeedbackPage,
-      moodFeedbackLoadError
+      moodFeedbackLoadError,
+      teamDashboard,
+      teamDashboardLoadError
     };
   }
 
