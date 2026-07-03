@@ -504,18 +504,27 @@ public class HrWorkspaceService : IHrWorkspaceService
                 runtime.TimesheetPeriodEndDay);
             var punches = await _totvsRmTimesheetRepository.GetPunchesAsync(chapa, dataDe, dataAte, cancellationToken);
             var processedDays = await _totvsRmTimesheetRepository.GetProcessedDaysAsync(chapa, dataDe, dataAte, cancellationToken);
+            var periodBank = await _totvsRmTimesheetRepository.GetPeriodBankSummaryAsync(chapa, dataDe, dataAte, cancellationToken);
             var (summary, _) = _timesheetMergeService.Merge(dataDe, dataAte, punches, processedDays);
+            var enrichedSummary = ApplyPeriodBankSummary(summary, periodBank);
 
             var lastPayslip = payslips.FirstOrDefault();
             var lastPayslipLabel = lastPayslip is null
                 ? null
                 : $"{HrRmMapper.BuildShortMonthLabel(lastPayslip.MesComp)} {lastPayslip.AnoComp} • {HrRmMapper.MapPaymentTypeLabel(lastPayslip)}";
+            var monthlyWorkedHours = FormatPeriodWorkedHours(SumCreditedMinutes(processedDays));
+            var monthlyBalanceHours = enrichedSummary?.TotalBankBalance;
+            if (string.Equals(monthlyBalanceHours, "—", StringComparison.Ordinal))
+            {
+                monthlyBalanceHours = null;
+            }
+
             return new HrRhSummaryDto(
                 balance?.AvailableDays.ToString(),
                 lastPayslip is null ? null : $"R$ {lastPayslip.NetAmount:N2}",
                 lastPayslipLabel,
-                summary?.PeriodBankBalance,
-                summary?.TotalBankBalance,
+                monthlyWorkedHours,
+                monthlyBalanceHours,
                 Provider,
                 false,
                 "ok",
@@ -676,6 +685,15 @@ public class HrWorkspaceService : IHrWorkspaceService
         var formatted = TimesheetAggregationService.FormatMinutes(minutes.Value);
         return minutes.Value > 0 ? $"+{formatted}" : formatted;
     }
+
+    private static int SumCreditedMinutes(IReadOnlyList<RmProcessedDayRecord> processedDays) =>
+        processedDays.Sum(day =>
+            (day.WorkedMinutes ?? 0) + (day.AbonoMinutes ?? 0) + (day.CompensatedMinutes ?? 0));
+
+    private static string? FormatPeriodWorkedHours(int totalMinutes) =>
+        totalMinutes > 0
+            ? TimesheetAggregationService.FormatMinutes(totalMinutes)
+            : null;
 
     private static HrTimesheetResponse BuildUnavailableTimesheet(string availabilityStatus, string userMessage) =>
         new("Ponto", null, [], Provider, false, availabilityStatus, userMessage, 0, 0, []);

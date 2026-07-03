@@ -1,4 +1,4 @@
-export const APP_VERSION = "v0.25.4";
+export const APP_VERSION = "v0.25.5";
 
 export const DATA_MODES = Object.freeze({
   MOCK: "mock",

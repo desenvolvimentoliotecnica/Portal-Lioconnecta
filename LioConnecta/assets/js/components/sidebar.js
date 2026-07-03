@@ -155,22 +155,38 @@ function isSensitivePanelValue(label, value, panelTitle) {
     .trim()
     .toLowerCase();
 
-  if (normalizedTitle === "resumo rh") {
-    return true;
-  }
+  const normalizedLabel = String(label || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
 
   const normalizedValue = String(value || "");
+
+  if (normalizedTitle === "resumo rh") {
+    return normalizedLabel.includes("envelope") || normalizedValue.includes("R$");
+  }
+
   return normalizedValue.includes("R$") || /\d/.test(normalizedValue);
+}
+
+function isRhSummaryPanel(title) {
+  return String(title || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase() === "resumo rh";
 }
 
 export function renderMenuCard(panel) {
   const items = Array.isArray(panel.items) ? panel.items : [];
+  const rhSummaryPanel = isRhSummaryPanel(panel.title);
 
   return `
     <section class="card">
       <div class="card-header">${escapeHtml(panel.title)}</div>
       ${items.length ? `
-        <div class="menu-list">
+        <div class="menu-list${rhSummaryPanel ? " menu-list--rh-summary" : ""}">
           ${items.map((item) => {
             const label = typeof item === "string" ? item : item.label;
             const url = typeof item === "object" ? item.url : "";
@@ -181,7 +197,7 @@ export function renderMenuCard(panel) {
               </span>
               ${typeof item === "object" && item.badge ? `<span class="menu-badge">${escapeHtml(item.badge)}</span>` : ""}
               ${typeof item === "object" && item.value
-    ? `<strong${isSensitivePanelValue(label, item.value, panel.title) ? ' data-sensitive-value' : ""}>${escapeHtml(item.value)}</strong>`
+    ? `<strong class="menu-item-value"${isSensitivePanelValue(label, item.value, panel.title) ? ' data-sensitive-value' : ""}>${escapeHtml(item.value)}</strong>`
     : ""}
             `;
 
