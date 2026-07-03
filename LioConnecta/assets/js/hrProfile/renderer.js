@@ -363,6 +363,8 @@ function renderTimesheetPage(data = {}, options = {}) {
                   <tr>
                     <th>Data</th>
                     <th>Entrada</th>
+                    <th>Saida almoco</th>
+                    <th>Volta almoco</th>
                     <th>Saida</th>
                     <th>Intervalo</th>
                     <th>Trabalhado</th>
@@ -375,6 +377,8 @@ function renderTimesheetPage(data = {}, options = {}) {
                     <tr>
                       <td>${escapeHtml(formatDate(item.date))} • ${escapeHtml(item.weekdayLabel)}</td>
                       <td>${escapeHtml(item.clockIn)}</td>
+                      <td>${escapeHtml(item.lunchOut)}</td>
+                      <td>${escapeHtml(item.lunchIn)}</td>
                       <td>${escapeHtml(item.clockOut)}</td>
                       <td>${escapeHtml(item.breakMinutes)} min</td>
                       <td>${escapeHtml(item.workedHours)}</td>

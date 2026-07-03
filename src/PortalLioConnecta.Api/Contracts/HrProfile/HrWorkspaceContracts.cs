@@ -124,6 +124,8 @@ public sealed record HrTimesheetEntryDto(
     DateTime Date,
     string WeekdayLabel,
     string ClockIn,
+    string LunchOut,
+    string LunchIn,
     string ClockOut,
     string BreakMinutes,
     string WorkedHours,

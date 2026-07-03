@@ -5,9 +5,6 @@ namespace PortalLioConnecta.Api.Services;
 
 public sealed class TimesheetAggregationService
 {
-    private static readonly HashSet<int> EntryNatureCodes = new() { 0, 1 };
-    private static readonly HashSet<int> ExitNatureCodes = new() { 2, 3 };
-
     public IReadOnlyDictionary<DateTime, AggregatedDayPunch> AggregateByDay(IEnumerable<RmPunchRecord> punches)
     {
         return punches
@@ -21,32 +18,54 @@ public sealed class TimesheetAggregationService
     {
         if (dayPunches.Count == 0)
         {
-            return new AggregatedDayPunch(date, null, null, 0, 0, "Sem registro");
+            return new AggregatedDayPunch(date, null, null, null, null, 0, 0, "Sem registro");
         }
 
-        var entryCandidates = dayPunches
-            .Where(item => EntryNatureCodes.Contains(item.Natureza)
-                || ContainsKeyword(item.DescricaoNatureza, "entrada"))
+        var ordered = dayPunches
             .Select(item => item.BatidaMinutos)
+            .OrderBy(item => item)
             .ToList();
 
-        var exitCandidates = dayPunches
-            .Where(item => ExitNatureCodes.Contains(item.Natureza)
-                || ContainsKeyword(item.DescricaoNatureza, "saida"))
-            .Select(item => item.BatidaMinutos)
-            .ToList();
+        int? clockIn = ordered.Count >= 1 ? ordered[0] : null;
+        int? lunchOut = null;
+        int? lunchIn = null;
+        int? clockOut = null;
 
-        var ordered = dayPunches.Select(item => item.BatidaMinutos).OrderBy(item => item).ToList();
-        var clockIn = entryCandidates.Count > 0 ? entryCandidates.Min() : ordered.First();
-        var clockOut = exitCandidates.Count > 0 ? exitCandidates.Max() : ordered.Last();
+        switch (ordered.Count)
+        {
+            case >= 4:
+                lunchOut = ordered[1];
+                lunchIn = ordered[2];
+                clockOut = ordered[3];
+                break;
+            case 3:
+                lunchOut = ordered[1];
+                lunchIn = ordered[2];
+                break;
+            case 2:
+                clockOut = ordered[1];
+                break;
+        }
 
-        var breakMinutes = CalculateBreakMinutes(ordered, clockIn, clockOut);
-        var workedMinutes = Math.Max(0, clockOut - clockIn - breakMinutes);
-        var status = dayPunches.Count >= 2 && clockOut > clockIn ? "Regular" : "Incompleto";
+        var firstPunch = ordered[0];
+        var lastPunch = ordered[^1];
+        var breakMinutes = ordered.Count >= 4
+            ? CalculateBreakMinutes(ordered, firstPunch, lastPunch)
+            : 0;
+        var workedMinutes = ordered.Count >= 2
+            ? Math.Max(0, lastPunch - firstPunch - breakMinutes)
+            : 0;
+        var status = ordered.Count >= 4 && lastPunch > firstPunch
+            ? "Regular"
+            : ordered.Count >= 2 && lastPunch > firstPunch
+                ? "Incompleto"
+                : "Incompleto";
 
         return new AggregatedDayPunch(
             date,
             clockIn,
+            lunchOut,
+            lunchIn,
             clockOut,
             breakMinutes,
             workedMinutes,
@@ -74,12 +93,6 @@ public sealed class TimesheetAggregationService
         return breakMinutes;
     }
 
-    private static bool ContainsKeyword(string? description, string keyword)
-    {
-        return !string.IsNullOrWhiteSpace(description)
-            && description.Contains(keyword, StringComparison.OrdinalIgnoreCase);
-    }
-
     public static string FormatMinutes(int minutes)
     {
         var absolute = Math.Abs(minutes);
@@ -105,6 +118,8 @@ public sealed class TimesheetAggregationService
 public sealed record AggregatedDayPunch(
     DateTime Date,
     int? ClockInMinutes,
+    int? LunchOutMinutes,
+    int? LunchInMinutes,
     int? ClockOutMinutes,
     int BreakMinutes,
     int WorkedMinutes,

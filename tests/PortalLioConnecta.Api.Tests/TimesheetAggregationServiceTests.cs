@@ -22,9 +22,49 @@ public class TimesheetAggregationServiceTests
         var day = result[new DateTime(2026, 6, 23)];
 
         Assert.Equal("08:02", TimesheetAggregationService.FormatClock(day.ClockInMinutes!.Value));
+        Assert.Equal("12:00", TimesheetAggregationService.FormatClock(day.LunchOutMinutes!.Value));
+        Assert.Equal("13:00", TimesheetAggregationService.FormatClock(day.LunchInMinutes!.Value));
         Assert.Equal("17:31", TimesheetAggregationService.FormatClock(day.ClockOutMinutes!.Value));
         Assert.Equal(60, day.BreakMinutes);
         Assert.Equal("Regular", day.Status);
+    }
+
+    [Fact]
+    public void AggregateByDay_WithTwoPunches_PlacesEntryAndExitInFirstAndLastColumns()
+    {
+        var punches = new List<RmPunchRecord>
+        {
+            new() { DataPonto = new DateTime(2026, 7, 1), BatidaMinutos = 459, Natureza = 0 },
+            new() { DataPonto = new DateTime(2026, 7, 1), BatidaMinutos = 1244, Natureza = 2 }
+        };
+
+        var result = _service.AggregateByDay(punches);
+        var day = result[new DateTime(2026, 7, 1)];
+
+        Assert.Equal("07:39", TimesheetAggregationService.FormatClock(day.ClockInMinutes!.Value));
+        Assert.Null(day.LunchOutMinutes);
+        Assert.Null(day.LunchInMinutes);
+        Assert.Equal("20:44", TimesheetAggregationService.FormatClock(day.ClockOutMinutes!.Value));
+        Assert.Equal("Incompleto", day.Status);
+    }
+
+    [Fact]
+    public void MergeService_ExcludesFutureDaysFromEntries()
+    {
+        var mergeService = new TimesheetMergeService(_service);
+        var todayLocal = TimeZoneInfo.ConvertTimeFromUtc(
+            DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById(
+                OperatingSystem.IsWindows()
+                    ? "E. South America Standard Time"
+                    : "America/Sao_Paulo")).Date;
+        var dataDe = new DateTime(todayLocal.Year, todayLocal.Month, 1);
+        var dataAte = dataDe.AddMonths(1).AddDays(-1);
+
+        var (_, entries) = mergeService.Merge(dataDe, dataAte, [], []);
+
+        Assert.All(entries, entry => Assert.True(entry.Date.Date <= todayLocal));
+        Assert.Equal(todayLocal.Day, entries.Count);
     }
 
     [Fact]

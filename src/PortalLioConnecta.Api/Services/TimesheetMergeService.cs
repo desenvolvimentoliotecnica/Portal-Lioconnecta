@@ -1,4 +1,5 @@
 using PortalLioConnecta.Api.Contracts.HrProfile;
+using PortalLioConnecta.Api.Infrastructure;
 using PortalLioConnecta.Api.Infrastructure.TotvsRm.Models;
 using System.Globalization;
 
@@ -22,8 +23,15 @@ public sealed class TimesheetMergeService
         var aggregated = _aggregationService.AggregateByDay(punches);
         var processedByDate = processedDays.ToDictionary(item => item.DataPonto.Date);
 
+        var todayLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, BrazilTimeZone.SaoPauloTimeZone).Date;
+        var effectiveEnd = dataAte.Date > todayLocal ? todayLocal : dataAte.Date;
+        if (effectiveEnd < dataDe.Date)
+        {
+            effectiveEnd = dataDe.Date;
+        }
+
         var dates = Enumerable
-            .Range(0, (dataAte.Date - dataDe.Date).Days + 1)
+            .Range(0, (effectiveEnd - dataDe.Date).Days + 1)
             .Select(offset => dataDe.Date.AddDays(offset))
             .OrderByDescending(item => item)
             .ToList();
@@ -44,13 +52,10 @@ public sealed class TimesheetMergeService
         aggregated.TryGetValue(date, out var dayPunch);
         processedByDate.TryGetValue(date, out var processed);
 
-        var clockIn = dayPunch?.ClockInMinutes is int entry
-            ? TimesheetAggregationService.FormatClock(entry)
-            : "—";
-
-        var clockOut = dayPunch?.ClockOutMinutes is int exit
-            ? TimesheetAggregationService.FormatClock(exit)
-            : "—";
+        var clockIn = FormatPunch(dayPunch?.ClockInMinutes);
+        var lunchOut = FormatPunch(dayPunch?.LunchOutMinutes);
+        var lunchIn = FormatPunch(dayPunch?.LunchInMinutes);
+        var clockOut = FormatPunch(dayPunch?.ClockOutMinutes);
 
         var breakMinutes = dayPunch?.BreakMinutes ?? 0;
         var workedMinutes = processed?.WorkedMinutes ?? dayPunch?.WorkedMinutes ?? 0;
@@ -64,6 +69,8 @@ public sealed class TimesheetMergeService
             date,
             TimesheetAggregationService.GetWeekdayLabel(date),
             clockIn,
+            lunchOut,
+            lunchIn,
             clockOut,
             breakMinutes.ToString(CultureInfo.InvariantCulture),
             TimesheetAggregationService.FormatMinutes(workedMinutes),
@@ -71,6 +78,13 @@ public sealed class TimesheetMergeService
                 ? FormatSignedMinutes(balanceMinutes.Value)
                 : "—",
             status);
+    }
+
+    private static string FormatPunch(int? minutes)
+    {
+        return minutes is int value
+            ? TimesheetAggregationService.FormatClock(value)
+            : "—";
     }
 
     private static string ResolveStatus(RmProcessedDayRecord? processed, AggregatedDayPunch? dayPunch)
