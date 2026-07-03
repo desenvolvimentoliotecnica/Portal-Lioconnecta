@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PortalLioConnecta.Api.Data;
+using PortalLioConnecta.Api.Infrastructure.TotvsRm;
 using PortalLioConnecta.Api.Interfaces;
 using PortalLioConnecta.Api.Models;
 
@@ -14,6 +15,7 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
     private readonly ILdapConfigurationService _ldapConfigurationService;
     private readonly ILdapDirectoryAuthenticator _ldapDirectoryAuthenticator;
     private readonly IMicrosoftGraphConfigurationService _graphConfigurationService;
+    private readonly ITotvsRmEmployeeRepository _totvsRmEmployeeRepository;
     private readonly MicrosoftGraphAuthClient _graphAuthClient;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<PortalUserEmployeeIdResolver> _logger;
@@ -23,6 +25,7 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         ILdapConfigurationService ldapConfigurationService,
         ILdapDirectoryAuthenticator ldapDirectoryAuthenticator,
         IMicrosoftGraphConfigurationService graphConfigurationService,
+        ITotvsRmEmployeeRepository totvsRmEmployeeRepository,
         MicrosoftGraphAuthClient graphAuthClient,
         IHttpClientFactory httpClientFactory,
         ILogger<PortalUserEmployeeIdResolver> logger)
@@ -31,6 +34,7 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         _ldapConfigurationService = ldapConfigurationService;
         _ldapDirectoryAuthenticator = ldapDirectoryAuthenticator;
         _graphConfigurationService = graphConfigurationService;
+        _totvsRmEmployeeRepository = totvsRmEmployeeRepository;
         _graphAuthClient = graphAuthClient;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
@@ -67,37 +71,63 @@ public class PortalUserEmployeeIdResolver : IPortalUserEmployeeIdResolver
         }
 
         var graphProfile = await FetchGraphProfileAsync(user, cancellationToken);
-        if (string.IsNullOrWhiteSpace(graphProfile?.EmployeeId))
+        if (!string.IsNullOrWhiteSpace(graphProfile?.EmployeeId))
         {
-            _logger.LogWarning(
-                "Matricula nao encontrada para o usuario {PortalUserId} ({Login}). Fontes tentadas: portal_user, ldap, microsoft_graph.",
-                user.Id,
-                FirstNonEmpty(user.UserPrincipalName, user.Email, user.Login));
+            var graphEmployeeId = graphProfile.EmployeeId.Trim();
+            if (persistWhenFound)
+            {
+                await PersistAsync(
+                    user,
+                    graphEmployeeId,
+                    graphProfile.JobTitle,
+                    graphProfile.Department,
+                    "microsoft_graph",
+                    cancellationToken);
+            }
 
             return new PortalUserEmployeeIdResolution
             {
-                EmployeeId = null,
-                Source = "none"
+                EmployeeId = graphEmployeeId,
+                Source = "microsoft_graph"
             };
         }
 
-        var graphEmployeeId = graphProfile.EmployeeId.Trim();
-        if (persistWhenFound)
+        var rmChapa = await FetchChapaFromTotvsRmAsync(user, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(rmChapa))
         {
-            await PersistAsync(
-                user,
-                graphEmployeeId,
-                graphProfile.JobTitle,
-                graphProfile.Department,
-                "microsoft_graph",
-                cancellationToken);
+            if (persistWhenFound)
+            {
+                await PersistAsync(user, rmChapa, null, null, "totvs_rm_pfunc", cancellationToken);
+            }
+
+            return new PortalUserEmployeeIdResolution
+            {
+                EmployeeId = rmChapa,
+                Source = "totvs_rm_pfunc"
+            };
         }
+
+        _logger.LogWarning(
+            "Matricula nao encontrada para o usuario {PortalUserId} ({Login}). Fontes tentadas: portal_user, ldap, microsoft_graph, totvs_rm_pfunc.",
+            user.Id,
+            FirstNonEmpty(user.UserPrincipalName, user.Email, user.Login));
 
         return new PortalUserEmployeeIdResolution
         {
-            EmployeeId = graphEmployeeId,
-            Source = "microsoft_graph"
+            EmployeeId = null,
+            Source = "none"
         };
+    }
+
+    private async Task<string?> FetchChapaFromTotvsRmAsync(PortalUser user, CancellationToken cancellationToken)
+    {
+        var fullName = FirstNonEmpty(user.DisplayName, user.Email, user.Login);
+        if (string.IsNullOrWhiteSpace(fullName))
+        {
+            return null;
+        }
+
+        return await _totvsRmEmployeeRepository.LookupChapaByFullNameAsync(fullName, cancellationToken);
     }
 
     private async Task<LdapProfileSnapshot?> FetchLdapProfileAsync(

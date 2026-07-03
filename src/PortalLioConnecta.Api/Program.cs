@@ -36,6 +36,7 @@ builder.Services.AddScoped<IMicrosoftGraphConfigurationService, MicrosoftGraphCo
 builder.Services.AddScoped<ITotvsRmConfigurationService, TotvsRmConfigurationService>();
 builder.Services.AddScoped<TotvsRmConnectionTester>();
 builder.Services.AddScoped<ITotvsRmTimesheetRepository, TotvsRmTimesheetRepository>();
+builder.Services.AddScoped<ITotvsRmEmployeeRepository, TotvsRmEmployeeRepository>();
 builder.Services.AddScoped<TimesheetAggregationService>();
 builder.Services.AddScoped<TimesheetMergeService>();
 builder.Services.AddScoped<IPortalAuthService, PortalAuthService>();

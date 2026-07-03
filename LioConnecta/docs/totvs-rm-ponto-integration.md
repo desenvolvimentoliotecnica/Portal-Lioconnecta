@@ -13,6 +13,7 @@ Este guia descreve como configurar e validar a integracao de ponto entre o porta
 4. **CodColigada fixa:** `1` (nao configuravel no portal).
 5. Acesso de **super-admin** ao portal para a area Configuracoes.
 6. **Microsoft Graph** habilitado em Configuracoes (opcional, recomendado): o portal usa `employeeId` do Graph como fallback quando o LDAP nao retorna matricula. Permissao de aplicativo: `User.Read.All`.
+7. **Integracao TOTVS RM habilitada** (opcional): fallback final consulta `dbo.PFUNC` pelo nome completo (`NOME`) para resolver a CHAPA quando LDAP/Graph nao retornarem matricula. Requer match unico e colaborador ativo (`CODSITUACAO = 'A'` ou nulo).
 
 ## Configurar no portal (super-admin)
 
