@@ -1,4 +1,4 @@
-const CACHE_NAME = "lioconnecta-static-v52";
+const CACHE_NAME = "lioconnecta-static-v53";
 const ASSETS = [
   "./",
   "./index.html",
@@ -29,6 +29,14 @@ const ASSETS = [
   "./assets/js/components/sidebar.js",
   "./assets/js/core/feedback.js",
   "./assets/js/core/runtimeConfig.js",
+  "./assets/js/settings/index.js",
+  "./assets/js/settings/ldapWizard.js",
+  "./assets/js/settings/microsoftGraphSettings.js",
+  "./assets/js/settings/totvsRmSettings.js",
+  "./assets/js/services/totvsRmSettingsService.js",
+  "./assets/js/services/ldapSettingsService.js",
+  "./assets/js/services/microsoftGraphSettingsService.js",
+  "./assets/js/services/portalPermissionService.js",
   "./assets/js/feed/index.js",
   "./assets/js/feed/mapper.js",
   "./assets/js/feed/renderer.js",
