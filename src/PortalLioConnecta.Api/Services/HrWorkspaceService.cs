@@ -12,15 +12,18 @@ public class HrWorkspaceService : IHrWorkspaceService
     private readonly ITotvsRmConfigurationService _totvsRmConfigurationService;
     private readonly ITotvsRmTimesheetRepository _totvsRmTimesheetRepository;
     private readonly TimesheetMergeService _timesheetMergeService;
+    private readonly IPortalUserEmployeeIdResolver _employeeIdResolver;
 
     public HrWorkspaceService(
         ITotvsRmConfigurationService totvsRmConfigurationService,
         ITotvsRmTimesheetRepository totvsRmTimesheetRepository,
-        TimesheetMergeService timesheetMergeService)
+        TimesheetMergeService timesheetMergeService,
+        IPortalUserEmployeeIdResolver employeeIdResolver)
     {
         _totvsRmConfigurationService = totvsRmConfigurationService;
         _totvsRmTimesheetRepository = totvsRmTimesheetRepository;
         _timesheetMergeService = timesheetMergeService;
+        _employeeIdResolver = employeeIdResolver;
     }
 
     public Task<HrVacationResponse> GetVacationAsync(PortalUser user, CancellationToken cancellationToken)
@@ -184,9 +187,9 @@ public class HrWorkspaceService : IHrWorkspaceService
         return Task.FromResult(response);
     }
 
-    public Task<HrPersonalDataResponse> GetPersonalDataAsync(PortalUser user, CancellationToken cancellationToken)
+    public async Task<HrPersonalDataResponse> GetPersonalDataAsync(PortalUser user, CancellationToken cancellationToken)
     {
-        _ = cancellationToken;
+        var resolution = await _employeeIdResolver.ResolveAsync(user, persistWhenFound: true, cancellationToken);
 
         var response = new HrPersonalDataResponse(
             "Dados Cadastrais",
@@ -194,7 +197,7 @@ public class HrWorkspaceService : IHrWorkspaceService
                 new HrPersonalDataSectionDto("Identificacao", [
                     new HrPersonalDataFieldDto("Nome", user.DisplayName, false),
                     new HrPersonalDataFieldDto("E-mail", user.Email ?? "—", false),
-                    new HrPersonalDataFieldDto("Matricula", user.EmployeeId ?? "—", false)
+                    new HrPersonalDataFieldDto("Matricula", resolution.EmployeeId ?? "—", false)
                 ]),
                 new HrPersonalDataSectionDto("Organizacao", [
                     new HrPersonalDataFieldDto("Cargo", user.Title ?? "—", false),
@@ -209,7 +212,7 @@ public class HrWorkspaceService : IHrWorkspaceService
             Provider,
             true);
 
-        return Task.FromResult(response);
+        return response;
     }
 
     public async Task<HrTimesheetResponse> GetTimesheetAsync(
@@ -219,12 +222,13 @@ public class HrWorkspaceService : IHrWorkspaceService
         CancellationToken cancellationToken)
     {
         var (dataDe, dataAte) = ResolvePeriod(month, year);
+        var resolution = await _employeeIdResolver.ResolveAsync(user, persistWhenFound: true, cancellationToken);
 
-        if (string.IsNullOrWhiteSpace(user.EmployeeId))
+        if (string.IsNullOrWhiteSpace(resolution.EmployeeId))
         {
             return BuildUnavailableResponse(
                 "missing_employee_id",
-                "Sua matricula nao esta vinculada ao perfil. Solicite ao RH a regularizacao do cadastro.");
+                PortalUserEmployeeIdResolution.BuildMissingProfileMessage(resolution.MessageLabel));
         }
 
         var runtime = await _totvsRmConfigurationService.GetRuntimeConfigurationAsync(cancellationToken);
@@ -235,12 +239,12 @@ public class HrWorkspaceService : IHrWorkspaceService
                 "Consulta de ponto temporariamente indisponivel. Entre em contato com o RH.");
         }
 
-        var chapa = TotvsRmChapaNormalizer.Normalize(user.EmployeeId);
+        var chapa = TotvsRmChapaNormalizer.Normalize(resolution.EmployeeId);
         if (string.IsNullOrWhiteSpace(chapa))
         {
             return BuildUnavailableResponse(
                 "missing_employee_id",
-                "Sua matricula nao esta vinculada ao perfil. Solicite ao RH a regularizacao do cadastro.");
+                PortalUserEmployeeIdResolution.BuildMissingProfileMessage(resolution.EmployeeId));
         }
 
         try

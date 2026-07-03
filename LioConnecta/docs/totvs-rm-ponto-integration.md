@@ -12,6 +12,7 @@ Este guia descreve como configurar e validar a integracao de ponto entre o porta
 3. **Espelho recalculado no RM** para o periodo consultado (menu Movimento > Calcular no Automação de Ponto).
 4. **CodColigada fixa:** `1` (nao configuravel no portal).
 5. Acesso de **super-admin** ao portal para a area Configuracoes.
+6. **Microsoft Graph** habilitado em Configuracoes (opcional, recomendado): o portal usa `employeeId` do Graph como fallback quando o LDAP nao retorna matricula. Permissao de aplicativo: `User.Read.All`.
 
 ## Configurar no portal (super-admin)
 

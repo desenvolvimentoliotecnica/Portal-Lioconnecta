@@ -2,13 +2,13 @@
   "meta": {
     "projeto": "LioConnecta / Portal do Colaborador",
     "responsavelPadrao": "Leonardo Sabino Mendes",
-    "atualizadoEm": "2026-07-02T20:40",
+    "atualizadoEm": "2026-07-03T00:22",
     "instrucao": "totalHoras = tempo real entre horarios no mesmo dia; multi-dia = parcial + 8h/dia.",
     "horasUteisPorDia": 8,
     "minutosMinimos": 30,
     "jornadaComercial": "08:00-18:00",
     "backfillPre23Em": "2026-06-29",
-    "totalTarefas": 40
+    "totalTarefas": 41
   },
   "tarefas": [
     {
@@ -1065,6 +1065,29 @@
         "prHml": "Promocao DEV/HML/PRD (pipelines 28628204775, 28628207199, 28628210923)"
       },
       "observacoes": "CodColigada fixo 1; CHAPA normalizada PadLeft(8). Pos-deploy: rodar migration e cadastrar conexao RM em Configuracoes."
+    },
+    {
+      "id": "TASK-2026-041",
+      "nome": "[LIOCONNECTA] Matricula no ponto — LDAP, Graph e mensagem diagnostica",
+      "descricaoAmigavel": "Correcao da leitura de employeeId no LDAP, fallback via Microsoft Graph e mensagem de ponto exibindo a matricula encontrada ou ausente para facilitar suporte ao colaborador.",
+      "inicio": "2026-07-02",
+      "horarioInicio": "21:05",
+      "conclusao": "2026-07-03",
+      "horarioConclusao": "00:22",
+      "totalHoras": 0.5,
+      "bucket": "Concluído",
+      "percentualConcluido": 100,
+      "prioridade": "Alta",
+      "atribuidaA": "Leonardo Sabino Mendes",
+      "pedidoOriginal": "Exibir matricula na mensagem de erro do ponto e usar Microsoft Graph como fallback para employeeId quando LDAP nao retornar; promover DEV-HML-PRD.",
+      "entregavel": "PortalUserEmployeeIdResolver com Graph, correcao LDAP employeeId, mensagem Sua matricula (xxxxx) nao esta vinculada e sincronizacao no login/ponto.",
+      "ambiente": "PRD",
+      "referencias": {
+        "commits": [],
+        "branch": "Lioconnecta_HML",
+        "prHml": "Promocao DEV/HML/PRD pendente pipeline"
+      },
+      "observacoes": "Requer Microsoft Graph habilitado com User.Read.All para fallback de matricula."
     }
   ]
 }

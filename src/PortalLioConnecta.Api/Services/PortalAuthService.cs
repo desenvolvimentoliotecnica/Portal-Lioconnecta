@@ -19,6 +19,7 @@ public class PortalAuthService : IPortalAuthService
     private readonly PortalLioConnectaDbContext _dbContext;
     private readonly ILdapConfigurationService _ldapConfigurationService;
     private readonly ILdapDirectoryAuthenticator _ldapDirectoryAuthenticator;
+    private readonly IPortalUserEmployeeIdResolver _employeeIdResolver;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IPasswordHasher<PortalUser> _passwordHasher;
     private readonly ILogger<PortalAuthService> _logger;
@@ -27,6 +28,7 @@ public class PortalAuthService : IPortalAuthService
         PortalLioConnectaDbContext dbContext,
         ILdapConfigurationService ldapConfigurationService,
         ILdapDirectoryAuthenticator ldapDirectoryAuthenticator,
+        IPortalUserEmployeeIdResolver employeeIdResolver,
         IHttpContextAccessor httpContextAccessor,
         IPasswordHasher<PortalUser> passwordHasher,
         ILogger<PortalAuthService> logger)
@@ -34,6 +36,7 @@ public class PortalAuthService : IPortalAuthService
         _dbContext = dbContext;
         _ldapConfigurationService = ldapConfigurationService;
         _ldapDirectoryAuthenticator = ldapDirectoryAuthenticator;
+        _employeeIdResolver = employeeIdResolver;
         _httpContextAccessor = httpContextAccessor;
         _passwordHasher = passwordHasher;
         _logger = logger;
@@ -157,6 +160,12 @@ public class PortalAuthService : IPortalAuthService
         portalUser.ManagerDisplayName = authenticatedUser.ManagerDisplayName;
         portalUser.ManagerDistinguishedName = authenticatedUser.ManagerDistinguishedName;
         portalUser.EmployeeId = NormalizeEmployeeId(authenticatedUser.EmployeeId);
+        if (string.IsNullOrWhiteSpace(portalUser.EmployeeId))
+        {
+            var resolution = await _employeeIdResolver.ResolveAsync(portalUser, persistWhenFound: false, cancellationToken);
+            portalUser.EmployeeId = NormalizeEmployeeId(resolution.EmployeeId);
+        }
+
         portalUser.LastLoginAtUtc = now;
         portalUser.LastKnownIpAddress = authContext.IpAddress;
         portalUser.LastOrigin = authContext.Origin;

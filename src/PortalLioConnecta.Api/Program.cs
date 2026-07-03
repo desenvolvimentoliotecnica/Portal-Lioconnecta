@@ -30,6 +30,7 @@ builder.Services.AddScoped<MicrosoftGraphAuthClient>();
 builder.Services.AddScoped<MicrosoftGraphConnectionTester>();
 builder.Services.AddScoped<IMicrosoftGraphUserPhotoService, MicrosoftGraphUserPhotoService>();
 builder.Services.AddScoped<IMicrosoftGraphCalendarService, MicrosoftGraphCalendarService>();
+builder.Services.AddScoped<IPortalUserEmployeeIdResolver, PortalUserEmployeeIdResolver>();
 builder.Services.AddScoped<ILdapConfigurationService, LdapConfigurationService>();
 builder.Services.AddScoped<IMicrosoftGraphConfigurationService, MicrosoftGraphConfigurationService>();
 builder.Services.AddScoped<ITotvsRmConfigurationService, TotvsRmConfigurationService>();

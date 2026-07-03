@@ -42,7 +42,9 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
                     "department",
                     "title",
                     "distinguishedName",
-                    "manager"
+                    "manager",
+                    "employeeId",
+                    "employeeNumber"
                 });
 
             var response = (SearchResponse)directoryConnection.SendRequest(request);
@@ -79,7 +81,7 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
                 distinguishedName,
                 managerDisplayName,
                 managerDistinguishedName,
-                ReadAttribute(entry, "employeeId"));
+                ReadEmployeeId(entry));
         }, cancellationToken);
     }
 
@@ -145,7 +147,8 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
                 "title",
                 "distinguishedName",
                 "manager",
-                "employeeId"
+                "employeeId",
+                "employeeNumber"
             });
 
         var response = (SearchResponse)connection.SendRequest(request);
@@ -178,7 +181,7 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
             distinguishedName,
             managerDisplayName,
             managerDistinguishedName,
-            ReadAttribute(entry, "employeeId"));
+            ReadEmployeeId(entry));
     }
 
     private static LdapAuthenticatedUser CreateDirectBindUser(
@@ -412,6 +415,11 @@ public class LdapDirectoryAuthenticator : ILdapDirectoryAuthenticator
             .Select(part => char.ToUpperInvariant(part[0]) + part[1..].ToLowerInvariant());
 
         return string.Join(' ', parts);
+    }
+
+    private static string? ReadEmployeeId(SearchResultEntry entry)
+    {
+        return ReadAttribute(entry, "employeeId") ?? ReadAttribute(entry, "employeeNumber");
     }
 
     private static string? ReadAttribute(SearchResultEntry entry, string attributeName)
