@@ -72,12 +72,20 @@ public class TotvsRmTimesheetRepository : ITotvsRmTimesheetRepository
                 COALESCE(H.BASE, H.TEMPOREF) AS ExpectedMinutes,
                 CASE
                     WHEN COALESCE(H.BASE, H.TEMPOREF) IS NOT NULL
-                        THEN H.HTRAB - COALESCE(H.BASE, H.TEMPOREF, 0)
+                        THEN COALESCE(H.HTRAB, 0)
+                           + COALESCE(H.ABONO, 0)
+                           + COALESCE(H.COMPENSADO, 0)
+                           - COALESCE(H.BASE, H.TEMPOREF, 0)
                     ELSE NULL
                 END AS BalanceMinutes,
                 COALESCE(H.ATRASOCALC, H.ATRASO) AS DelayMinutes,
                 COALESCE(H.FALTACALC, H.FALTA) AS AbsenceMinutes,
+                H.ABONO              AS AbonoMinutes,
+                H.EXTRAAUTORIZADO    AS AuthorizedOvertimeMinutes,
+                H.COMPENSADO         AS CompensatedMinutes,
                 CASE
+                    WHEN COALESCE(H.ABONO, 0) > 0 THEN 'B'
+                    WHEN COALESCE(H.EXTRAAUTORIZADO, 0) > 0 THEN 'E'
                     WHEN COALESCE(H.FALTACALC, H.FALTA, 0) > 0 THEN 'F'
                     WHEN COALESCE(H.ATRASOCALC, H.ATRASO, 0) > 0 THEN 'A'
                     ELSE 'D'

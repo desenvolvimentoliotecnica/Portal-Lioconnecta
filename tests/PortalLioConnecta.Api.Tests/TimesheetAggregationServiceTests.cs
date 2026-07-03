@@ -104,4 +104,68 @@ public class TimesheetAggregationServiceTests
         Assert.Equal("—", summary.PeriodBankBalance);
         Assert.Equal("—", summary.TotalBankBalance);
     }
+
+    [Fact]
+    public void MergeService_ApprovedAbonoDay_ShowsAbonoStatusAndZeroBalance()
+    {
+        var mergeService = new TimesheetMergeService(_service);
+        var dataDe = new DateTime(2026, 6, 26);
+        var dataAte = new DateTime(2026, 6, 26);
+
+        var processed = new List<RmProcessedDayRecord>
+        {
+            new()
+            {
+                DataPonto = new DateTime(2026, 6, 26),
+                WorkedMinutes = 0,
+                ExpectedMinutes = 480,
+                BalanceMinutes = 0,
+                AbsenceMinutes = 480,
+                AbonoMinutes = 480,
+                StatusCode = "B"
+            }
+        };
+
+        var (_, entries) = mergeService.Merge(dataDe, dataAte, [], processed);
+
+        Assert.Single(entries);
+        Assert.Equal("—", entries[0].ClockIn);
+        Assert.Equal("8h00", entries[0].WorkedHours);
+        Assert.Equal("0h00", entries[0].BalanceHours);
+        Assert.Equal("Abono Aprovado", entries[0].Status);
+    }
+
+    [Fact]
+    public void MergeService_AuthorizedOvertimeDay_ShowsExtraStatus()
+    {
+        var mergeService = new TimesheetMergeService(_service);
+        var dataDe = new DateTime(2026, 6, 28);
+        var dataAte = new DateTime(2026, 6, 28);
+
+        var punches = new List<RmPunchRecord>
+        {
+            new() { DataPonto = new DateTime(2026, 6, 28), BatidaMinutos = 480, Natureza = 0 },
+            new() { DataPonto = new DateTime(2026, 6, 28), BatidaMinutos = 660, Natureza = 2 },
+            new() { DataPonto = new DateTime(2026, 6, 28), BatidaMinutos = 750, Natureza = 1 },
+            new() { DataPonto = new DateTime(2026, 6, 28), BatidaMinutos = 1110, Natureza = 3 }
+        };
+
+        var processed = new List<RmProcessedDayRecord>
+        {
+            new()
+            {
+                DataPonto = new DateTime(2026, 6, 28),
+                WorkedMinutes = 540,
+                ExpectedMinutes = 0,
+                BalanceMinutes = 540,
+                AuthorizedOvertimeMinutes = 540,
+                StatusCode = "E"
+            }
+        };
+
+        var (_, entries) = mergeService.Merge(dataDe, dataAte, punches, processed);
+
+        Assert.Single(entries);
+        Assert.Equal("Hora Extra Autorizada", entries[0].Status);
+    }
 }

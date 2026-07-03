@@ -73,7 +73,12 @@ function resolveTimesheetRowClass(item) {
   const lunchIn = readTimesheetEntryField(item, "lunchIn", "LunchIn");
   const clockOut = readTimesheetEntryField(item, "clockOut", "ClockOut");
   const balanceHours = readTimesheetEntryField(item, "balanceHours", "BalanceHours");
+  const status = String(readTimesheetEntryField(item, "status", "Status")).toLowerCase();
   const allPunchesEmpty = [clockIn, lunchOut, lunchIn, clockOut].every(isEmptyTimesheetPunch);
+
+  if (status.includes("abono") || status.includes("hora extra")) {
+    return "";
+  }
 
   if (isNegativeTimesheetBalance(balanceHours)) {
     return "hr-timesheet-row--negative";
@@ -136,13 +141,15 @@ function renderMetricCards(items = []) {
 
 function renderStatusPill(status = "") {
   const normalized = String(status).toLowerCase();
-  const tone = normalized.includes("aprov")
-    ? "success"
-    : normalized.includes("analise") || normalized.includes("andamento")
-      ? "warning"
-      : normalized.includes("antecipada") || normalized.includes("atras")
-        ? "danger"
-        : "info";
+  const tone = normalized.includes("abono") || normalized.includes("hora extra")
+    ? "info"
+    : normalized.includes("aprov")
+      ? "success"
+      : normalized.includes("analise") || normalized.includes("andamento")
+        ? "warning"
+        : normalized.includes("antecipada") || normalized.includes("atras") || normalized.includes("falta")
+          ? "danger"
+          : "info";
 
   return `<span class="panel-pill panel-pill--${tone}">${escapeHtml(status)}</span>`;
 }

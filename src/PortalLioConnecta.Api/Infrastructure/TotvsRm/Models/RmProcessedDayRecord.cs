@@ -8,5 +8,8 @@ public sealed class RmProcessedDayRecord
     public int? BalanceMinutes { get; init; }
     public int? DelayMinutes { get; init; }
     public int? AbsenceMinutes { get; init; }
+    public int? AbonoMinutes { get; init; }
+    public int? AuthorizedOvertimeMinutes { get; init; }
+    public int? CompensatedMinutes { get; init; }
     public string? StatusCode { get; init; }
 }

@@ -59,9 +59,12 @@ public sealed class TimesheetMergeService
 
         var breakMinutes = dayPunch?.BreakMinutes ?? 0;
         var workedMinutes = processed?.WorkedMinutes ?? dayPunch?.WorkedMinutes ?? 0;
+        var abonoMinutes = processed?.AbonoMinutes ?? 0;
+        var compensatedMinutes = processed?.CompensatedMinutes ?? 0;
+        var creditedMinutes = workedMinutes + abonoMinutes + compensatedMinutes;
         var expectedMinutes = processed?.ExpectedMinutes;
         var balanceMinutes = processed?.BalanceMinutes
-            ?? (expectedMinutes.HasValue ? workedMinutes - expectedMinutes.Value : (int?)null);
+            ?? (expectedMinutes.HasValue ? creditedMinutes - expectedMinutes.Value : (int?)null);
 
         var status = ResolveStatus(processed, dayPunch);
 
@@ -73,7 +76,7 @@ public sealed class TimesheetMergeService
             lunchIn,
             clockOut,
             breakMinutes.ToString(CultureInfo.InvariantCulture),
-            TimesheetAggregationService.FormatMinutes(workedMinutes),
+            TimesheetAggregationService.FormatMinutes(creditedMinutes),
             balanceMinutes.HasValue
                 ? FormatSignedMinutes(balanceMinutes.Value)
                 : "—",
@@ -101,6 +104,8 @@ public sealed class TimesheetMergeService
     {
         return statusCode.Trim().ToUpperInvariant() switch
         {
+            "B" => "Abono Aprovado",
+            "E" => "Hora Extra Autorizada",
             "F" => "Falta",
             "A" => "Atraso",
             "D" => "Regular",

@@ -56,15 +56,20 @@ WHERE CODCOLIGADA = @CodColigada
   AND TRY_CONVERT(date, INICIOPER) = @DataDe
   AND TRY_CONVERT(date, FIMPER) = @DataAte;
 
--- 6) Conferencia diaria AAFHTFUN no periodo
+-- 6) Conferencia diaria AAFHTFUN no periodo (inclui ABONO e EXTRAAUTORIZADO)
 SELECT
     CAST(H.DATA AS DATE) AS DataPonto,
     H.HTRAB,
+    H.ABONO,
+    H.COMPENSADO,
+    H.EXTRAAUTORIZADO,
     H.BASE,
     H.TEMPOREF,
-    H.SALDO,
+    COALESCE(H.HTRAB, 0) + COALESCE(H.ABONO, 0) + COALESCE(H.COMPENSADO, 0) - COALESCE(H.BASE, H.TEMPOREF, 0) AS SaldoCalculadoMin,
     H.ATRASO,
-    H.FALTA
+    H.FALTA,
+    H.ATRASOCALC,
+    H.FALTACALC
 FROM dbo.AAFHTFUN H WITH (NOLOCK)
 WHERE H.CODCOLIGADA = @CodColigada
   AND H.CHAPA = @Chapa
