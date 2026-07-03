@@ -57,7 +57,7 @@ export function renderTotvsRmSettingsPage(settings = {}) {
           <p class="ldap-wizard__subtitle">Integracao de ponto (Automação de Ponto)</p>
           <p class="ldap-wizard__description">
             Configure a conexao SQL Server read-only com o banco Corpore para consultar batidas (ABATFUN)
-            e espelho processado (AAHTFUN) na secao MEU PERFIL RH &gt; Ponto.
+            e espelho processado (AAFHTFUN) na secao MEU PERFIL RH &gt; Ponto.
           </p>
         </div>
         <div class="ldap-wizard__hero-icon" aria-hidden="true">
@@ -71,7 +71,7 @@ export function renderTotvsRmSettingsPage(settings = {}) {
         <section class="ldap-wizard__panel">
           <div class="ldap-wizard__panel-head">
             <h2>Conexao SQL Server</h2>
-            <p>Credenciais com permissao de leitura nas tabelas ABATFUN, ANATUBAT e AAHTFUN. CodColigada fixa: 1.</p>
+            <p>Credenciais com permissao de leitura nas tabelas ABATFUN, ANATUBAT e AAFHTFUN. CodColigada fixa: 1.</p>
           </div>
 
           <label class="ldap-wizard__toggle">

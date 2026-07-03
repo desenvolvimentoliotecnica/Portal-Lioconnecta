@@ -8,7 +8,7 @@ Este guia descreve como configurar e validar a integracao de ponto entre o porta
 2. **Usuario SQL read-only** com `SELECT` em:
    - `dbo.ABATFUN` (batidas brutas)
    - `dbo.ANATUBAT` (descricao das naturezas)
-   - `dbo.AAHTFUN` (espelho processado)
+   - `dbo.AAFHTFUN` (espelho processado)
 3. **Espelho recalculado no RM** para o periodo consultado (menu Movimento > Calcular no Automação de Ponto).
 4. **CodColigada fixa:** `1` (nao configuravel no portal).
 5. Acesso de **super-admin** ao portal para a area Configuracoes.
@@ -32,7 +32,7 @@ Este guia descreve como configurar e validar a integracao de ponto entre o porta
 
 1. Na mesma tela, clique em **Testar conexao** (nao e necessario salvar antes se todos os campos estiverem preenchidos).
 2. Um modal exibira:
-   - **Sucesso:** mensagem de conexao + contagem de registros em `ABATFUN` e `AAHTFUN`.
+   - **Sucesso:** mensagem de conexao + contagem de registros em `ABATFUN` e `AAFHTFUN`.
    - **Erro:** mensagem amigavel + detalhe tecnico (timeout, login failed, tabela inacessivel, etc.).
 3. Corrija credenciais/firewall/permissões SQL conforme o retorno.
 
@@ -64,9 +64,9 @@ Este guia descreve como configurar e validar a integracao de ponto entre o porta
 - Verifique firewall entre API e SQL Server.
 - Confirme que a senha nao expirou.
 
-### Tabela AAHTFUN vazia ou colunas invalidas
+### Tabela AAFHTFUN vazia ou colunas invalidas
 - Execute recalculo do espelho no RM para o periodo.
-- Valide nomes de colunas (`HTRAB`, `HTNORM`, `SALDO`, `ATRASO`, `FALTA`) com `SELECT TOP 1 * FROM AAHTFUN`.
+- Valide nomes de colunas (`HTRAB`, `BASE`, `TEMPOREF`, `ATRASO`, `FALTA`, `ATRASOCALC`, `FALTACALC`) com `SELECT TOP 1 * FROM AAFHTFUN`.
 - ABATFUN ainda exibe batidas mesmo sem espelho processado; resumo pode ficar parcial.
 
 ### Batidas com entrada/saida incorretas

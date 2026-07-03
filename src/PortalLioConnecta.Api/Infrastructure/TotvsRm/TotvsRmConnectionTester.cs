@@ -52,10 +52,10 @@ public class TotvsRmConnectionTester
                 return new TotvsRmConnectionTestResponse(false, "Conexao estabelecida, mas a validacao basica falhou.", null);
             }
 
-            var abatfunCount = await CountTableAsync(connection, "ABATFUN", cancellationToken);
-            var aahtfunCount = await CountTableAsync(connection, "AAHTFUN", cancellationToken);
+            var abatfunCount = await CountTableAsync(connection, TotvsRmConstants.PunchTableName, cancellationToken);
+            var aafhtfunCount = await CountTableAsync(connection, TotvsRmConstants.ProcessedDayTableName, cancellationToken);
 
-            var detail = $"Tabelas acessiveis: ABATFUN ({abatfunCount} registros), AAHTFUN ({aahtfunCount} registros). CodColigada fixa: {TotvsRmConstants.CodColigada}.";
+            var detail = $"Tabelas acessiveis: {TotvsRmConstants.PunchTableName} ({abatfunCount} registros), {TotvsRmConstants.ProcessedDayTableName} ({aafhtfunCount} registros). CodColigada fixa: {TotvsRmConstants.CodColigada}.";
             return new TotvsRmConnectionTestResponse(true, "Conexao com TOTVS RM realizada com sucesso.", detail);
         }
         catch (Exception exception)

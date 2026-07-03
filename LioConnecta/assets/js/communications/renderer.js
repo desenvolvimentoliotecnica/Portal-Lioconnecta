@@ -130,7 +130,7 @@ function renderTotvsRmSettingsCard() {
       <div class="card-header">TOTVS RM</div>
       <div class="communication-section-intro">
         <strong>Configure a integracao de ponto</strong>
-        <p>Informe servidor SQL, database e credenciais read-only para consultar ABATFUN e AAHTFUN no MEU PERFIL RH &gt; Ponto.</p>
+        <p>Informe servidor SQL, database e credenciais read-only para consultar ABATFUN e AAFHTFUN no MEU PERFIL RH &gt; Ponto.</p>
       </div>
       <div class="comm-item-actions">
         <a href="#configuracoes/totvs-rm" class="feed-composer-submit">

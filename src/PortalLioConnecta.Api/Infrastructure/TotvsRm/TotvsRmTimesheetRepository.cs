@@ -43,7 +43,7 @@ public class TotvsRmTimesheetRepository : ITotvsRmTimesheetRepository
             """;
 
         return await QueryAsync<RmPunchRecord>(
-            "ABATFUN",
+            TotvsRmConstants.PunchTableName,
             chapa,
             dataDe,
             dataAte,
@@ -71,12 +71,20 @@ public class TotvsRmTimesheetRepository : ITotvsRmTimesheetRepository
             SELECT
                 CAST(H.DATA AS DATE) AS DataPonto,
                 H.HTRAB              AS WorkedMinutes,
-                COALESCE(H.HTNORM, H.HNORMAIS, H.HNORM) AS ExpectedMinutes,
-                H.SALDO              AS BalanceMinutes,
-                H.ATRASO             AS DelayMinutes,
-                H.FALTA              AS AbsenceMinutes,
-                H.STATUS             AS StatusCode
-            FROM dbo.AAHTFUN H WITH (NOLOCK)
+                COALESCE(H.BASE, H.TEMPOREF) AS ExpectedMinutes,
+                CASE
+                    WHEN COALESCE(H.BASE, H.TEMPOREF) IS NOT NULL
+                        THEN H.HTRAB - COALESCE(H.BASE, H.TEMPOREF, 0)
+                    ELSE NULL
+                END AS BalanceMinutes,
+                COALESCE(H.ATRASOCALC, H.ATRASO) AS DelayMinutes,
+                COALESCE(H.FALTACALC, H.FALTA) AS AbsenceMinutes,
+                CASE
+                    WHEN COALESCE(H.FALTACALC, H.FALTA, 0) > 0 THEN 'F'
+                    WHEN COALESCE(H.ATRASOCALC, H.ATRASO, 0) > 0 THEN 'A'
+                    ELSE 'D'
+                END AS StatusCode
+            FROM dbo.AAFHTFUN H WITH (NOLOCK)
             WHERE H.CODCOLIGADA = @CodColigada
               AND H.CHAPA       = @Chapa
               AND CAST(H.DATA AS DATE) BETWEEN @DataDe AND @DataAte
@@ -84,7 +92,7 @@ public class TotvsRmTimesheetRepository : ITotvsRmTimesheetRepository
             """;
 
         return await QueryAsync<RmProcessedDayRecord>(
-            "AAHTFUN",
+            TotvsRmConstants.ProcessedDayTableName,
             chapa,
             dataDe,
             dataAte,
