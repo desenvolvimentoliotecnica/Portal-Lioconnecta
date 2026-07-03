@@ -21,8 +21,10 @@ Guia unificado para consulta read-only ao Corpore via SQL Server.
 2. Informe servidor, database (Corpore), usuario/senha read-only
 3. Defina **CodColigada** (padrao: 1)
 4. Habilite modulos desejados (cadastro, holerite, ferias, etc.)
-5. Clique **Testar conexao** — deve listar contagens de ABATFUN, AAFHTFUN, PFUNC
+5. Clique **Testar conexao** — valida SELECT em todas as 12 tabelas (PFUNC, PFFINANC, ABATFUN, etc.)
 6. Salve e aplique migration no PostgreSQL do portal
+
+> **Usuario ja cadastrado (ex. `rm_readonly_voltage`):** se o teste de conexao retornar sucesso com todas as tabelas OK, **nao e necessario** executar `tools/rm-sql-grants.sql`. Esse script e apenas referencia para criar permissoes em um login novo.
 
 ## Resolucao de matricula (CHAPA)
 
@@ -58,15 +60,16 @@ dotnet run --project src/PortalLioConnecta.Api
 ## Pos-deploy (HML/PRD)
 
 1. Rodar migration PostgreSQL
-2. Configurar conexao RM em `#configuracoes/totvs-rm`
-3. Validar `/health/rm` = healthy
-4. Testar um colaborador real em cada modulo RH
-5. Conferir GRANTs SQL com `tools/rm-sql-grants.sql`
+2. Configurar conexao RM em `#configuracoes/totvs-rm` (usuario `rm_readonly_voltage` ou equivalente)
+3. **Testar conexao** no admin — todas as tabelas devem aparecer como OK
+4. Validar `/health/rm` = healthy
+5. Testar um colaborador real em cada modulo RH
 
 ## Scripts auxiliares
 
 - `tools/rm-schema-discovery.sql` — validar colunas no Corpore
-- `tools/rm-sql-grants.sql` — permissoes read-only
+- `tools/rm-validate-permissions.sql` — validar SELECT do usuario ja cadastrado
+- `tools/rm-sql-grants.sql` — referencia opcional para login novo sem permissoes
 
 ## Documentos relacionados
 

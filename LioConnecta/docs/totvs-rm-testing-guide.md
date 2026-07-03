@@ -4,7 +4,8 @@
 
 - [ ] Migration `AddTotvsRmExtendedConfiguration` aplicada
 - [ ] RM habilitado em `#configuracoes/totvs-rm`
-- [ ] Usuario SQL com GRANTs de `tools/rm-sql-grants.sql`
+- [ ] Usuario SQL read-only ja cadastrado (ex. `rm_readonly_voltage`)
+- [ ] Teste de conexao no admin com **todas** as tabelas OK (nao precisa GRANT se ja passar)
 - [ ] Colaborador de teste com CHAPA no AD ou PFUNC
 
 ## Testes automatizados
