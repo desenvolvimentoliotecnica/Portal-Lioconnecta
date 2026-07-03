@@ -16,6 +16,15 @@ public class TotvsRmModuleFlagsTests
         Assert.True(flags.Beneficios);
         Assert.True(flags.Ponto);
         Assert.True(flags.TeamDashboard);
+        Assert.True(flags.HasAnyEnabled);
+    }
+
+    [Fact]
+    public void LegacyUnsetFlags_HasAnyEnabledIsFalse()
+    {
+        var flags = new TotvsRmModuleFlags(false, false, false, false, false, false);
+
+        Assert.False(flags.HasAnyEnabled);
     }
 
     [Fact]

@@ -112,8 +112,37 @@ public class TotvsRmConfigurationService : ITotvsRmConfigurationService
 
     public async Task EnsureDefaultConfigurationAsync(CancellationToken cancellationToken)
     {
-        await EnsureAndGetEntityAsync(cancellationToken);
+        var entity = await EnsureAndGetEntityAsync(cancellationToken);
+        if (!entity.IsEnabled || HasAnyModuleEnabled(entity))
+        {
+            return;
+        }
+
+        entity.EnableCadastro = true;
+        entity.EnableHolerite = true;
+        entity.EnableFerias = true;
+        entity.EnableBeneficios = true;
+        entity.EnablePonto = true;
+        entity.EnableTeamDashboard = true;
+        if (entity.CodColigada <= 0)
+        {
+            entity.CodColigada = 1;
+        }
+
+        entity.UpdatedAtUtc = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation(
+            "Modulos TOTVS RM reativados automaticamente para configuracao legada (IsEnabled=true, flags desligadas).");
     }
+
+    private static bool HasAnyModuleEnabled(TotvsRmConfiguration entity) =>
+        entity.EnableCadastro
+        || entity.EnableHolerite
+        || entity.EnableFerias
+        || entity.EnableBeneficios
+        || entity.EnablePonto
+        || entity.EnableTeamDashboard;
 
     private async Task<TotvsRmConfiguration> EnsureAndGetEntityAsync(CancellationToken cancellationToken)
     {

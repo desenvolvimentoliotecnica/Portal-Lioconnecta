@@ -20,4 +20,7 @@ public sealed record TotvsRmModuleFlags(
     bool TeamDashboard)
 {
     public static TotvsRmModuleFlags AllEnabled { get; } = new(true, true, true, true, true, true);
+
+    public bool HasAnyEnabled =>
+        Cadastro || Holerite || Ferias || Beneficios || Ponto || TeamDashboard;
 }

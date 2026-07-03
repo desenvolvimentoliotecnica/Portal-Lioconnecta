@@ -31,7 +31,7 @@ public sealed class HrRmAccessGuard
                 "Consulta temporariamente indisponivel. Entre em contato com o RH."), runtime);
         }
 
-        if (!moduleEnabled(runtime.ModuleFlags))
+        if (runtime.ModuleFlags.HasAnyEnabled && !moduleEnabled(runtime.ModuleFlags))
         {
             return (TotvsRmHrResolution.ModuleDisabled(moduleDisabledMessage), runtime);
         }

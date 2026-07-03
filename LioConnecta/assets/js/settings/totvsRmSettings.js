@@ -4,6 +4,20 @@ function renderChecked(value) {
   return value ? "checked" : "";
 }
 
+function isLegacyModuleFlags(settings = {}) {
+  return Boolean(settings.isEnabled)
+    && !settings.enableCadastro
+    && !settings.enableHolerite
+    && !settings.enableFerias
+    && !settings.enableBeneficios
+    && !settings.enablePonto
+    && !settings.enableTeamDashboard;
+}
+
+function renderModuleChecked(settings, value) {
+  return renderChecked(isLegacyModuleFlags(settings) || value !== false);
+}
+
 export function collectTotvsRmSettingsPayload(form) {
   const formData = new FormData(form);
   return {
@@ -179,32 +193,32 @@ export function renderTotvsRmSettingsPage(settings = {}) {
           </div>
 
           <label class="ldap-wizard__toggle">
-            <input type="checkbox" name="enableCadastro" ${renderChecked(settings.enableCadastro !== false)} />
+            <input type="checkbox" name="enableCadastro" ${renderModuleChecked(settings, settings.enableCadastro)} />
             <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
             <span class="ldap-wizard__toggle-label">Dados cadastrais</span>
           </label>
           <label class="ldap-wizard__toggle">
-            <input type="checkbox" name="enableHolerite" ${renderChecked(settings.enableHolerite !== false)} />
+            <input type="checkbox" name="enableHolerite" ${renderModuleChecked(settings, settings.enableHolerite)} />
             <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
             <span class="ldap-wizard__toggle-label">Holerite</span>
           </label>
           <label class="ldap-wizard__toggle">
-            <input type="checkbox" name="enableFerias" ${renderChecked(settings.enableFerias !== false)} />
+            <input type="checkbox" name="enableFerias" ${renderModuleChecked(settings, settings.enableFerias)} />
             <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
             <span class="ldap-wizard__toggle-label">Ferias</span>
           </label>
           <label class="ldap-wizard__toggle">
-            <input type="checkbox" name="enableBeneficios" ${renderChecked(settings.enableBeneficios !== false)} />
+            <input type="checkbox" name="enableBeneficios" ${renderModuleChecked(settings, settings.enableBeneficios)} />
             <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
             <span class="ldap-wizard__toggle-label">Beneficios</span>
           </label>
           <label class="ldap-wizard__toggle">
-            <input type="checkbox" name="enablePonto" ${renderChecked(settings.enablePonto !== false)} />
+            <input type="checkbox" name="enablePonto" ${renderModuleChecked(settings, settings.enablePonto)} />
             <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
             <span class="ldap-wizard__toggle-label">Ponto</span>
           </label>
           <label class="ldap-wizard__toggle">
-            <input type="checkbox" name="enableTeamDashboard" ${renderChecked(settings.enableTeamDashboard !== false)} />
+            <input type="checkbox" name="enableTeamDashboard" ${renderModuleChecked(settings, settings.enableTeamDashboard)} />
             <span class="ldap-wizard__toggle-track" aria-hidden="true"></span>
             <span class="ldap-wizard__toggle-label">Dashboard de equipe (gestores)</span>
           </label>
