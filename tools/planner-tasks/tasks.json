@@ -1083,9 +1083,11 @@
       "entregavel": "PortalUserEmployeeIdResolver com Graph, correcao LDAP employeeId, mensagem Sua matricula (xxxxx) nao esta vinculada e sincronizacao no login/ponto.",
       "ambiente": "PRD",
       "referencias": {
-        "commits": [],
+        "commits": [
+          "4e89b2e"
+        ],
         "branch": "Lioconnecta_HML",
-        "prHml": "Promocao DEV/HML/PRD pendente pipeline"
+        "prHml": "Promocao DEV/HML/PRD (pipelines 28630050216, 28630051349, 28630052820)"
       },
       "observacoes": "Requer Microsoft Graph habilitado com User.Read.All para fallback de matricula."
     }
