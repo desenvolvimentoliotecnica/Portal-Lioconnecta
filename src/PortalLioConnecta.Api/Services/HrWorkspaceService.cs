@@ -122,10 +122,14 @@ public class HrWorkspaceService : IHrWorkspaceService
         try
         {
             var summaries = await _payrollRepository.GetPayslipSummariesAsync(resolution.Context!.Chapa, 48, cancellationToken);
+            var envelopesPerMonth = summaries
+                .GroupBy(summary => (summary.AnoComp, summary.MesComp))
+                .ToDictionary(group => group.Key, group => group.Count());
             var items = summaries.Select(summary =>
             {
                 var paymentType = HrRmMapper.MapPaymentTypeLabel(summary);
-                var id = HrRmMapper.BuildPayslipId(summary.AnoComp, summary.MesComp, summary.NroPeriodo, paymentType);
+                var multipleEnvelopes = envelopesPerMonth.TryGetValue((summary.AnoComp, summary.MesComp), out var count) && count > 1;
+                var id = HrRmMapper.BuildPayslipId(summary.AnoComp, summary.MesComp, summary.NroPeriodo, paymentType, multipleEnvelopes);
                 return new HrPayslipDto(
                     id,
                     HrRmMapper.BuildPeriodLabel(summary.AnoComp, summary.MesComp),
@@ -192,17 +196,17 @@ public class HrWorkspaceService : IHrWorkspaceService
                 paymentTypeHint = null;
             }
 
-            var profile = await _employeeRepository.GetProfileByChapaAsync(chapa, cancellationToken);
             RmPayslipSummaryRecord? envelope = null;
             IReadOnlyList<RmPayslipLineRecord> lines = [];
 
             foreach (var candidate in HrRmMapper.EnumerateEnvelopeCandidates(envelopes, explicitNroPeriodo, paymentTypeHint))
             {
-                var candidateLines = await _payrollRepository.GetPayslipLinesAsync(
+                var candidateLines = await TryGetPayslipLinesAsync(
                     chapa,
                     anoComp,
                     mesComp,
                     candidate.NroPeriodo,
+                    paymentTypeHint,
                     cancellationToken);
                 if (candidateLines.Count == 0)
                 {
@@ -216,18 +220,23 @@ public class HrWorkspaceService : IHrWorkspaceService
 
             if (envelope is null || lines.Count == 0)
             {
-                var monthLines = await _payrollRepository.GetPayslipLinesForMonthAsync(
-                    chapa,
-                    anoComp,
-                    mesComp,
-                    cancellationToken);
+                var monthLines = await TryGetPayslipLinesForMonthAsync(chapa, anoComp, mesComp, cancellationToken);
                 if (monthLines.Count == 0)
                 {
                     return null;
                 }
 
                 var preferredPeriod = HrRmMapper.ResolveNroPeriodo(envelopes, explicitNroPeriodo, paymentTypeHint);
-                lines = monthLines.Where(line => line.NroPeriodo == preferredPeriod).ToList();
+                lines = HrRmMapper.FilterLinesByPaymentType(
+                    monthLines.Where(line => line.NroPeriodo == preferredPeriod).ToList(),
+                    paymentTypeHint);
+                if (lines.Count == 0)
+                {
+                    lines = HrRmMapper.FilterLinesByPaymentType(
+                        monthLines.Where(line => line.NroPeriodo == preferredPeriod).ToList(),
+                        null);
+                }
+
                 if (lines.Count == 0)
                 {
                     var fallbackPeriod = monthLines
@@ -235,8 +244,10 @@ public class HrWorkspaceService : IHrWorkspaceService
                         .OrderByDescending(group => group.Count())
                         .First()
                         .Key;
-                    lines = monthLines.Where(line => line.NroPeriodo == fallbackPeriod).ToList();
                     preferredPeriod = fallbackPeriod;
+                    lines = HrRmMapper.FilterLinesByPaymentType(
+                        monthLines.Where(line => line.NroPeriodo == fallbackPeriod).ToList(),
+                        paymentTypeHint);
                 }
 
                 envelope = envelopes.FirstOrDefault(item => item.NroPeriodo == preferredPeriod)
@@ -247,7 +258,10 @@ public class HrWorkspaceService : IHrWorkspaceService
                 }
             }
 
-            var paymentType = HrRmMapper.MapPaymentTypeLabel(envelope);
+            var profile = await _employeeRepository.GetProfileByChapaAsync(chapa, cancellationToken);
+            var paymentType = !string.IsNullOrWhiteSpace(paymentTypeHint)
+                ? paymentTypeHint
+                : HrRmMapper.MapPaymentTypeLabel(envelope);
             var period = await _payrollRepository.GetPayslipPeriodAsync(chapa, anoComp, mesComp, envelope.NroPeriodo, cancellationToken);
 
             var earnings = lines.Where(line => !line.IsDeduction)
@@ -261,7 +275,12 @@ public class HrWorkspaceService : IHrWorkspaceService
             var totalDeductions = deductions.Sum(item => item.Amount);
             var net = gross - totalDeductions;
             var periodLabel = HrRmMapper.BuildPeriodLabel(anoComp, mesComp);
-            var resolvedId = HrRmMapper.BuildPayslipId(anoComp, mesComp, envelope.NroPeriodo, paymentType);
+            var resolvedId = HrRmMapper.BuildPayslipId(
+                anoComp,
+                mesComp,
+                envelope.NroPeriodo,
+                paymentType,
+                envelopes.Count > 1);
             var paymentDate = envelope.PaymentDate ?? new DateTime(anoComp, mesComp, DateTime.DaysInMonth(anoComp, mesComp));
 
             return new HrPayslipDetailDto(
@@ -676,6 +695,46 @@ public class HrWorkspaceService : IHrWorkspaceService
             false,
             "rm_unavailable",
             "Nao foi possivel consultar ferias agora. Tente novamente em alguns minutos.");
+
+    private async Task<IReadOnlyList<RmPayslipLineRecord>> TryGetPayslipLinesAsync(
+        string chapa,
+        int anoComp,
+        int mesComp,
+        int nroPeriodo,
+        string? paymentTypeHint,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var lines = await _payrollRepository.GetPayslipLinesAsync(
+                chapa,
+                anoComp,
+                mesComp,
+                nroPeriodo,
+                cancellationToken);
+            return HrRmMapper.FilterLinesByPaymentType(lines, paymentTypeHint);
+        }
+        catch (TotvsRmIntegrationException)
+        {
+            return [];
+        }
+    }
+
+    private async Task<IReadOnlyList<RmPayslipLineRecord>> TryGetPayslipLinesForMonthAsync(
+        string chapa,
+        int anoComp,
+        int mesComp,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _payrollRepository.GetPayslipLinesForMonthAsync(chapa, anoComp, mesComp, cancellationToken);
+        }
+        catch (TotvsRmIntegrationException)
+        {
+            return [];
+        }
+    }
 
     private static bool TryParsePeriodId(string payslipId, out int anoComp, out int mesComp)
     {

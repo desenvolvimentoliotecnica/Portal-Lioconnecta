@@ -15,12 +15,40 @@ public class HrRmMapperTests
     }
 
     [Theory]
-    [InlineData(2026, 6, 1, "FOLHA", "2026-06")]
-    [InlineData(2026, 6, 2, "ADIANTAMENTO", "2026-06-ADIANTAMENTO")]
-    [InlineData(2026, 6, 1, "ADIANTAMENTO", "2026-06-ADIANTAMENTO")]
-    public void BuildPayslipId_UsesPeriodSuffixWhenNeeded(int year, int month, int period, string paymentType, string expected)
+    [InlineData(2026, 6, 1, "FOLHA", false, "2026-06")]
+    [InlineData(2026, 6, 2, "ADIANTAMENTO", false, "2026-06-ADIANTAMENTO")]
+    [InlineData(2026, 6, 1, "ADIANTAMENTO", false, "2026-06-ADIANTAMENTO")]
+    [InlineData(2026, 6, 1, "FOLHA", true, "2026-06-1")]
+    [InlineData(2026, 6, 2, "ADIANTAMENTO", true, "2026-06-2")]
+    public void BuildPayslipId_UsesPeriodSuffixWhenNeeded(
+        int year,
+        int month,
+        int period,
+        string paymentType,
+        bool multipleEnvelopes,
+        string expected)
     {
-        Assert.Equal(expected, HrRmMapper.BuildPayslipId(year, month, period, paymentType));
+        Assert.Equal(expected, HrRmMapper.BuildPayslipId(year, month, period, paymentType, multipleEnvelopes));
+    }
+
+    [Fact]
+    public void FilterLinesByPaymentType_SplitsAdvanceAndFolhaLines()
+    {
+        var lines = new List<RmPayslipLineRecord>
+        {
+            new() { Code = "401", Description = "Adiantamento Normal Vencimento", Amount = 100m, IsDeduction = false },
+            new() { Code = "001", Description = "Salario base", Amount = 500m, IsDeduction = false },
+            new() { Code = "404", Description = "Adiantamento Normal Desconto", Amount = 100m, IsDeduction = true }
+        };
+
+        var advance = HrRmMapper.FilterLinesByPaymentType(lines, "ADIANTAMENTO");
+        var folha = HrRmMapper.FilterLinesByPaymentType(lines, "FOLHA");
+
+        Assert.Single(advance);
+        Assert.Equal("401", advance[0].Code);
+        Assert.Equal(2, folha.Count);
+        Assert.Contains(folha, line => line.Code == "001");
+        Assert.Contains(folha, line => line.Code == "404");
     }
 
     [Theory]

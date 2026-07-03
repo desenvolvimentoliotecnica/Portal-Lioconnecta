@@ -173,7 +173,7 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
               AND PER.NROPERIODO = @NroPeriodo;
             """;
 
-        return _queryExecutor.QueryAsync(
+        return _queryExecutor.TryQueryAsync(
             "PFPERFF period",
             async (runtime, connection, token) =>
             {
@@ -186,6 +186,7 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
                     NroPeriodo = nroPeriodo
                 });
             },
-            cancellationToken);
+            cancellationToken,
+            throwWhenDisabled: false);
     }
 }

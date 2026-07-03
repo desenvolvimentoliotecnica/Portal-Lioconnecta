@@ -325,11 +325,16 @@ function resolvePayslipDetailId(payslipId) {
 function buildPayslipDetailCandidates(payslipId) {
   const normalizedId = resolvePayslipDetailId(payslipId);
   const baseMonthId = String(normalizedId || payslipId || "").replace(/-ADIANTAMENTO$/i, "");
+  const monthMatch = /^(\d{4}-\d{2})$/.exec(baseMonthId);
+  const periodCandidates = monthMatch
+    ? [1, 2, 3, 4].map((period) => `${monthMatch[1]}-${period}`)
+    : [];
 
   return [...new Set([
     normalizedId,
     payslipId,
-    baseMonthId
+    baseMonthId,
+    ...periodCandidates
   ].filter(Boolean))];
 }
 

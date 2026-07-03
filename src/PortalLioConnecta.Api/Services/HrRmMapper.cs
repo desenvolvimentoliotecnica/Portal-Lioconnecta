@@ -19,8 +19,18 @@ public static class HrRmMapper
     public static string BuildPeriodId(int anoComp, int mesComp) =>
         $"{anoComp:D4}-{mesComp:D2}";
 
-    public static string BuildPayslipId(int anoComp, int mesComp, int nroPeriodo, string paymentType = "FOLHA")
+    public static string BuildPayslipId(
+        int anoComp,
+        int mesComp,
+        int nroPeriodo,
+        string paymentType = "FOLHA",
+        bool multipleEnvelopesInMonth = false)
     {
+        if (multipleEnvelopesInMonth)
+        {
+            return $"{anoComp:D4}-{mesComp:D2}-{nroPeriodo}";
+        }
+
         if (string.Equals(paymentType, "ADIANTAMENTO", StringComparison.OrdinalIgnoreCase))
         {
             return $"{anoComp:D4}-{mesComp:D2}-ADIANTAMENTO";
@@ -29,6 +39,37 @@ public static class HrRmMapper
         return nroPeriodo <= 1
             ? BuildPeriodId(anoComp, mesComp)
             : $"{anoComp:D4}-{mesComp:D2}-{nroPeriodo}";
+    }
+
+    public static bool IsAdvanceLine(RmPayslipLineRecord line)
+    {
+        var code = line.Code.Trim();
+        if (code is "401" or "0401")
+        {
+            return true;
+        }
+
+        return !line.IsDeduction &&
+               line.Description.Contains("ADIANTAMENTO", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static IReadOnlyList<RmPayslipLineRecord> FilterLinesByPaymentType(
+        IReadOnlyList<RmPayslipLineRecord> lines,
+        string? paymentTypeHint)
+    {
+        if (string.IsNullOrWhiteSpace(paymentTypeHint) || lines.Count == 0)
+        {
+            return lines;
+        }
+
+        if (paymentTypeHint.Equals("ADIANTAMENTO", StringComparison.OrdinalIgnoreCase))
+        {
+            var advanceLines = lines.Where(IsAdvanceLine).ToList();
+            return advanceLines.Count > 0 ? advanceLines : lines;
+        }
+
+        var folhaLines = lines.Where(line => !IsAdvanceLine(line)).ToList();
+        return folhaLines.Count > 0 ? folhaLines : lines;
     }
 
     public static bool TryParsePayslipId(
