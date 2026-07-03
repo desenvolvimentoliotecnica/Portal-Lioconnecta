@@ -5,7 +5,7 @@ import { getHrProfileModule } from "./moduleCatalog.js";
 
 const MOCK_PAYSLIP_ITEMS = Object.freeze([
   { id: "2026-06", periodLabel: "Junho/2026", referenceMonth: "2026-06", grossAmount: 11687.46, netAmount: 2686.42, paymentDate: "2026-06-30", status: "Disponivel", paymentType: "FOLHA", competenceYear: "2026", referenceMonthShort: "JUN." },
-  { id: "2026-06-2", periodLabel: "Junho/2026", referenceMonth: "2026-06", grossAmount: 4644.58, netAmount: 4644.58, paymentDate: "2026-06-15", status: "Disponivel", paymentType: "ADIANTAMENTO", competenceYear: "2026", referenceMonthShort: "JUN." },
+  { id: "2026-06-ADIANTAMENTO", periodLabel: "Junho/2026", referenceMonth: "2026-06", grossAmount: 4644.58, netAmount: 4644.58, paymentDate: "2026-06-15", status: "Disponivel", paymentType: "ADIANTAMENTO", competenceYear: "2026", referenceMonthShort: "JUN." },
   { id: "2026-05", periodLabel: "Maio/2026", referenceMonth: "2026-05", grossAmount: 8420.55, netAmount: 6780.69, paymentDate: "2026-05-30", status: "Disponivel", paymentType: "FOLHA", competenceYear: "2026", referenceMonthShort: "MAI." },
   { id: "2026-05-2", periodLabel: "Maio/2026", referenceMonth: "2026-05", grossAmount: 4056.40, netAmount: 4056.40, paymentDate: "2026-05-15", status: "Disponivel", paymentType: "ADIANTAMENTO", competenceYear: "2026", referenceMonthShort: "MAI." }
 ]);
@@ -58,8 +58,8 @@ const MOCK_PAYSLIP_DETAILS = Object.freeze({
     provider: "TOTVS RM",
     isSimulated: true
   },
-  "2026-06-2": {
-    id: "2026-06-2",
+  "2026-06-ADIANTAMENTO": {
+    id: "2026-06-ADIANTAMENTO",
     periodLabel: "Junho/2026",
     referenceMonth: "2026-06",
     grossAmount: 4644.58,
@@ -191,19 +191,55 @@ function buildMockPayload(slug) {
   return base;
 }
 
+function inferPaymentType(item = {}) {
+  const explicit = item.paymentType || item.PaymentType;
+  if (explicit) {
+    return explicit;
+  }
+
+  const gross = Number(item.grossAmount ?? item.GrossAmount ?? 0);
+  const net = Number(item.netAmount ?? item.NetAmount ?? 0);
+  const paymentDate = new Date(item.paymentDate || item.PaymentDate || "");
+  const hasNoDeductions = gross > 0 && Math.abs(gross - net) < 0.01;
+  const isMidMonthPayment = !Number.isNaN(paymentDate.getTime()) && paymentDate.getDate() <= 20;
+
+  if (hasNoDeductions || isMidMonthPayment) {
+    return "ADIANTAMENTO";
+  }
+
+  return "FOLHA";
+}
+
 function normalizePayslipItem(item = {}) {
+  const paymentType = inferPaymentType(item);
+  const anoComp = Number(item.competenceYear || item.CompetenceYear || String(item.referenceMonth || item.ReferenceMonth || "").split("-")[0] || 0);
+  const mesComp = Number(String(item.referenceMonth || item.ReferenceMonth || "").split("-")[1] || 0);
+  const id = item.id || item.Id || HrPayslipFallbackId(anoComp, mesComp, paymentType);
+
   return {
-    id: item.id || item.Id || "",
+    id,
     periodLabel: item.periodLabel || item.PeriodLabel || "",
     referenceMonth: item.referenceMonth || item.ReferenceMonth || "",
     grossAmount: item.grossAmount ?? item.GrossAmount ?? 0,
     netAmount: item.netAmount ?? item.NetAmount ?? 0,
     paymentDate: item.paymentDate || item.PaymentDate || "",
     status: item.status || item.Status || "",
-    paymentType: item.paymentType || item.PaymentType || "FOLHA",
-    competenceYear: item.competenceYear || item.CompetenceYear || "",
+    paymentType,
+    competenceYear: item.competenceYear || item.CompetenceYear || (anoComp ? String(anoComp) : ""),
     referenceMonthShort: item.referenceMonthShort || item.ReferenceMonthShort || ""
   };
+}
+
+function HrPayslipFallbackId(anoComp, mesComp, paymentType) {
+  if (!anoComp || !mesComp) {
+    return "";
+  }
+
+  if (paymentType === "ADIANTAMENTO") {
+    return `${anoComp}-${String(mesComp).padStart(2, "0")}-ADIANTAMENTO`;
+  }
+
+  return `${anoComp}-${String(mesComp).padStart(2, "0")}`;
 }
 
 function normalizePayslipDetail(payload = {}) {

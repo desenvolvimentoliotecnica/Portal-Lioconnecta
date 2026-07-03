@@ -166,7 +166,7 @@ function renderPayslipPage(data = {}) {
   function renderEnvelopeRow(item) {
     return `
       <tr class="payslip-envelope-row">
-        <td>${escapeHtml(item.referenceMonthShort || item.periodLabel || "—")}</td>
+        <td>${escapeHtml(item.periodLabel || item.referenceMonthShort || "—")}</td>
         <td>
           <button
             type="button"
@@ -205,19 +205,20 @@ function renderPayslipPage(data = {}) {
         title: "Envelope de pagamento",
         bodyHtml: items.length
           ? `
-            <div class="payslip-envelope-toolbar">
-              <button
-                type="button"
-                class="comm-secondary-button payslip-envelope-toggle"
-                data-action="toggle-payslip-values"
-                aria-pressed="false"
-              >
-                <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
-                Ocultar valores
-              </button>
-            </div>
-            <div class="hr-profile-table-wrap payslip-envelope-table-wrap" data-payslip-values-visible="true">
-              <table class="hr-profile-table payslip-envelope-table">
+            <div class="payslip-envelope-panel" data-payslip-values-visible="true">
+              <div class="payslip-envelope-toolbar">
+                <button
+                  type="button"
+                  class="comm-secondary-button payslip-envelope-toggle"
+                  data-action="toggle-payslip-values"
+                  aria-pressed="false"
+                >
+                  <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+                  Ocultar valores
+                </button>
+              </div>
+              <div class="hr-profile-table-wrap payslip-envelope-table-wrap">
+                <table class="hr-profile-table payslip-envelope-table">
                 <thead>
                   <tr>
                     <th scope="col">Ref.</th>
@@ -236,6 +237,7 @@ function renderPayslipPage(data = {}) {
                   `).join("")}
                 </tbody>
               </table>
+            </div>
             </div>
           `
           : renderEmptyState("Nenhum holerite", "Os envelopes liberados pelo RH aparecerao aqui.")

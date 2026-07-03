@@ -19,16 +19,29 @@ public static class HrRmMapper
     public static string BuildPeriodId(int anoComp, int mesComp) =>
         $"{anoComp:D4}-{mesComp:D2}";
 
-    public static string BuildPayslipId(int anoComp, int mesComp, int nroPeriodo) =>
-        nroPeriodo <= 1
+    public static string BuildPayslipId(int anoComp, int mesComp, int nroPeriodo, string paymentType = "FOLHA")
+    {
+        if (string.Equals(paymentType, "ADIANTAMENTO", StringComparison.OrdinalIgnoreCase) && nroPeriodo <= 1)
+        {
+            return $"{anoComp:D4}-{mesComp:D2}-ADIANTAMENTO";
+        }
+
+        return nroPeriodo <= 1
             ? BuildPeriodId(anoComp, mesComp)
             : $"{anoComp:D4}-{mesComp:D2}-{nroPeriodo}";
+    }
 
-    public static bool TryParsePayslipId(string payslipId, out int anoComp, out int mesComp, out int? nroPeriodo)
+    public static bool TryParsePayslipId(
+        string payslipId,
+        out int anoComp,
+        out int mesComp,
+        out int? nroPeriodo,
+        out string? paymentTypeHint)
     {
         anoComp = 0;
         mesComp = 0;
         nroPeriodo = null;
+        paymentTypeHint = null;
 
         var parts = payslipId.Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (parts.Length < 2 ||
@@ -39,16 +52,41 @@ public static class HrRmMapper
             return false;
         }
 
-        if (parts.Length >= 3 && int.TryParse(parts[2], out var parsedPeriod))
+        if (parts.Length >= 3)
         {
-            nroPeriodo = parsedPeriod;
+            if (parts[2].Equals("ADIANTAMENTO", StringComparison.OrdinalIgnoreCase))
+            {
+                paymentTypeHint = "ADIANTAMENTO";
+                return true;
+            }
+
+            if (int.TryParse(parts[2], out var parsedPeriod))
+            {
+                nroPeriodo = parsedPeriod;
+            }
         }
 
         return true;
     }
 
-    public static int ResolveNroPeriodo(IReadOnlyList<RmPayslipSummaryRecord> envelopes, int? explicitNroPeriodo)
+    public static bool TryParsePayslipId(string payslipId, out int anoComp, out int mesComp, out int? nroPeriodo) =>
+        TryParsePayslipId(payslipId, out anoComp, out mesComp, out nroPeriodo, out _);
+
+    public static int ResolveNroPeriodo(
+        IReadOnlyList<RmPayslipSummaryRecord> envelopes,
+        int? explicitNroPeriodo,
+        string? paymentTypeHint = null)
     {
+        if (!string.IsNullOrWhiteSpace(paymentTypeHint))
+        {
+            var typedEnvelope = envelopes.FirstOrDefault(item =>
+                string.Equals(MapPaymentTypeLabel(item), paymentTypeHint, StringComparison.OrdinalIgnoreCase));
+            if (typedEnvelope is not null)
+            {
+                return typedEnvelope.NroPeriodo;
+            }
+        }
+
         if (explicitNroPeriodo.HasValue)
         {
             return explicitNroPeriodo.Value;
@@ -76,6 +114,20 @@ public static class HrRmMapper
         }
 
         if (summary.NroPeriodo > 1 && !summary.HasPayrollEvents)
+        {
+            return "ADIANTAMENTO";
+        }
+
+        if (summary.DeductionAmount <= 0.01m &&
+            summary.GrossAmount > 0m &&
+            summary.NetAmount >= summary.GrossAmount - 0.01m)
+        {
+            return "ADIANTAMENTO";
+        }
+
+        if (summary.PaymentDate?.Day is int paymentDay &&
+            paymentDay <= 20 &&
+            summary.DeductionAmount <= 0.01m)
         {
             return "ADIANTAMENTO";
         }

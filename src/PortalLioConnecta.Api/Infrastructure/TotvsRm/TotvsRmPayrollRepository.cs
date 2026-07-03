@@ -25,13 +25,20 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
                 SUM(CASE WHEN E.PROVDESCBASE = 'P' THEN F.VALOR ELSE 0 END) AS GrossAmount,
                 SUM(CASE WHEN E.PROVDESCBASE = 'P' THEN F.VALOR ELSE 0 END)
                     - SUM(CASE WHEN E.PROVDESCBASE = 'D' THEN F.VALOR ELSE 0 END) AS NetAmount,
+                SUM(CASE WHEN E.PROVDESCBASE = 'D' THEN F.VALOR ELSE 0 END) AS DeductionAmount,
                 MAX(F.DTPAGTO) AS PaymentDate,
                 MAX(CASE
-                    WHEN LTRIM(RTRIM(F.CODEVENTO)) IN ('401', '0401') AND E.PROVDESCBASE = 'P' THEN 1
+                    WHEN E.PROVDESCBASE = 'P' AND (
+                        LTRIM(RTRIM(F.CODEVENTO)) IN ('401', '0401')
+                        OR LTRIM(RTRIM(E.DESCRICAO)) LIKE '%ADIANTAMENTO%'
+                    ) THEN 1
                     ELSE 0
                 END) AS HasAdvanceEvent,
                 MAX(CASE
-                    WHEN LTRIM(RTRIM(F.CODEVENTO)) NOT IN ('401', '0401') AND E.PROVDESCBASE = 'P' THEN 1
+                    WHEN E.PROVDESCBASE = 'P' AND (
+                        LTRIM(RTRIM(F.CODEVENTO)) NOT IN ('401', '0401')
+                        AND LTRIM(RTRIM(E.DESCRICAO)) NOT LIKE '%ADIANTAMENTO%'
+                    ) THEN 1
                     ELSE 0
                 END) AS HasPayrollEvents
             FROM dbo.PFFINANC F WITH (NOLOCK)

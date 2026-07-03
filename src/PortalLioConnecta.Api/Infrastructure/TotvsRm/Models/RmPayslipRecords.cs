@@ -7,6 +7,7 @@ public sealed class RmPayslipSummaryRecord
     public int NroPeriodo { get; set; }
     public decimal GrossAmount { get; set; }
     public decimal NetAmount { get; set; }
+    public decimal DeductionAmount { get; set; }
     public DateTime? PaymentDate { get; set; }
     public bool HasAdvanceEvent { get; set; }
     public bool HasPayrollEvents { get; set; }

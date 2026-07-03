@@ -403,6 +403,12 @@ export async function openPayslipModal(payslipId, root = document) {
   }
 }
 
+function findPayslipValuesScope(button, root) {
+  return button.closest("#center-content")
+    || button.closest("#payslip-modal-body")
+    || root;
+}
+
 function setPayslipValuesVisible(root, visible) {
   root.querySelectorAll("[data-payslip-values-visible]").forEach((container) => {
     container.dataset.payslipValuesVisible = visible ? "true" : "false";
@@ -424,8 +430,10 @@ function bindPayslipValueToggle(root = document) {
 
     button.dataset.bound = "true";
     button.addEventListener("click", () => {
-      const container = button.closest("[data-payslip-values-visible]") || root;
-      const visible = container.dataset.payslipValuesVisible !== "false";
+      const scope = findPayslipValuesScope(button, root);
+      const container = button.closest("[data-payslip-values-visible]")
+        || scope?.querySelector("[data-payslip-values-visible]");
+      const visible = !container || container.dataset.payslipValuesVisible !== "false";
       setPayslipValuesVisible(root, !visible);
     });
   });

@@ -5635,6 +5635,11 @@ body.agenda-event-modal-open {
   margin-bottom: 12px;
 }
 
+.payslip-envelope-panel[data-payslip-values-visible="false"] [data-sensitive-value] {
+  filter: blur(8px);
+  user-select: none;
+}
+
 .payslip-envelope-table-wrap[data-payslip-values-visible="false"] [data-sensitive-value] {
   filter: blur(8px);
   user-select: none;
