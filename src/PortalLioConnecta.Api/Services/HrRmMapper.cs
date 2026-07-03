@@ -28,7 +28,9 @@ public static class HrRmMapper
     {
         if (multipleEnvelopesInMonth)
         {
-            return $"{anoComp:D4}-{mesComp:D2}-{nroPeriodo}";
+            return string.Equals(paymentType, "ADIANTAMENTO", StringComparison.OrdinalIgnoreCase)
+                ? $"{anoComp:D4}-{mesComp:D2}-ADIANTAMENTO"
+                : $"{anoComp:D4}-{mesComp:D2}-FOLHA";
         }
 
         if (string.Equals(paymentType, "ADIANTAMENTO", StringComparison.OrdinalIgnoreCase))
@@ -101,13 +103,15 @@ public static class HrRmMapper
                 return true;
             }
 
+            if (parts[2].Equals("FOLHA", StringComparison.OrdinalIgnoreCase))
+            {
+                paymentTypeHint = "FOLHA";
+                return true;
+            }
+
             if (int.TryParse(parts[2], out var parsedPeriod))
             {
                 nroPeriodo = parsedPeriod;
-                if (parsedPeriod > 1)
-                {
-                    paymentTypeHint = "ADIANTAMENTO";
-                }
             }
         }
 

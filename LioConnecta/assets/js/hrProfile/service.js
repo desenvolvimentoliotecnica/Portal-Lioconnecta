@@ -314,26 +314,29 @@ function normalizePayslipDetail(payload = {}) {
 }
 
 function resolvePayslipDetailId(payslipId) {
-  const legacyMatch = /^(\d{4}-\d{2})-(\d+)$/.exec(String(payslipId || ""));
-  if (legacyMatch && Number(legacyMatch[2]) > 1) {
-    return `${legacyMatch[1]}-ADIANTAMENTO`;
-  }
-
   return payslipId;
 }
 
 function buildPayslipDetailCandidates(payslipId) {
-  const normalizedId = resolvePayslipDetailId(payslipId);
-  const baseMonthId = String(normalizedId || payslipId || "").replace(/-ADIANTAMENTO$/i, "");
-  const monthMatch = /^(\d{4}-\d{2})$/.exec(baseMonthId);
-  const periodCandidates = monthMatch
-    ? [1, 2, 3, 4].map((period) => `${monthMatch[1]}-${period}`)
+  const rawId = String(payslipId || "");
+  const strippedType = rawId.replace(/-(ADIANTAMENTO|FOLHA)$/i, "");
+  const monthMatch = /^(\d{4}-\d{2})$/.exec(strippedType);
+  const legacyPeriodMatch = /^(\d{4}-\d{2})-(\d+)$/.exec(rawId);
+
+  const typeCandidates = monthMatch
+    ? [`${monthMatch[1]}-FOLHA`, `${monthMatch[1]}-ADIANTAMENTO`]
+    : legacyPeriodMatch
+      ? [`${legacyPeriodMatch[1]}-FOLHA`, `${legacyPeriodMatch[1]}-ADIANTAMENTO`]
+      : [];
+
+  const periodCandidates = legacyPeriodMatch
+    ? [1, 2, 3, 4].map((period) => `${legacyPeriodMatch[1]}-${period}`)
     : [];
 
   return [...new Set([
-    normalizedId,
-    payslipId,
-    baseMonthId,
+    rawId,
+    ...typeCandidates,
+    strippedType,
     ...periodCandidates
   ].filter(Boolean))];
 }

@@ -18,8 +18,8 @@ public class HrRmMapperTests
     [InlineData(2026, 6, 1, "FOLHA", false, "2026-06")]
     [InlineData(2026, 6, 2, "ADIANTAMENTO", false, "2026-06-ADIANTAMENTO")]
     [InlineData(2026, 6, 1, "ADIANTAMENTO", false, "2026-06-ADIANTAMENTO")]
-    [InlineData(2026, 6, 1, "FOLHA", true, "2026-06-1")]
-    [InlineData(2026, 6, 2, "ADIANTAMENTO", true, "2026-06-2")]
+    [InlineData(2026, 6, 1, "FOLHA", true, "2026-06-FOLHA")]
+    [InlineData(2026, 6, 2, "ADIANTAMENTO", true, "2026-06-ADIANTAMENTO")]
     public void BuildPayslipId_UsesPeriodSuffixWhenNeeded(
         int year,
         int month,
@@ -53,7 +53,8 @@ public class HrRmMapperTests
 
     [Theory]
     [InlineData("2026-06", 2026, 6, null, null)]
-    [InlineData("2026-06-2", 2026, 6, 2, "ADIANTAMENTO")]
+    [InlineData("2026-06-2", 2026, 6, 2, null)]
+    [InlineData("2026-06-FOLHA", 2026, 6, null, "FOLHA")]
     [InlineData("2026-06-ADIANTAMENTO", 2026, 6, null, "ADIANTAMENTO")]
     public void TryParsePayslipId_ParsesLegacyAndEnvelopeIds(
         string id,

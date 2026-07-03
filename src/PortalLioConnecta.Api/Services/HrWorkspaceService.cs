@@ -258,6 +258,16 @@ public class HrWorkspaceService : IHrWorkspaceService
                 }
             }
 
+            if (!string.IsNullOrWhiteSpace(paymentTypeHint))
+            {
+                var typedEnvelope = envelopes.FirstOrDefault(item =>
+                    string.Equals(HrRmMapper.MapPaymentTypeLabel(item), paymentTypeHint, StringComparison.OrdinalIgnoreCase));
+                if (typedEnvelope is not null)
+                {
+                    envelope = typedEnvelope;
+                }
+            }
+
             var profile = await _employeeRepository.GetProfileByChapaAsync(chapa, cancellationToken);
             var paymentType = !string.IsNullOrWhiteSpace(paymentTypeHint)
                 ? paymentTypeHint
