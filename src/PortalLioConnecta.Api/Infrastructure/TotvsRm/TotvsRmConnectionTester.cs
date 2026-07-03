@@ -52,12 +52,43 @@ public class TotvsRmConnectionTester
                 return new TotvsRmConnectionTestResponse(false, "Conexao estabelecida, mas a validacao basica falhou.", null);
             }
 
-            var abatfunCount = await CountTableAsync(connection, TotvsRmConstants.PunchTableName, cancellationToken);
-            var aafhtfunCount = await CountTableAsync(connection, TotvsRmConstants.ProcessedDayTableName, cancellationToken);
-            var pfuncCount = await CountTableAsync(connection, TotvsRmConstants.EmployeeTableName, cancellationToken);
+            var results = new List<string>();
+            var failures = 0;
 
-            var detail = $"Tabelas acessiveis: {TotvsRmConstants.PunchTableName} ({abatfunCount} registros), {TotvsRmConstants.ProcessedDayTableName} ({aafhtfunCount} registros), {TotvsRmConstants.EmployeeTableName} ({pfuncCount} registros). CodColigada: {configuration.CodColigada}.";
-            return new TotvsRmConnectionTestResponse(true, "Conexao com TOTVS RM realizada com sucesso.", detail);
+            foreach (var tableName in TotvsRmConstants.RequiredReadTables)
+            {
+                try
+                {
+                    var count = await CountTableAsync(connection, tableName, cancellationToken);
+                    results.Add($"{tableName}: OK ({count} registros)");
+                }
+                catch (Exception exception)
+                {
+                    failures++;
+                    results.Add($"{tableName}: SEM PERMISSAO ({exception.Message})");
+                    _logger.LogWarning(
+                        exception,
+                        "Usuario {UserName} sem SELECT em {TableName}.",
+                        configuration.UserName,
+                        tableName);
+                }
+            }
+
+            var detail = string.Join("; ", results) +
+                         $". Usuario: {configuration.UserName}; CodColigada: {configuration.CodColigada}.";
+
+            if (failures > 0)
+            {
+                return new TotvsRmConnectionTestResponse(
+                    false,
+                    $"Conexao OK, mas {failures} tabela(s) sem permissao SELECT para o usuario informado.",
+                    detail);
+            }
+
+            return new TotvsRmConnectionTestResponse(
+                true,
+                "Conexao com TOTVS RM realizada com sucesso. Todas as tabelas necessarias estao acessiveis.",
+                detail);
         }
         catch (Exception exception)
         {

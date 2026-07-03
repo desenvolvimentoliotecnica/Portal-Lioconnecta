@@ -1,5 +1,7 @@
--- GRANTs read-only para usuario portal_rm_read no Corpore
--- Ajuste @Login e @Database conforme ambiente.
+-- Referencia opcional: GRANTs para NOVO usuario SQL sem permissoes no Corpore.
+-- Se voce ja usa um login read-only provisionado (ex.: rm_readonly_voltage),
+-- NAO execute este script. Valide antes com tools/rm-validate-permissions.sql
+-- ou pelo botao "Testar conexao" em #configuracoes/totvs-rm no portal.
 
 USE [Corpore];
 GO
@@ -24,4 +26,5 @@ GRANT SELECT ON dbo.PFDEPEND TO [portal_rm_read];
 GRANT SELECT ON dbo.ABATFUN TO [portal_rm_read];
 GRANT SELECT ON dbo.AAFHTFUN TO [portal_rm_read];
 GRANT SELECT ON dbo.ANATUBAT TO [portal_rm_read];
+GRANT SELECT ON dbo.ACOMPFUN TO [portal_rm_read];
 GO

@@ -116,19 +116,6 @@ public sealed class TimesheetMergeService
     {
         var periodLabel = TimesheetPeriodResolver.FormatPeriodLabel(dataDe.Date, dataAte.Date);
 
-        var workedMinutes = processedDays.Sum(item => item.WorkedMinutes ?? 0);
-        if (workedMinutes == 0)
-        {
-            workedMinutes = entries.Sum(item => ParseWorkedMinutes(item.WorkedHours));
-        }
-
-        var expectedMinutes = processedDays.Sum(item => item.ExpectedMinutes ?? 0);
-        var balanceMinutes = processedDays.Any(item => item.BalanceMinutes.HasValue)
-            ? processedDays.Sum(item => item.BalanceMinutes ?? 0)
-            : expectedMinutes > 0
-                ? workedMinutes - expectedMinutes
-                : 0;
-
         var absences = processedDays.Count(item => (item.AbsenceMinutes ?? 0) > 0
             || string.Equals(item.StatusCode, "F", StringComparison.OrdinalIgnoreCase));
         var delays = processedDays.Count(item => (item.DelayMinutes ?? 0) > 0
@@ -136,33 +123,11 @@ public sealed class TimesheetMergeService
 
         return new HrTimesheetSummaryDto(
             periodLabel,
-            TimesheetAggregationService.FormatMinutes(workedMinutes),
-            expectedMinutes > 0 ? TimesheetAggregationService.FormatMinutes(expectedMinutes) : "—",
-            FormatSignedMinutes(balanceMinutes),
+            "—",
+            "—",
+            "—",
             absences,
             delays);
-    }
-
-    private static int ParseWorkedMinutes(string workedHours)
-    {
-        if (string.IsNullOrWhiteSpace(workedHours) || workedHours == "—")
-        {
-            return 0;
-        }
-
-        var normalized = workedHours.Trim().ToLowerInvariant();
-        var hoursPart = 0;
-        var minutesPart = 0;
-
-        var hourIndex = normalized.IndexOf('h', StringComparison.Ordinal);
-        if (hourIndex >= 0)
-        {
-            _ = int.TryParse(normalized[..hourIndex], out hoursPart);
-            var minuteSlice = normalized[(hourIndex + 1)..];
-            _ = int.TryParse(minuteSlice, out minutesPart);
-        }
-
-        return (hoursPart * 60) + minutesPart;
     }
 
     private static string FormatSignedMinutes(int minutes)

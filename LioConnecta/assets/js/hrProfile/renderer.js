@@ -333,18 +333,14 @@ function renderTimesheetPage(data = {}, options = {}) {
 
   const summaryCards = availabilityStatus === "ok"
     ? renderMetricCards([
-      { label: "Horas trabalhadas", value: summary.workedHours || "—" },
-      { label: "Horas previstas", value: summary.expectedHours || "—" },
-      { label: "Banco de horas", value: summary.balanceHours || "—" },
-      { label: "Faltas", value: String(summary.absences ?? 0) },
-      { label: "Atrasos", value: String(summary.delays ?? 0) }
+      { label: "Saldo anterior", value: summary.previousBankBalance || summary.PreviousBankBalance || "—" },
+      { label: "Saldo do periodo", value: summary.periodBankBalance || summary.PeriodBankBalance || "—" },
+      { label: "Total banco", value: summary.totalBankBalance || summary.TotalBankBalance || "—" }
     ])
     : renderMetricCards([
-      { label: "Horas trabalhadas", value: "—" },
-      { label: "Horas previstas", value: "—" },
-      { label: "Banco de horas", value: "—" },
-      { label: "Faltas", value: "—" },
-      { label: "Atrasos", value: "—" }
+      { label: "Saldo anterior", value: "—" },
+      { label: "Saldo do periodo", value: "—" },
+      { label: "Total banco", value: "—" }
     ]);
 
   return renderPageShell({

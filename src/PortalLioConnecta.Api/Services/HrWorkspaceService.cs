@@ -1,5 +1,6 @@
 using PortalLioConnecta.Api.Contracts.HrProfile;
 using PortalLioConnecta.Api.Infrastructure.TotvsRm;
+using PortalLioConnecta.Api.Infrastructure.TotvsRm.Models;
 using PortalLioConnecta.Api.Interfaces;
 using PortalLioConnecta.Api.Models;
 
@@ -404,11 +405,9 @@ public class HrWorkspaceService : IHrWorkspaceService
             var chapa = resolution.Context!.Chapa;
             var punches = await _totvsRmTimesheetRepository.GetPunchesAsync(chapa, dataDe, dataAte, cancellationToken);
             var processedDays = await _totvsRmTimesheetRepository.GetProcessedDaysAsync(chapa, dataDe, dataAte, cancellationToken);
+            var periodBank = await _totvsRmTimesheetRepository.GetPeriodBankSummaryAsync(chapa, dataDe, dataAte, cancellationToken);
             var (summary, entries) = _timesheetMergeService.Merge(dataDe, dataAte, punches, processedDays);
-
-            var enrichedSummary = summary is null
-                ? null
-                : summary with { BankHours = summary.BalanceHours };
+            var enrichedSummary = ApplyPeriodBankSummary(summary, periodBank);
 
             return new HrTimesheetResponse(
                 "Ponto",
@@ -468,8 +467,8 @@ public class HrWorkspaceService : IHrWorkspaceService
                 balance?.AvailableDays.ToString(),
                 lastPayslip is null ? null : $"R$ {lastPayslip.NetAmount:N2}",
                 lastPayslip is null ? null : HrRmMapper.BuildPeriodLabel(lastPayslip.AnoComp, lastPayslip.MesComp),
-                summary?.WorkedHours,
-                summary?.BalanceHours,
+                summary?.PeriodBankBalance,
+                summary?.TotalBankBalance,
                 Provider,
                 false,
                 "ok",
@@ -596,6 +595,39 @@ public class HrWorkspaceService : IHrWorkspaceService
                int.TryParse(parts[0], out anoComp) &&
                int.TryParse(parts[1], out mesComp) &&
                mesComp is >= 1 and <= 12;
+    }
+
+    private static HrTimesheetSummaryDto? ApplyPeriodBankSummary(
+        HrTimesheetSummaryDto? summary,
+        RmPeriodBankSummary? periodBank)
+    {
+        if (summary is null)
+        {
+            return null;
+        }
+
+        if (periodBank is null)
+        {
+            return summary;
+        }
+
+        return summary with
+        {
+            PreviousBankBalance = FormatSignedBankMinutes(periodBank.PreviousBalanceMinutes),
+            PeriodBankBalance = FormatSignedBankMinutes(periodBank.PeriodBalanceMinutes),
+            TotalBankBalance = FormatSignedBankMinutes(periodBank.TotalBalanceMinutes)
+        };
+    }
+
+    private static string FormatSignedBankMinutes(int? minutes)
+    {
+        if (!minutes.HasValue)
+        {
+            return "—";
+        }
+
+        var formatted = TimesheetAggregationService.FormatMinutes(minutes.Value);
+        return minutes.Value > 0 ? $"+{formatted}" : formatted;
     }
 
     private static HrTimesheetResponse BuildUnavailableTimesheet(string availabilityStatus, string userMessage) =>

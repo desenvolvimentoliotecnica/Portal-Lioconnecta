@@ -36,6 +36,7 @@ builder.Services.AddScoped<IMicrosoftGraphConfigurationService, MicrosoftGraphCo
 builder.Services.AddScoped<ITotvsRmConfigurationService, TotvsRmConfigurationService>();
 builder.Services.AddScoped<TotvsRmConnectionTester>();
 builder.Services.AddScoped<TotvsRmQueryExecutor>();
+builder.Services.AddScoped<TotvsRmPeriodBankReader>();
 builder.Services.AddScoped<ITotvsRmTimesheetRepository, TotvsRmTimesheetRepository>();
 builder.Services.AddScoped<ITotvsRmEmployeeRepository, TotvsRmEmployeeRepository>();
 builder.Services.AddScoped<ITotvsRmPayrollRepository, TotvsRmPayrollRepository>();

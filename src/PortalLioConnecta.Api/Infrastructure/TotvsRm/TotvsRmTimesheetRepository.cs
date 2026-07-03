@@ -10,10 +10,14 @@ namespace PortalLioConnecta.Api.Infrastructure.TotvsRm;
 public class TotvsRmTimesheetRepository : ITotvsRmTimesheetRepository
 {
     private readonly TotvsRmQueryExecutor _queryExecutor;
+    private readonly TotvsRmPeriodBankReader _periodBankReader;
 
-    public TotvsRmTimesheetRepository(TotvsRmQueryExecutor queryExecutor)
+    public TotvsRmTimesheetRepository(
+        TotvsRmQueryExecutor queryExecutor,
+        TotvsRmPeriodBankReader periodBankReader)
     {
         _queryExecutor = queryExecutor;
+        _periodBankReader = periodBankReader;
     }
 
     public Task<IReadOnlyList<RmPunchRecord>> GetPunchesAsync(
@@ -99,5 +103,25 @@ public class TotvsRmTimesheetRepository : ITotvsRmTimesheetRepository
                 return (IReadOnlyList<RmProcessedDayRecord>)rows.ToList();
             },
             cancellationToken);
+    }
+
+    public Task<RmPeriodBankSummary?> GetPeriodBankSummaryAsync(
+        string chapa,
+        DateTime dataDe,
+        DateTime dataAte,
+        CancellationToken cancellationToken)
+    {
+        return _queryExecutor.TryQueryAsync(
+            "ACOMPFUN",
+            async (runtime, connection, token) =>
+                await _periodBankReader.ReadAsync(
+                    connection,
+                    runtime.CodColigada,
+                    chapa,
+                    dataDe,
+                    dataAte,
+                    token),
+            cancellationToken,
+            throwWhenDisabled: true);
     }
 }

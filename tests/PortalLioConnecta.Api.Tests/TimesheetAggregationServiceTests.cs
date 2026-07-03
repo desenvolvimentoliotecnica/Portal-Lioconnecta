@@ -100,6 +100,8 @@ public class TimesheetAggregationServiceTests
         Assert.Equal("8h00", entries[0].WorkedHours);
         Assert.Equal("0h00", entries[0].BalanceHours);
         Assert.Equal("Regular", entries[0].Status);
-        Assert.Equal("8h00", summary.WorkedHours);
+        Assert.Equal("—", summary.PreviousBankBalance);
+        Assert.Equal("—", summary.PeriodBankBalance);
+        Assert.Equal("—", summary.TotalBankBalance);
     }
 }

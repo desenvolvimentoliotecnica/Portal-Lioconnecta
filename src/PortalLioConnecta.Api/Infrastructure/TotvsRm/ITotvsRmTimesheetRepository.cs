@@ -15,4 +15,10 @@ public interface ITotvsRmTimesheetRepository
         DateTime dataDe,
         DateTime dataAte,
         CancellationToken cancellationToken);
+
+    Task<RmPeriodBankSummary?> GetPeriodBankSummaryAsync(
+        string chapa,
+        DateTime dataDe,
+        DateTime dataAte,
+        CancellationToken cancellationToken);
 }

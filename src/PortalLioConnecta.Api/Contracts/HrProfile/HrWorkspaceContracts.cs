@@ -161,12 +161,11 @@ public sealed record HrTimesheetEntryDto(
 
 public sealed record HrTimesheetSummaryDto(
     string PeriodLabel,
-    string WorkedHours,
-    string ExpectedHours,
-    string BalanceHours,
+    string PreviousBankBalance,
+    string PeriodBankBalance,
+    string TotalBankBalance,
     int Absences,
-    int Delays,
-    string? BankHours = null);
+    int Delays);
 
 public sealed record HrTimesheetResponse(
     string Title,
