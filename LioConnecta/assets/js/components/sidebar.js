@@ -148,13 +148,7 @@ function renderPanelPill(label, tone = "neutral") {
   return `<span class="panel-pill panel-pill--${tone}">${escapeHtml(label)}</span>`;
 }
 
-function isSensitivePanelValue(label, value, panelTitle) {
-  const normalizedTitle = String(panelTitle || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
-
+function isMonetaryPanelValue(label, value) {
   const normalizedLabel = String(label || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -162,12 +156,7 @@ function isSensitivePanelValue(label, value, panelTitle) {
     .toLowerCase();
 
   const normalizedValue = String(value || "");
-
-  if (normalizedTitle === "resumo rh") {
-    return normalizedLabel.includes("envelope") || normalizedValue.includes("R$");
-  }
-
-  return normalizedValue.includes("R$") || /\d/.test(normalizedValue);
+  return normalizedValue.includes("R$") || normalizedLabel.includes("envelope");
 }
 
 function isRhSummaryPanel(title) {
@@ -197,7 +186,7 @@ export function renderMenuCard(panel) {
               </span>
               ${typeof item === "object" && item.badge ? `<span class="menu-badge">${escapeHtml(item.badge)}</span>` : ""}
               ${typeof item === "object" && item.value
-    ? `<strong class="menu-item-value"${isSensitivePanelValue(label, item.value, panel.title) ? ' data-sensitive-value' : ""}>${escapeHtml(item.value)}</strong>`
+    ? `<strong class="menu-item-value"${isMonetaryPanelValue(label, item.value) ? ' data-sensitive-value="monetary"' : ""}>${escapeHtml(item.value)}</strong>`
     : ""}
             `;
 

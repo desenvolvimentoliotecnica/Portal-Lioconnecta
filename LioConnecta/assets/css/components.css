@@ -5650,7 +5650,8 @@ body.agenda-event-modal-open {
 }
 
 .payslip-envelope-panel[data-payslip-values-visible="false"] [data-sensitive-value],
-body[data-payslip-values-visible="false"] [data-sensitive-value] {
+.payslip-rm[data-payslip-values-visible="false"] [data-sensitive-value],
+body[data-payslip-values-visible="false"] [data-sensitive-value="monetary"] {
   filter: blur(8px);
   user-select: none;
 }

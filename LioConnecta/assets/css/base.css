@@ -357,6 +357,24 @@ a:visited {
   flex: 1 1 auto;
 }
 
+.menu-list--rh-summary {
+  font-size: 12px;
+}
+
+.menu-list--rh-summary .menu-item {
+  flex-wrap: nowrap;
+  font-size: 12px;
+  gap: 6px;
+  padding: 5px 2px;
+}
+
+.menu-list--rh-summary .menu-item-label {
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 .menu-list--rh-summary .menu-item-label > span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -365,10 +383,16 @@ a:visited {
 
 .menu-list--rh-summary .menu-item-value {
   flex: 0 0 auto;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.2;
   text-align: right;
   white-space: nowrap;
+}
+
+.menu-list--rh-summary .panel-item-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 10px;
 }
 
 .menu-badge {

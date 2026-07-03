@@ -422,7 +422,7 @@ function writeStoredPayslipValuesVisible(visible) {
 }
 
 export function arePayslipValuesVisible(root = document) {
-  return root.body?.dataset?.payslipValuesVisible !== "false";
+  return root.body?.dataset?.payslipValuesVisible === "true";
 }
 
 export function initPayslipValuesPrivacy(root = document) {

@@ -191,10 +191,19 @@ function buildMockPayload(slug) {
   return base;
 }
 
-function inferPaymentType(item = {}) {
+function inferPaymentType(item = {}, rawId = "") {
   const explicit = item.paymentType || item.PaymentType;
   if (explicit) {
     return explicit;
+  }
+
+  const id = String(rawId || item.id || item.Id || "");
+  if (id.toUpperCase().includes("ADIANTAMENTO")) {
+    return "ADIANTAMENTO";
+  }
+
+  if (/^\d{4}-\d{2}$/.test(id)) {
+    return "FOLHA";
   }
 
   const gross = Number(item.grossAmount ?? item.GrossAmount ?? 0);
@@ -203,33 +212,29 @@ function inferPaymentType(item = {}) {
   const hasNoDeductions = gross > 0 && Math.abs(gross - net) < 0.01;
   const isMidMonthPayment = !Number.isNaN(paymentDate.getTime()) && paymentDate.getDate() <= 20;
 
-  if (hasNoDeductions || isMidMonthPayment) {
+  if (hasNoDeductions && isMidMonthPayment) {
     return "ADIANTAMENTO";
   }
 
   return "FOLHA";
 }
 
-function normalizePayslipListId(rawId, paymentType, anoComp, mesComp) {
+function normalizePayslipListId(rawId) {
   const legacyMatch = /^(\d{4}-\d{2})-(\d+)$/.exec(String(rawId || ""));
   if (legacyMatch && Number(legacyMatch[2]) > 1) {
     return `${legacyMatch[1]}-ADIANTAMENTO`;
   }
 
-  if (paymentType === "ADIANTAMENTO" && !String(rawId || "").toUpperCase().includes("ADIANTAMENTO")) {
-    return `${anoComp}-${String(mesComp).padStart(2, "0")}-ADIANTAMENTO`;
-  }
-
-  return rawId;
+  return rawId || "";
 }
 
 function normalizePayslipItem(item = {}) {
-  const paymentType = inferPaymentType(item);
+  const rawId = item.id || item.Id || "";
+  const paymentType = inferPaymentType(item, rawId);
   const anoComp = Number(item.competenceYear || item.CompetenceYear || String(item.referenceMonth || item.ReferenceMonth || "").split("-")[0] || 0);
   const mesComp = Number(String(item.referenceMonth || item.ReferenceMonth || "").split("-")[1] || 0);
-  const rawId = item.id || item.Id || "";
   const id = rawId
-    ? normalizePayslipListId(rawId, paymentType, anoComp, mesComp)
+    ? normalizePayslipListId(rawId)
     : HrPayslipFallbackId(anoComp, mesComp, paymentType);
 
   return {
@@ -317,28 +322,49 @@ function resolvePayslipDetailId(payslipId) {
   return payslipId;
 }
 
+function buildPayslipDetailCandidates(payslipId) {
+  const normalizedId = resolvePayslipDetailId(payslipId);
+  const baseMonthId = String(normalizedId || payslipId || "").replace(/-ADIANTAMENTO$/i, "");
+
+  return [...new Set([
+    normalizedId,
+    payslipId,
+    baseMonthId
+  ].filter(Boolean))];
+}
+
 export async function getPayslipDetail(payslipId, options = {}) {
   const config = getRuntimeConfig();
-  const normalizedId = resolvePayslipDetailId(payslipId);
+  const candidates = buildPayslipDetailCandidates(payslipId);
 
   if (config.dataMode !== DATA_MODES.API) {
-    const mock = MOCK_PAYSLIP_DETAILS[normalizedId]
-      || MOCK_PAYSLIP_DETAILS[payslipId]
+    const mock = candidates
+      .map((candidateId) => MOCK_PAYSLIP_DETAILS[candidateId])
+      .find(Boolean)
       || MOCK_PAYSLIP_DETAILS["2026-05"];
     return normalizePayslipDetail({
       ...mock,
-      id: normalizedId || payslipId || mock.id
+      id: candidates[0] || payslipId || mock.id
     });
   }
 
-  const endpoint = `${resolveApiEndpoint("hrHolerite")}/${encodeURIComponent(normalizedId)}`;
-  const payload = await getJson(endpoint, {
-    headers: getPortalAuthHeaders(),
-    ...options
-  });
+  let lastError;
+  for (const candidateId of candidates) {
+    try {
+      const endpoint = `${resolveApiEndpoint("hrHolerite")}/${encodeURIComponent(candidateId)}`;
+      const payload = await getJson(endpoint, {
+        headers: getPortalAuthHeaders(),
+        ...options
+      });
 
-  return normalizePayslipDetail({
-    ...payload,
-    id: normalizedId
-  });
+      return normalizePayslipDetail({
+        ...payload,
+        id: payload.id || payload.Id || candidateId
+      });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError ?? new Error("Holerite nao encontrado.");
 }

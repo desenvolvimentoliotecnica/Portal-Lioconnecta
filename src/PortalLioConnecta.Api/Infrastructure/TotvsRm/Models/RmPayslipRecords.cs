@@ -15,6 +15,7 @@ public sealed class RmPayslipSummaryRecord
 
 public sealed class RmPayslipLineRecord
 {
+    public int NroPeriodo { get; set; }
     public string Code { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Reference { get; set; } = string.Empty;

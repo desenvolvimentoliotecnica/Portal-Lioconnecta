@@ -73,6 +73,7 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
     {
         const string sql = """
             SELECT
+                F.NROPERIODO AS NroPeriodo,
                 LTRIM(RTRIM(F.CODEVENTO)) AS Code,
                 COALESCE(LTRIM(RTRIM(E.DESCRICAO)), LTRIM(RTRIM(F.CODEVENTO))) AS Description,
                 COALESCE(LTRIM(RTRIM(CAST(F.REF AS VARCHAR(32)))), '—') AS Reference,
@@ -101,6 +102,47 @@ public class TotvsRmPayrollRepository : ITotvsRmPayrollRepository
                     AnoComp = anoComp,
                     MesComp = mesComp,
                     NroPeriodo = nroPeriodo
+                });
+                return (IReadOnlyList<RmPayslipLineRecord>)rows.ToList();
+            },
+            cancellationToken);
+    }
+
+    public Task<IReadOnlyList<RmPayslipLineRecord>> GetPayslipLinesForMonthAsync(
+        string chapa,
+        int anoComp,
+        int mesComp,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT
+                F.NROPERIODO AS NroPeriodo,
+                LTRIM(RTRIM(F.CODEVENTO)) AS Code,
+                COALESCE(LTRIM(RTRIM(E.DESCRICAO)), LTRIM(RTRIM(F.CODEVENTO))) AS Description,
+                COALESCE(LTRIM(RTRIM(CAST(F.REF AS VARCHAR(32)))), '—') AS Reference,
+                F.VALOR AS Amount,
+                CASE WHEN E.PROVDESCBASE = 'D' THEN 1 ELSE 0 END AS IsDeduction
+            FROM dbo.PFFINANC F WITH (NOLOCK)
+            LEFT JOIN dbo.PEVENTO E WITH (NOLOCK)
+                ON E.CODCOLIGADA = F.CODCOLIGADA AND E.CODIGO = F.CODEVENTO
+            WHERE F.CODCOLIGADA = @CodColigada
+              AND F.CHAPA = @Chapa
+              AND F.ANOCOMP = @AnoComp
+              AND F.MESCOMP = @MesComp
+              AND F.VALOR <> 0
+            ORDER BY F.NROPERIODO, E.PROVDESCBASE, F.CODEVENTO;
+            """;
+
+        return _queryExecutor.QueryAsync(
+            "PFFINANC month lines",
+            async (runtime, connection, token) =>
+            {
+                var rows = await connection.QueryAsync<RmPayslipLineRecord>(sql, new
+                {
+                    CodColigada = runtime.CodColigada,
+                    Chapa = chapa,
+                    AnoComp = anoComp,
+                    MesComp = mesComp
                 });
                 return (IReadOnlyList<RmPayslipLineRecord>)rows.ToList();
             },

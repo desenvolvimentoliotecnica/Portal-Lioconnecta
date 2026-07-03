@@ -132,7 +132,7 @@ public class HrWorkspaceService : IHrWorkspaceService
                     HrRmMapper.BuildPeriodId(summary.AnoComp, summary.MesComp),
                     summary.GrossAmount,
                     summary.NetAmount,
-                    summary.PaymentDate ?? new DateTime(summary.AnoComp, summary.MesComp, 1),
+                    summary.PaymentDate ?? new DateTime(summary.AnoComp, summary.MesComp, DateTime.DaysInMonth(summary.AnoComp, summary.MesComp)),
                     "Disponivel",
                     paymentType,
                     summary.AnoComp.ToString(),
@@ -185,6 +185,13 @@ public class HrWorkspaceService : IHrWorkspaceService
                 return null;
             }
 
+            if (!string.IsNullOrWhiteSpace(paymentTypeHint) &&
+                !envelopes.Any(item =>
+                    string.Equals(HrRmMapper.MapPaymentTypeLabel(item), paymentTypeHint, StringComparison.OrdinalIgnoreCase)))
+            {
+                paymentTypeHint = null;
+            }
+
             var profile = await _employeeRepository.GetProfileByChapaAsync(chapa, cancellationToken);
             RmPayslipSummaryRecord? envelope = null;
             IReadOnlyList<RmPayslipLineRecord> lines = [];
@@ -209,7 +216,35 @@ public class HrWorkspaceService : IHrWorkspaceService
 
             if (envelope is null || lines.Count == 0)
             {
-                return null;
+                var monthLines = await _payrollRepository.GetPayslipLinesForMonthAsync(
+                    chapa,
+                    anoComp,
+                    mesComp,
+                    cancellationToken);
+                if (monthLines.Count == 0)
+                {
+                    return null;
+                }
+
+                var preferredPeriod = HrRmMapper.ResolveNroPeriodo(envelopes, explicitNroPeriodo, paymentTypeHint);
+                lines = monthLines.Where(line => line.NroPeriodo == preferredPeriod).ToList();
+                if (lines.Count == 0)
+                {
+                    var fallbackPeriod = monthLines
+                        .GroupBy(line => line.NroPeriodo)
+                        .OrderByDescending(group => group.Count())
+                        .First()
+                        .Key;
+                    lines = monthLines.Where(line => line.NroPeriodo == fallbackPeriod).ToList();
+                    preferredPeriod = fallbackPeriod;
+                }
+
+                envelope = envelopes.FirstOrDefault(item => item.NroPeriodo == preferredPeriod)
+                    ?? envelopes.FirstOrDefault();
+                if (envelope is null)
+                {
+                    return null;
+                }
             }
 
             var paymentType = HrRmMapper.MapPaymentTypeLabel(envelope);
