@@ -5629,6 +5629,141 @@ body.agenda-event-modal-open {
   gap: 10px;
 }
 
+.payslip-envelope-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.payslip-envelope-table-wrap[data-payslip-values-visible="false"] [data-sensitive-value] {
+  filter: blur(8px);
+  user-select: none;
+}
+
+.payslip-envelope-year td {
+  background: #f3f7fb;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.payslip-envelope-link {
+  background: none;
+  border: 0;
+  color: var(--color-brand-600);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.payslip-envelope-row__amount {
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.payslip-envelope-row__actions {
+  text-align: right;
+  width: 56px;
+}
+
+.payslip-rm {
+  display: grid;
+  gap: 12px;
+}
+
+.payslip-rm[data-payslip-values-visible="false"] [data-sensitive-value] {
+  filter: blur(8px);
+  user-select: none;
+}
+
+.payslip-rm__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.payslip-rm__header h2 {
+  font-size: 1.35rem;
+  margin: 0 0 4px;
+}
+
+.payslip-rm__payment-title,
+.payslip-rm__payment-date {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.payslip-rm__header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.payslip-rm__toggle {
+  justify-self: stretch;
+}
+
+.payslip-rm-card,
+.payslip-rm-bases .payslip-rm-card--base {
+  background: #fff;
+  border: 1px solid #dbe6f0;
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+}
+
+.payslip-rm-card__head,
+.payslip-rm-card--base {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.payslip-rm-card__body {
+  border-top: 1px solid #edf2f7;
+  display: grid;
+  gap: 10px;
+  padding: 12px 16px 16px;
+}
+
+.payslip-rm-line {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.payslip-rm-line span {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.payslip-rm-card--earnings .payslip-rm-card__head span,
+.payslip-rm-card--net .payslip-rm-card__head span {
+  color: #1f7a4d;
+  font-weight: 700;
+}
+
+.payslip-rm-card--deductions .payslip-rm-card__head span {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.payslip-rm-bases {
+  display: grid;
+  gap: 10px;
+}
+
+.payslip-rm-card__empty {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
 .hr-profile-grid {
   display: grid;
   gap: 14px;

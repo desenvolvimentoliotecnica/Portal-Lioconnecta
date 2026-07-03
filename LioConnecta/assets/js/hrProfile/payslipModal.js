@@ -59,6 +59,109 @@ function renderPayslipLinesTable(lines = [], type = "earning") {
   `;
 }
 
+function formatSignedCurrency(value, isDeduction = false) {
+  const amount = Number(value ?? 0);
+  const formatted = amount.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (isDeduction && amount > 0) {
+    return `-${formatted}`;
+  }
+  return formatted;
+}
+
+function renderRmLineItem(line, isDeduction = false) {
+  const label = `${line.code}-${line.description}`;
+  return `
+    <div class="payslip-rm-line">
+      <span>${escapeHtml(label)}</span>
+      <strong data-sensitive-value>${escapeHtml(formatSignedCurrency(line.amount, isDeduction))}</strong>
+    </div>
+  `;
+}
+
+export function renderRmPayslipDetailView(detail = {}) {
+  const earnings = Array.isArray(detail.earnings) ? detail.earnings : [];
+  const deductions = Array.isArray(detail.deductions) ? detail.deductions : [];
+  const totalEarnings = detail.totalEarnings ?? earnings.reduce((sum, line) => sum + Number(line.amount || 0), 0);
+  const totalDeductions = detail.totalDeductions ?? deductions.reduce((sum, line) => sum + Number(line.amount || 0), 0);
+
+  return `
+    <div class="payslip-rm" data-payslip-values-visible="true">
+      <header class="payslip-rm__header">
+        <div>
+          <h2>${escapeHtml(detail.competenceTitle || detail.periodLabel || "Holerite")}</h2>
+          <p class="payslip-rm__payment-title">${escapeHtml(detail.paymentTypeTitle || "Pagamento em FOLHA")}</p>
+          <p class="payslip-rm__payment-date">Realizado em ${escapeHtml(formatDate(detail.paymentDate))}</p>
+        </div>
+        <div class="payslip-rm__header-actions">
+          <button type="button" class="comm-secondary-button" data-action="download-payslip-pdf">
+            <i class="fa-solid fa-download" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="comm-secondary-button" data-action="print-payslip">
+            <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      <button
+        type="button"
+        class="comm-secondary-button payslip-envelope-toggle payslip-rm__toggle"
+        data-action="toggle-payslip-values"
+        aria-pressed="false"
+      >
+        <i class="fa-solid fa-eye-slash" aria-hidden="true"></i>
+        Ocultar valores
+      </button>
+
+      <section class="payslip-rm-card payslip-rm-card--earnings">
+        <div class="payslip-rm-card__head">
+          <strong>Proventos</strong>
+          <span data-sensitive-value>${escapeHtml(formatSignedCurrency(totalEarnings))}</span>
+        </div>
+        <div class="payslip-rm-card__body">
+          ${earnings.length
+            ? earnings.map((line) => renderRmLineItem(line, false)).join("")
+            : `<p class="payslip-rm-card__empty">Sem proventos</p>`}
+        </div>
+      </section>
+
+      <section class="payslip-rm-card payslip-rm-card--deductions">
+        <div class="payslip-rm-card__head">
+          <strong>Descontos</strong>
+          <span data-sensitive-value>${escapeHtml(totalDeductions > 0 ? `-${formatSignedCurrency(totalDeductions)}` : "0,00")}</span>
+        </div>
+        <div class="payslip-rm-card__body">
+          ${deductions.length
+            ? deductions.map((line) => renderRmLineItem(line, true)).join("")
+            : `<p class="payslip-rm-card__empty">0,00</p>`}
+        </div>
+      </section>
+
+      <section class="payslip-rm-card payslip-rm-card--net">
+        <div class="payslip-rm-card__head">
+          <strong>Liquido</strong>
+          <span data-sensitive-value>${escapeHtml(formatSignedCurrency(detail.netAmount))}</span>
+        </div>
+      </section>
+
+      <section class="payslip-rm-bases">
+        ${[
+          ["Base para FGTS", detail.baseFgts],
+          ["Base calc. IRRF", detail.baseIrrf ?? detail.baseFgts],
+          ["Base IR PLR Anual", detail.baseIrPlr],
+          ["Sal. Contribuicao INSS", detail.baseInss],
+          ["FGTS do mes", detail.fgtsAmount],
+          ["Pensao Alimenticia Judicial", detail.pensionAlimony]
+        ].map(([label, value]) => `
+          <article class="payslip-rm-card payslip-rm-card--base">
+            <span>${escapeHtml(label)}</span>
+            <strong data-sensitive-value>${escapeHtml(formatSignedCurrency(value))}</strong>
+          </article>
+        `).join("")}
+      </section>
+    </div>
+  `;
+}
+
 export function renderPayslipDocument(detail = {}) {
   const earnings = Array.isArray(detail.earnings) ? detail.earnings : [];
   const deductions = Array.isArray(detail.deductions) ? detail.deductions : [];
@@ -281,9 +384,11 @@ export async function openPayslipModal(payslipId, root = document) {
       title.textContent = `Holerite ${detail.periodLabel || ""}`.trim();
     }
     if (subtitle) {
-      subtitle.textContent = `Pagamento em ${formatDate(detail.paymentDate)} • Liquido ${formatCurrency(detail.netAmount)} • ${getPayslipBuildLabel()}`;
+      subtitle.textContent = `${detail.paymentTypeTitle || "Pagamento"} • ${formatDate(detail.paymentDate)} • ${getPayslipBuildLabel()}`;
     }
-    body.innerHTML = renderPayslipDocument(detail);
+    body.innerHTML = renderRmPayslipDetailView(detail);
+    setPayslipValuesVisible(root, true);
+    bindPayslipValueToggle(root);
     setPayslipActionsEnabled(modal, true);
   } catch {
     currentPayslipDetail = null;
@@ -296,6 +401,34 @@ export async function openPayslipModal(payslipId, root = document) {
       </div>
     `;
   }
+}
+
+function setPayslipValuesVisible(root, visible) {
+  root.querySelectorAll("[data-payslip-values-visible]").forEach((container) => {
+    container.dataset.payslipValuesVisible = visible ? "true" : "false";
+  });
+
+  root.querySelectorAll("[data-action='toggle-payslip-values']").forEach((button) => {
+    button.setAttribute("aria-pressed", visible ? "false" : "true");
+    button.innerHTML = visible
+      ? `<i class="fa-solid fa-eye-slash" aria-hidden="true"></i> Ocultar valores`
+      : `<i class="fa-solid fa-eye" aria-hidden="true"></i> Mostrar valores`;
+  });
+}
+
+function bindPayslipValueToggle(root = document) {
+  root.querySelectorAll("[data-action='toggle-payslip-values']").forEach((button) => {
+    if (button.dataset.bound === "true") {
+      return;
+    }
+
+    button.dataset.bound = "true";
+    button.addEventListener("click", () => {
+      const container = button.closest("[data-payslip-values-visible]") || root;
+      const visible = container.dataset.payslipValuesVisible !== "false";
+      setPayslipValuesVisible(root, !visible);
+    });
+  });
 }
 
 export function bindPayslipModal(root = document) {
@@ -333,6 +466,8 @@ export function bindPayslipModal(root = document) {
       }
     });
   });
+
+  bindPayslipValueToggle(root);
 
   if (modal.dataset.bound === "true") {
     return;

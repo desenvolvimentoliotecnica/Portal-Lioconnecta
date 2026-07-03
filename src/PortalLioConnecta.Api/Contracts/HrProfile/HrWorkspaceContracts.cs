@@ -35,7 +35,10 @@ public sealed record HrPayslipDto(
     decimal GrossAmount,
     decimal NetAmount,
     DateTime PaymentDate,
-    string Status);
+    string Status,
+    string PaymentType = "FOLHA",
+    string CompetenceYear = "",
+    string ReferenceMonthShort = "");
 
 public sealed record HrPayslipResponse(
     string Title,
@@ -82,7 +85,13 @@ public sealed record HrPayslipDetailDto(
     string Provider,
     bool IsSimulated,
     string? AvailabilityStatus = null,
-    string? UserMessage = null);
+    string? UserMessage = null,
+    string PaymentType = "FOLHA",
+    string PaymentTypeTitle = "Pagamento em FOLHA",
+    string CompetenceTitle = "",
+    decimal BaseIrrf = 0m,
+    decimal BaseIrPlr = 0m,
+    decimal PensionAlimony = 0m);
 
 public sealed record HrBenefitItemDto(
     string Code,

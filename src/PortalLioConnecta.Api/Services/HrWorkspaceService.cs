@@ -154,7 +154,7 @@ public class HrWorkspaceService : IHrWorkspaceService
         string payslipId,
         CancellationToken cancellationToken)
     {
-        if (!TryParsePeriodId(payslipId, out var anoComp, out var mesComp))
+        if (!HrRmMapper.TryParsePayslipId(payslipId, out var anoComp, out var mesComp, out var explicitNroPeriodo))
         {
             return null;
         }
@@ -173,12 +173,26 @@ public class HrWorkspaceService : IHrWorkspaceService
         try
         {
             var chapa = resolution.Context!.Chapa;
+            var envelopes = (await _payrollRepository.GetPayslipSummariesAsync(chapa, 48, cancellationToken))
+                .Where(item => item.AnoComp == anoComp && item.MesComp == mesComp)
+                .ToList();
+            if (envelopes.Count == 0)
+            {
+                return null;
+            }
+
+            var nroPeriodo = HrRmMapper.ResolveNroPeriodo(envelopes, explicitNroPeriodo);
+            var envelope = envelopes.FirstOrDefault(item => item.NroPeriodo == nroPeriodo) ?? envelopes[0];
+            var paymentType = HrRmMapper.MapPaymentTypeLabel(envelope);
+
             var profile = await _employeeRepository.GetProfileByChapaAsync(chapa, cancellationToken);
-            var lines = await _payrollRepository.GetPayslipLinesAsync(chapa, anoComp, mesComp, cancellationToken);
+            var lines = await _payrollRepository.GetPayslipLinesAsync(chapa, anoComp, mesComp, envelope.NroPeriodo, cancellationToken);
             if (lines.Count == 0)
             {
                 return null;
             }
+
+            var period = await _payrollRepository.GetPayslipPeriodAsync(chapa, anoComp, mesComp, envelope.NroPeriodo, cancellationToken);
 
             var earnings = lines.Where(line => !line.IsDeduction)
                 .Select(line => new HrPayslipLineDto(line.Code, line.Description, line.Reference, line.Amount))
@@ -188,16 +202,19 @@ public class HrWorkspaceService : IHrWorkspaceService
                 .ToList();
 
             var gross = earnings.Sum(item => item.Amount);
-            var net = gross - deductions.Sum(item => item.Amount);
+            var totalDeductions = deductions.Sum(item => item.Amount);
+            var net = gross - totalDeductions;
             var periodLabel = HrRmMapper.BuildPeriodLabel(anoComp, mesComp);
+            var resolvedId = HrRmMapper.BuildPayslipId(anoComp, mesComp, envelope.NroPeriodo);
+            var paymentDate = envelope.PaymentDate ?? new DateTime(anoComp, mesComp, DateTime.DaysInMonth(anoComp, mesComp));
 
             return new HrPayslipDetailDto(
-                payslipId,
+                resolvedId,
                 periodLabel,
-                payslipId,
+                HrRmMapper.BuildPeriodId(anoComp, mesComp),
                 gross,
                 net,
-                new DateTime(anoComp, mesComp, DateTime.DaysInMonth(anoComp, mesComp)),
+                paymentDate,
                 "Disponivel",
                 "LIO Tecnica",
                 "—",
@@ -211,18 +228,24 @@ public class HrWorkspaceService : IHrWorkspaceService
                 profile?.Banco ?? "—",
                 profile?.Agencia ?? "—",
                 profile?.Conta ?? "—",
-                gross,
-                gross,
-                gross,
-                gross * 0.08m,
+                period?.BaseSalary ?? gross,
+                period?.BaseInss ?? gross,
+                period?.BaseFgts ?? gross,
+                period?.FgtsAmount ?? 0m,
                 earnings,
                 deductions,
-                earnings.Sum(item => item.Amount),
-                deductions.Sum(item => item.Amount),
+                gross,
+                totalDeductions,
                 Provider,
                 false,
                 "ok",
-                null);
+                null,
+                paymentType,
+                HrRmMapper.BuildPaymentTypeTitle(paymentType),
+                HrRmMapper.BuildCompetenceTitle(anoComp, mesComp),
+                period?.BaseIrrf ?? gross,
+                period?.BaseIrPlr ?? 0m,
+                period?.PensionAlimony ?? 0m);
         }
         catch (TotvsRmIntegrationException)
         {
@@ -463,10 +486,13 @@ public class HrWorkspaceService : IHrWorkspaceService
             var (summary, _) = _timesheetMergeService.Merge(dataDe, dataAte, punches, processedDays);
 
             var lastPayslip = payslips.FirstOrDefault();
+            var lastPayslipLabel = lastPayslip is null
+                ? null
+                : $"{HrRmMapper.BuildShortMonthLabel(lastPayslip.MesComp)} {lastPayslip.AnoComp} • {HrRmMapper.MapPaymentTypeLabel(lastPayslip)}";
             return new HrRhSummaryDto(
                 balance?.AvailableDays.ToString(),
                 lastPayslip is null ? null : $"R$ {lastPayslip.NetAmount:N2}",
-                lastPayslip is null ? null : HrRmMapper.BuildPeriodLabel(lastPayslip.AnoComp, lastPayslip.MesComp),
+                lastPayslipLabel,
                 summary?.PeriodBankBalance,
                 summary?.TotalBankBalance,
                 Provider,

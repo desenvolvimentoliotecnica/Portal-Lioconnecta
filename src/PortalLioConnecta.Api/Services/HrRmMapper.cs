@@ -10,8 +10,91 @@ public static class HrRmMapper
         "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
     ];
 
+    private static readonly string[] ShortMonthNames =
+    [
+        "", "JAN.", "FEV.", "MAR.", "ABR.", "MAI.", "JUN.",
+        "JUL.", "AGO.", "SET.", "OUT.", "NOV.", "DEZ."
+    ];
+
     public static string BuildPeriodId(int anoComp, int mesComp) =>
         $"{anoComp:D4}-{mesComp:D2}";
+
+    public static string BuildPayslipId(int anoComp, int mesComp, int nroPeriodo) =>
+        nroPeriodo <= 1
+            ? BuildPeriodId(anoComp, mesComp)
+            : $"{anoComp:D4}-{mesComp:D2}-{nroPeriodo}";
+
+    public static bool TryParsePayslipId(string payslipId, out int anoComp, out int mesComp, out int? nroPeriodo)
+    {
+        anoComp = 0;
+        mesComp = 0;
+        nroPeriodo = null;
+
+        var parts = payslipId.Split('-', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length < 2 ||
+            !int.TryParse(parts[0], out anoComp) ||
+            !int.TryParse(parts[1], out mesComp) ||
+            mesComp is < 1 or > 12)
+        {
+            return false;
+        }
+
+        if (parts.Length >= 3 && int.TryParse(parts[2], out var parsedPeriod))
+        {
+            nroPeriodo = parsedPeriod;
+        }
+
+        return true;
+    }
+
+    public static int ResolveNroPeriodo(IReadOnlyList<RmPayslipSummaryRecord> envelopes, int? explicitNroPeriodo)
+    {
+        if (explicitNroPeriodo.HasValue)
+        {
+            return explicitNroPeriodo.Value;
+        }
+
+        if (envelopes.Count == 0)
+        {
+            return 1;
+        }
+
+        if (envelopes.Count == 1)
+        {
+            return envelopes[0].NroPeriodo;
+        }
+
+        var folha = envelopes.FirstOrDefault(item => MapPaymentTypeLabel(item) == "FOLHA");
+        return folha?.NroPeriodo ?? envelopes[0].NroPeriodo;
+    }
+
+    public static string MapPaymentTypeLabel(RmPayslipSummaryRecord summary)
+    {
+        if (summary.HasAdvanceEvent && !summary.HasPayrollEvents)
+        {
+            return "ADIANTAMENTO";
+        }
+
+        if (summary.NroPeriodo > 1 && !summary.HasPayrollEvents)
+        {
+            return "ADIANTAMENTO";
+        }
+
+        return "FOLHA";
+    }
+
+    public static string BuildPaymentTypeTitle(string paymentType) =>
+        paymentType == "ADIANTAMENTO"
+            ? "Pagamento em ADIANTAMENTO"
+            : "Pagamento em FOLHA";
+
+    public static string BuildCompetenceTitle(int anoComp, int mesComp) =>
+        mesComp is >= 1 and <= 12
+            ? $"{MonthNames[mesComp]} {anoComp}"
+            : $"{mesComp:D2}/{anoComp}";
+
+    public static string BuildShortMonthLabel(int mesComp) =>
+        mesComp is >= 1 and <= 12 ? ShortMonthNames[mesComp] : $"{mesComp:D2}";
 
     public static string BuildPeriodLabel(int anoComp, int mesComp) =>
         mesComp is >= 1 and <= 12
@@ -53,4 +136,7 @@ public static class HrRmMapper
 
     public static string FormatAdmissionDate(DateTime? date) =>
         date?.ToString("dd/MM/yyyy") ?? "—";
+
+    public static string FormatPaymentDateShort(DateTime? date) =>
+        date?.ToString("dd/MM") ?? "—";
 }

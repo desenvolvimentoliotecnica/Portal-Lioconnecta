@@ -4,8 +4,9 @@ namespace PortalLioConnecta.Api.Infrastructure.TotvsRm;
 
 public interface ITotvsRmPayrollRepository
 {
-    Task<IReadOnlyList<RmPayslipSummaryRecord>> GetPayslipSummariesAsync(string chapa, int maxMonths, CancellationToken cancellationToken);
-    Task<IReadOnlyList<RmPayslipLineRecord>> GetPayslipLinesAsync(string chapa, int anoComp, int mesComp, CancellationToken cancellationToken);
+    Task<IReadOnlyList<RmPayslipSummaryRecord>> GetPayslipSummariesAsync(string chapa, int maxEnvelopes, CancellationToken cancellationToken);
+    Task<IReadOnlyList<RmPayslipLineRecord>> GetPayslipLinesAsync(string chapa, int anoComp, int mesComp, int nroPeriodo, CancellationToken cancellationToken);
+    Task<RmPayslipPeriodRecord?> GetPayslipPeriodAsync(string chapa, int anoComp, int mesComp, int nroPeriodo, CancellationToken cancellationToken);
 }
 
 public interface ITotvsRmVacationRepository

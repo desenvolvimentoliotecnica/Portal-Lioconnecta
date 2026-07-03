@@ -13,6 +13,7 @@ public class TotvsRmRequiredTablesTests
         Assert.Contains("PPESSOA", required);
         Assert.Contains("PFFINANC", required);
         Assert.Contains("PEVENTO", required);
+        Assert.Contains("PFPERFF", required);
         Assert.Contains("PFUFERIAS", required);
         Assert.Contains("PFUFERIASPER", required);
         Assert.Contains("PFDEPEND", required);
@@ -20,6 +21,7 @@ public class TotvsRmRequiredTablesTests
         Assert.Contains("AAFHTFUN", required);
         Assert.Contains("ANATUBAT", required);
         Assert.Contains("ACOMPFUN", required);
-        Assert.Equal(13, required.Length);
+        Assert.Contains("ASALDOBANCOHOR", required);
+        Assert.Equal(15, required.Length);
     }
 }

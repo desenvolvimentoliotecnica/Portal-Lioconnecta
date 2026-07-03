@@ -112,7 +112,7 @@ public class TotvsRmTimesheetRepository : ITotvsRmTimesheetRepository
         CancellationToken cancellationToken)
     {
         return _queryExecutor.TryQueryAsync(
-            "ACOMPFUN",
+            "ASALDOBANCOHOR",
             async (runtime, connection, token) =>
                 await _periodBankReader.ReadAsync(
                     connection,

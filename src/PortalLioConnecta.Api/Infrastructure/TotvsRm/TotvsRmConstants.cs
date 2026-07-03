@@ -20,12 +20,14 @@ public static class TotvsRmConstants
         "PFUNCAO",
         "PFFINANC",
         "PEVENTO",
+        "PFPERFF",
         "PFUFERIAS",
         "PFUFERIASPER",
         "PFDEPEND",
         "ABATFUN",
         "AAFHTFUN",
         "ANATUBAT",
-        "ACOMPFUN"
+        "ACOMPFUN",
+        "ASALDOBANCOHOR"
     ];
 }

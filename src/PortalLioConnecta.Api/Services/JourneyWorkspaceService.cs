@@ -15,10 +15,12 @@ public class JourneyWorkspaceService : IJourneyWorkspaceService
     private static readonly ConcurrentDictionary<Guid, List<JourneyTaskItemDto>> CreatedTasksByUser = new();
 
     private readonly IWebHostEnvironment _environment;
+    private readonly IHrWorkspaceService _hrWorkspaceService;
 
-    public JourneyWorkspaceService(IWebHostEnvironment environment)
+    public JourneyWorkspaceService(IWebHostEnvironment environment, IHrWorkspaceService hrWorkspaceService)
     {
         _environment = environment;
+        _hrWorkspaceService = hrWorkspaceService;
     }
 
     public Task<JourneyTasksResponse> GetTasksAsync(PortalUser user, CancellationToken cancellationToken)
@@ -222,19 +224,41 @@ public class JourneyWorkspaceService : IJourneyWorkspaceService
             IsSimulated));
     }
 
-    public Task<JourneyRequestsResponse> GetRequestsAsync(PortalUser user, CancellationToken cancellationToken)
+    public async Task<JourneyRequestsResponse> GetRequestsAsync(PortalUser user, CancellationToken cancellationToken)
     {
-        _ = cancellationToken;
+        var items = BuildRequestItems(user).ToList();
+        var hasRmItems = false;
 
-        var items = BuildRequestItems(user);
+        try
+        {
+            var vacation = await _hrWorkspaceService.GetVacationAsync(user, cancellationToken);
+            if (vacation.AvailabilityStatus == "ok" && vacation.Requests.Count > 0)
+            {
+                var rmItems = vacation.Requests.Select(request => new JourneyRequestItemDto(
+                    request.Id,
+                    "Ferias (RM)",
+                    $"{request.Days} dias • {request.StartDate:dd/MM/yyyy} a {request.EndDate:dd/MM/yyyy}",
+                    request.RequestedAtUtc,
+                    request.Status,
+                    "TOTVS RM")).ToList();
+
+                items = [.. rmItems, .. items.Where(item => item.Type != "Ferias")];
+                hasRmItems = true;
+            }
+        }
+        catch
+        {
+            // Mantem solicitacoes simuladas quando o RM nao estiver disponivel.
+        }
+
         var response = new JourneyRequestsResponse(
             "Solicitacoes em Andamento",
             BuildRequestsSummary(items),
             items,
-            Provider,
-            IsSimulated);
+            hasRmItems ? "TOTVS RM" : Provider,
+            !hasRmItems && IsSimulated);
 
-        return Task.FromResult(response);
+        return response;
     }
 
     public Task<JourneyCreateRequestResponse> CreateRequestAsync(

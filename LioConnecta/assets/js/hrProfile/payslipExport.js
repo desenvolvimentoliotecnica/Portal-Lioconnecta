@@ -1,7 +1,7 @@
 import { PAYSLIP_PRINT_CSS } from "./payslipPrintStyles.js";
 
 const HTML2PDF_SRC = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-const PAYSLIP_BUILD = "holerite-v3";
+const PAYSLIP_BUILD = "holerite-v4";
 let html2PdfPromise;
 
 export function getPayslipBuildLabel() {

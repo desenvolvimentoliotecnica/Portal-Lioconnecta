@@ -27,4 +27,5 @@ GRANT SELECT ON dbo.ABATFUN TO [portal_rm_read];
 GRANT SELECT ON dbo.AAFHTFUN TO [portal_rm_read];
 GRANT SELECT ON dbo.ANATUBAT TO [portal_rm_read];
 GRANT SELECT ON dbo.ACOMPFUN TO [portal_rm_read];
+GRANT SELECT ON dbo.ASALDOBANCOHOR TO [portal_rm_read];
 GO

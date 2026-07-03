@@ -31,6 +31,7 @@ public class PortalPanelsComposer : IPortalPanelsComposer
     private readonly IHrProfileService _hrProfileService;
     private readonly ICorporateSystemsService _corporateSystemsService;
     private readonly IFeedService _feedService;
+    private readonly IHrWorkspaceService _hrWorkspaceService;
 
     public PortalPanelsComposer(
         INotificationService notificationService,
@@ -40,7 +41,8 @@ public class PortalPanelsComposer : IPortalPanelsComposer
         IKpiService kpiService,
         IHrProfileService hrProfileService,
         ICorporateSystemsService corporateSystemsService,
-        IFeedService feedService)
+        IFeedService feedService,
+        IHrWorkspaceService hrWorkspaceService)
     {
         _notificationService = notificationService;
         _agendaService = agendaService;
@@ -50,6 +52,7 @@ public class PortalPanelsComposer : IPortalPanelsComposer
         _hrProfileService = hrProfileService;
         _corporateSystemsService = corporateSystemsService;
         _feedService = feedService;
+        _hrWorkspaceService = hrWorkspaceService;
     }
 
     public async Task<PanelsResponse> BuildAsync(PortalUser user, CancellationToken cancellationToken)
@@ -64,12 +67,14 @@ public class PortalPanelsComposer : IPortalPanelsComposer
         var systemsTask = _corporateSystemsService.GetSystemsAsync(user, cancellationToken);
         var kpisTask = _kpiService.GetSummaryAsync(user, cancellationToken);
         var hrProfileTask = _hrProfileService.GetProfileAsync(user, cancellationToken);
+        var rhSummaryTask = _hrWorkspaceService.GetRhSummaryAsync(user, cancellationToken);
 
-        await Task.WhenAll(journeyTask, systemsTask, kpisTask, hrProfileTask);
+        await Task.WhenAll(journeyTask, systemsTask, kpisTask, hrProfileTask, rhSummaryTask);
 
         var leftPanels = new List<PanelDto>
         {
             BuildJourneyPanel(await journeyTask),
+            BuildRhSummaryPanel(await rhSummaryTask),
             BuildNotificationsPanel(notifications, savedCount),
             BuildCorporateSystemsPanel(await systemsTask),
             BuildKpiPanel(await kpisTask)
@@ -85,6 +90,51 @@ public class PortalPanelsComposer : IPortalPanelsComposer
         return new PanelsResponse(
             FilterPanels(leftPanels, user),
             FilterPanels(rightPanels, user));
+    }
+
+    private static PanelDto BuildRhSummaryPanel(Contracts.HrProfile.HrRhSummaryDto summary)
+    {
+        var items = new List<JsonNode>();
+
+        if (!string.IsNullOrWhiteSpace(summary.VacationBalanceDays))
+        {
+            items.Add(ShellPanelJson.LabelValue("Saldo de ferias", $"{summary.VacationBalanceDays} dias"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(summary.LastPayslipNet))
+        {
+            var payslipLabel = string.IsNullOrWhiteSpace(summary.LastPayslipPeriod)
+                ? "Ultimo envelope"
+                : $"Envelope {summary.LastPayslipPeriod}";
+            items.Add(ShellPanelJson.LabelValue(payslipLabel, summary.LastPayslipNet));
+        }
+
+        if (!string.IsNullOrWhiteSpace(summary.MonthlyWorkedHours))
+        {
+            items.Add(ShellPanelJson.LabelValue("Horas no periodo", summary.MonthlyWorkedHours));
+        }
+
+        if (!string.IsNullOrWhiteSpace(summary.MonthlyBalanceHours))
+        {
+            items.Add(ShellPanelJson.LabelValue("Saldo banco de horas", summary.MonthlyBalanceHours));
+        }
+
+        if (items.Count == 0 && !string.IsNullOrWhiteSpace(summary.UserMessage))
+        {
+            items.Add(ShellPanelJson.LabelOnly(summary.UserMessage));
+        }
+
+        items.Add(ShellPanelJson.LabelLink("Abrir Perfil RH", "#perfil-rh", null));
+
+        return new PanelDto(
+            string.Empty,
+            "RESUMO RH",
+            string.Empty,
+            string.Empty,
+            summary.Provider,
+            string.Empty,
+            PortalModulePermissionCatalog.HrProfile,
+            items);
     }
 
     private static PanelDto BuildJourneyPanel(Contracts.Journey.JourneySummaryResponse journey)

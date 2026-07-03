@@ -81,6 +81,52 @@ function renderMoodKpiGrid(summary = {}) {
   `;
 }
 
+export function renderRhTeamDashboardSection(teamDashboard = {}) {
+  const members = Array.isArray(teamDashboard.members) ? teamDashboard.members : [];
+  if (!members.length && teamDashboard.availabilityStatus !== "ok") {
+    return "";
+  }
+
+  return `
+    <section class="card comm-list-card">
+      <div class="card-header">
+        ${escapeHtml(teamDashboard.title || "Minha Equipe")}
+        <span class="panel-pill panel-pill--brand">${escapeHtml(String(teamDashboard.activeCount ?? 0))} ativos</span>
+      </div>
+      <div class="comm-list-body">
+        ${members.length
+          ? `
+            <div class="hr-profile-table-wrap">
+              <table class="hr-profile-table">
+                <thead>
+                  <tr>
+                    <th>Matricula</th>
+                    <th>Nome</th>
+                    <th>Cargo</th>
+                    <th>Area</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${members.map((member) => `
+                    <tr>
+                      <td>${escapeHtml(member.chapa)}</td>
+                      <td>${escapeHtml(member.name)}</td>
+                      <td>${escapeHtml(member.role)}</td>
+                      <td>${escapeHtml(member.department)}</td>
+                      <td>${escapeHtml(member.status)}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          `
+          : renderEmptyState("Equipe nao encontrada", teamDashboard.userMessage || "Nao ha colaboradores vinculados a sua secao no RM.")}
+      </div>
+    </section>
+  `;
+}
+
 export function renderRhMoodDashboardPage(dashboard, {
   periodPreset = "7d",
   department = "all",
@@ -89,7 +135,8 @@ export function renderRhMoodDashboardPage(dashboard, {
   feedbackPage = null,
   feedbackLoadError = "",
   feedbackOptionKey = "motivated",
-  feedbackEditingId = ""
+  feedbackEditingId = "",
+  teamDashboard = null
 } = {}) {
   if (accessDenied) {
     return `
@@ -223,6 +270,7 @@ export function renderRhMoodDashboardPage(dashboard, {
         loadError: feedbackLoadError
       })
       : ""}
+    ${renderRhTeamDashboardSection(teamDashboard)}
   `;
 }
 
